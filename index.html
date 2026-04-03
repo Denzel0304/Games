@@ -10,6 +10,7 @@
             --card-bg: #ffffff;
             --text-main: #2c3e50;
             --text-sub: #7f8c8d;
+            --neon-purple: #9c27b0; /* 테트리스 포인트 컬러 */
         }
 
         body {
@@ -52,21 +53,20 @@
             font-weight: 600;
         }
 
-        /* 그리드 설정: 정사각형 유지를 위해 aspect-ratio 사용 */
         .container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             padding: 30px 20px;
             width: 100%;
-            max-width: 380px; /* 모바일에서 적절한 너비 */
+            max-width: 380px;
             box-sizing: border-box;
         }
 
         .menu-card {
             background: var(--card-bg);
             border-radius: 24px;
-            aspect-ratio: 1 / 1; /* 가로세로 1:1 비율 고정 */
+            aspect-ratio: 1 / 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -100,9 +100,14 @@
             color: var(--text-main);
         }
 
-        /* 카드별 포인트 컬러 */
+        /* 별 가르기 스타일 */
         .star-game { border-top: 4px solid #ffeb3b; }
         .star-game .icon-box { background-color: #fff9c4; }
+
+        /* 테트리스 스타일 추가 */
+        .tetris-game { border-top: 4px solid var(--neon-purple); }
+        .tetris-game .icon-box { background-color: #f3e5f5; }
+        .tetris-game .card-title { color: #4a148c; }
 
         .preparing { border-top: 4px solid #cfd8dc; opacity: 0.8; }
         .preparing .icon-box { background-color: #eceff1; }
@@ -130,11 +135,11 @@
             <div class="card-title">별 가르기</div>
         </a>
 
-        <div class="menu-card preparing">
-            <div class="icon-box">🍵</div>
-            <div class="card-title">준비 중</div>
-            <div class="status-tag">Coming Soon</div>
-        </div>
+        <a href="Tetris.html" class="menu-card tetris-game">
+            <div class="icon-box">🧱</div>
+            <div class="card-title">네온 테트리스</div>
+            <div class="status-tag" style="color: var(--neon-purple); font-weight: 600;">NEW</div>
+        </a>
 
         <div class="menu-card preparing">
             <div class="icon-box">🌊</div>
@@ -150,7 +155,6 @@
     </div>
 
     <script>
-        // 오늘 날짜 표시 자동 업데이트
         const d = new Date();
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const dateStr = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${week[d.getDay()]})`;
