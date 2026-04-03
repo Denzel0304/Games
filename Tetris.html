@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS - Custom Flip</title>
+    <title>PRO TETRIS - Hard Mode</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -11,6 +11,7 @@
             --neon-blue: #00f2ff;
             --neon-pink: #ff007f;
             --pastel-green: #77dd77;
+            --pastel-blue: #A2D2FF; /* 새로 정의한 파스텔 블루 */
         }
 
         body {
@@ -24,121 +25,79 @@
             transition: flex-direction 0.3s ease;
         }
         
-        #game-container.left-handed {
-            flex-direction: row-reverse;
-        }
+        #game-container.left-handed { flex-direction: row-reverse; }
 
-        #stage-area {
-            flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%;
-        }
+        #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; }
 
         #canvas {
             border: 2px solid rgba(255, 255, 255, 0.1); background: #000;
             width: 100%; border-radius: 4px; flex-shrink: 0;
         }
 
-        /* [수정] 모드 전환 버튼 스타일 */
+        /* [추가/수정] 하단 버튼 영역 레이아웃 */
+        .bottom-btn-row {
+            display: flex; gap: 10px; margin-top: 30px; width: 100%;
+        }
+
+        /* 공통 버튼 스타일 */
+        .sub-btn {
+            padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold;
+            cursor: pointer; flex: 1; transition: all 0.2s; text-align: center;
+        }
+
+        /* Left-handed 버튼 (파스텔 블루 채워짐) */
         #mode-toggle-btn {
-            margin-top: 30px; /* 경기장으로부터 더 아래로 배치 */
-            padding: 12px;
-            background: #A2D2FF; /* 눈이 편안한 파스텔 블루 */
-            border: 2px solid var(--neon-blue);
-            border-radius: 6px;
-            color: #000; /* 글자는 검은색 */
-            font-size: 14px;
-            font-weight: bold; /* 볼드체 적용 */
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.1s;
+            background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000;
         }
+        #mode-toggle-btn:active { background: transparent; color: var(--pastel-blue); }
 
-        /* [수정] 클릭 시 디자인 반전 (색이 빠짐) */
-        #mode-toggle-btn:active {
-            background: transparent;
-            color: #A2D2FF;
-        }
-
-        #sidebar {
-            flex: 1; display: flex; flex-direction: column; height: 100%;
-            justify-content: flex-start;
-        }
-
-        .info-panel {
-            background: var(--panel-bg); padding: 12px 8px; border-radius: 10px;
-            display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;
+        /* Reverse 버튼 (기본은 비어있음) */
+        #reverse-toggle-btn {
+            background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue);
         }
         
-        #next-container { 
-            text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333;
+        /* [핵심] Reverse 모드 활성화 시 스타일 (파스텔 블루로 반전) */
+        .reverse-active #reverse-toggle-btn,
+        .reverse-active #left-btn,
+        .reverse-active #right-btn {
+            background: var(--pastel-blue) !important;
+            border-color: var(--pastel-blue) !important;
+            color: #000 !important;
         }
-        
+
+        #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
+        .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
+        #next-container { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333; }
         #next-canvas { display: block; margin: 5px auto; }
-
-        .info-item { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 4px;
-        }
+        .info-item { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
         .info-label { font-size: 11px; color: #888; font-weight: bold; }
-        .info-value { 
-            font-size: 14px; 
-            font-weight: bold; 
-            color: var(--neon-blue);
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            max-width: 80px; 
-            text-align: right;
-        }
+        .info-value { font-size: 14px; font-weight: bold; color: var(--neon-blue); text-align: right; }
 
-        #controls { 
-            display: flex; flex-direction: column; gap: 16px; 
-            margin-top: 20px; 
-            padding-bottom: 20px; 
-        }
-        
+        #controls { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; padding-bottom: 20px; }
         .btn-row { display: flex; gap: 8px; }
-
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 22px; color: white; flex: 1; cursor: pointer;
-            height: 50px;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
+            font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.5); transition: all 0.1s;
         }
-        .btn:active { background: #444; transform: translateY(1px); box-shadow: none; }
-        
+        .btn:active { transform: translateY(1px); box-shadow: none; }
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
-        
-        #save-btn { 
-            margin-top: 10px;
-            background: rgba(119, 221, 119, 0.15); 
-            color: var(--pastel-green); 
-            border-color: var(--pastel-green); 
-            font-size: 14px; 
-            font-weight: bold;
-        }
-
-        #start-btn {
-            padding: 14px; background: var(--pastel-green); border: none;
-            border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px;
-            width: 100%; cursor: pointer; font-size: 15px;
-        }
-
-        #game-over {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-        }
+        #save-btn { margin-top: 10px; background: rgba(119, 221, 119, 0.15); color: var(--pastel-green); border-color: var(--pastel-green); font-size: 14px; font-weight: bold; }
+        #start-btn { padding: 14px; background: var(--pastel-green); border: none; border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px; width: 100%; cursor: pointer; font-size: 15px; }
+        #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
     </style>
 </head>
-<body>
-
-<div id="game-container">
+<body class=""> <div id="game-container">
     <div id="stage-area">
         <button id="start-btn">START / RESET</button>
         <canvas id="canvas"></canvas>
-        <button id="mode-toggle-btn">Left-handed</button>
+        
+        <div class="bottom-btn-row">
+            <div id="mode-toggle-btn" class="sub-btn">Left-handed</div>
+            <div id="reverse-toggle-btn" class="sub-btn">Reverse</div>
+        </div>
 
         <div id="game-over">
             <h2 style="color:var(--neon-pink)">GAME OVER</h2>
@@ -180,36 +139,54 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
+    // --- 모드 제어 변수 ---
+    let isReversed = false; 
     const modeBtn = document.getElementById('mode-toggle-btn');
+    const reverseBtn = document.getElementById('reverse-toggle-btn');
     const gameContainer = document.getElementById('game-container');
 
+    // 1. 레이아웃 반전 (Left-handed)
     modeBtn.addEventListener('click', () => {
-        const isLeftHanded = gameContainer.classList.toggle('left-handed');
-        modeBtn.innerText = isLeftHanded ? 'Right-handed' : 'Left-handed';
+        const isLeft = gameContainer.classList.toggle('left-handed');
+        modeBtn.innerText = isLeft ? 'Right-handed' : 'Left-handed';
         resize();
     });
 
+    // 2. 조작 방향 반전 (Reverse)
+    reverseBtn.addEventListener('click', () => {
+        isReversed = !isReversed;
+        document.body.classList.toggle('reverse-active');
+    });
+
+    // --- 조작 로직 (반전 적용) ---
+    function moveLeft() {
+        // isReversed가 true면 오른쪽(+1)으로, false면 왼쪽(-1)으로
+        const dir = isReversed ? 1 : -1;
+        if(!collision(dir, 0, current.matrix)) current.x += dir;
+        draw();
+    }
+
+    function moveRight() {
+        // isReversed가 true면 왼쪽(-1)으로, false면 오른쪽(+1)으로
+        const dir = isReversed ? -1 : 1;
+        if(!collision(dir, 0, current.matrix)) current.x += dir;
+        draw();
+    }
+
+    // --- 기존 게임 로직 ---
     function loadBestScore() {
         const saved = localStorage.getItem('tetris_best');
         bestScore = saved ? parseInt(saved, 10) : 0;
     }
     loadBestScore();
 
-    const COLORS = [null, 
-        { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' },
-        { base: '#ff007f', light: '#ff66b2', dark: '#b30059' },
-        { base: '#00ff41', light: '#80ff9f', dark: '#00b32e' },
-        { base: '#ffff00', light: '#ffff80', dark: '#b3b300' },
-        { base: '#ff8c00', light: '#ffc180', dark: '#b36200' },
-        { base: '#7b00ff', light: '#bc80ff', dark: '#5600b3' },
-        { base: '#ff0000', light: '#ff8080', dark: '#b30000' }
-    ];
+    const COLORS = [null, { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' }, { base: '#ff007f', light: '#ff66b2', dark: '#b30059' }, { base: '#00ff41', light: '#80ff9f', dark: '#00b32e' }, { base: '#ffff00', light: '#ffff80', dark: '#b3b300' }, { base: '#ff8c00', light: '#ffc180', dark: '#b36200' }, { base: '#7b00ff', light: '#bc80ff', dark: '#5600b3' }, { base: '#ff0000', light: '#ff8080', dark: '#b30000' }];
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
 
     function resize() {
         const startBtnH = document.getElementById('start-btn').offsetHeight;
-        const modeBtnH = document.getElementById('mode-toggle-btn').offsetHeight;
-        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - modeBtnH - 60;
+        const bottomRowH = document.querySelector('.bottom-btn-row').offsetHeight;
+        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - bottomRowH - 60;
         BLOCK_SIZE = Math.floor(availableH / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -221,9 +198,7 @@
         if(animationId) cancelAnimationFrame(animationId);
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
-        loadBestScore();
-        updateUI(); 
-        next = createPiece(); spawn();
+        loadBestScore(); updateUI(); next = createPiece(); spawn();
         animationId = requestAnimationFrame(update);
     }
 
@@ -239,10 +214,7 @@
         tCtx.strokeStyle = 'rgba(0,0,0,0.2)'; tCtx.strokeRect(px, py, size, size);
     }
 
-    function createPiece() {
-        const idx = Math.floor(Math.random() * PIECES.length);
-        return { matrix: PIECES[idx], color: idx + 1 };
-    }
+    function createPiece() { const idx = Math.floor(Math.random() * PIECES.length); return { matrix: PIECES[idx], color: idx + 1 }; }
 
     function spawn() {
         current = next; next = createPiece();
@@ -266,12 +238,8 @@
 
     function gameOver() {
         isGameOver = true;
-        if(score > bestScore) { 
-            bestScore = score; 
-            localStorage.setItem('tetris_best', bestScore.toString()); 
-        }
-        updateUI();
-        document.getElementById('game-over').style.display = 'flex';
+        if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); }
+        updateUI(); document.getElementById('game-over').style.display = 'flex';
     }
 
     function update(time = 0) {
@@ -287,9 +255,7 @@
     function moveDown() { if(!collision(0,1,current.matrix)) current.y++; else lock(); }
 
     function lock() {
-        current.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { let fy = current.y + r; if(fy < 0) { gameOver(); return; } grid[fy][current.x + c] = current.color; }
-        }));
+        current.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) { let fy = current.y + r; if(fy < 0) { gameOver(); return; } grid[fy][current.x + c] = current.color; } }));
         if(!isGameOver) { checkLines(); spawn(); }
     }
 
@@ -300,29 +266,13 @@
             if(grid[r].every(v => v !== 0)) {
                 for(let c = 0; c < COLS; c++) {
                     const color = COLORS[grid[r][c]];
-                    for(let i = 0; i < 15; i++) {
-                        particles.push({ 
-                            x: c * BLOCK_SIZE + BLOCK_SIZE/2, 
-                            y: r * BLOCK_SIZE + BLOCK_SIZE/2, 
-                            vx: (Math.random()-0.5)*5, 
-                            vy: (Math.random()-1.5)*4, 
-                            life: 1.5, 
-                            color: color.base 
-                        });
-                    }
+                    for(let i = 0; i < 15; i++) { particles.push({ x: c * BLOCK_SIZE + BLOCK_SIZE/2, y: r * BLOCK_SIZE + BLOCK_SIZE/2, vx: (Math.random()-0.5)*5, vy: (Math.random()-1.5)*4, life: 1.5, color: color.base }); }
                 }
-                grid.splice(r, 1);
-                grid.unshift(Array(COLS).fill(0));
-                linesCleared++;
-                lines++;
-                r++; 
+                grid.splice(r, 1); grid.unshift(Array(COLS).fill(0));
+                linesCleared++; lines++; r++; 
             }
         }
-        if (linesCleared > 0) {
-            score += linePoints[linesCleared] * level;
-            level = Math.floor(lines / 10) + 1;
-            updateUI();
-        }
+        if (linesCleared > 0) { score += linePoints[linesCleared] * level; level = Math.floor(lines / 10) + 1; updateUI(); }
     }
 
     function updateUI() {
@@ -351,30 +301,23 @@
     function sA(id, f) { if(isGameOver || ivs[id]) return; f(); ivs[id] = setInterval(f, 90); }
     function pA(id) { clearInterval(ivs[id]); delete ivs[id]; }
 
-    document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', () => { if(!collision(-1,0,current.matrix)) current.x--; draw(); }); });
-    document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', () => { if(!collision(1,0,current.matrix)) current.x++; draw(); }); });
+    // 조작 이벤트 핸들러 (수정된 moveLeft/moveRight 호출)
+    document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', moveLeft); });
+    document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', moveRight); });
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
     
     document.getElementById('save-btn').addEventListener('click', () => {
         if(score > bestScore) {
-            bestScore = score;
-            localStorage.setItem('tetris_best', bestScore.toString());
-            updateUI();
+            bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); updateUI();
             alert("최고 기록(" + bestScore.toLocaleString() + ")이 저장되었습니다!");
-        } else {
-            alert("현재 점수가 최고 기록(" + bestScore.toLocaleString() + ")보다 낮거나 같습니다.");
-        }
+        } else { alert("현재 점수가 최고 기록(" + bestScore.toLocaleString() + ")보다 낮거나 같습니다."); }
     });
 
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
-    window.onload = () => { 
-        loadBestScore();
-        updateUI();
-        resize();
-    };
+    window.onload = () => { loadBestScore(); updateUI(); resize(); };
 </script>
 </body>
 </html>
