@@ -240,19 +240,42 @@
     }
 
     function checkLines() {
-        for(let r=ROWS-1; r>=0; r--) {
-            if(grid[r].every(v => v !== 0)) {
-                for(let c=0; c<COLS; c++) {
-                    const color = COLORS[grid[r][c]];
-                    for(let i=0; i<15; i++) {
-                        particles.push({ x: c * BLOCK_SIZE + BLOCK_SIZE/2, y: r * BLOCK_SIZE + BLOCK_SIZE/2, vx: (Math.random()-0.5)*5, vy: (Math.random()-1.5)*4, life: 1.5, color: color.base });
-                    }
+    let linesCleared = 0; // 이번에 지운 줄 수를 카운트
+    const linePoints = [0, 100, 300, 500, 800]; // 1줄, 2줄, 3줄, 4줄(테트리스) 보너스 점수
+
+    for(let r = ROWS - 1; r >= 0; r--) {
+        if(grid[r].every(v => v !== 0)) {
+            // 파티클 생성 로직 (기존 유지)
+            for(let c = 0; c < COLS; c++) {
+                const color = COLORS[grid[r][c]];
+                for(let i = 0; i < 15; i++) {
+                    particles.push({ 
+                        x: c * BLOCK_SIZE + BLOCK_SIZE/2, 
+                        y: r * BLOCK_SIZE + BLOCK_SIZE/2, 
+                        vx: (Math.random()-0.5)*5, 
+                        vy: (Math.random()-1.5)*4, 
+                        life: 1.5, 
+                        color: color.base 
+                    });
                 }
-                grid.splice(r, 1); grid.unshift(Array(COLS).fill(0));
-                score += 100; lines++; r++; level = Math.floor(lines / 10) + 1; updateUI();
             }
+            grid.splice(r, 1);
+            grid.unshift(Array(COLS).fill(0));
+            linesCleared++; // 지운 줄 수 증가
+            lines++;
+            r++; 
         }
     }
+
+    if (linesCleared > 0) {
+        // 보너스 점수 계산: (기본 보너스 * 현재 레벨)
+        score += linePoints[linesCleared] * level;
+        
+        // 레벨업 판단 (10줄마다)
+        level = Math.floor(lines / 10) + 1;
+        updateUI();
+    }
+}
 
     function updateUI() {
         document.getElementById('score').innerText = score.toLocaleString();
