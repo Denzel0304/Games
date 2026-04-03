@@ -3,97 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEON TETRIS DELUXE</title>
+    <title>PASTEL NEON TETRIS</title>
     <style>
         :root {
-            --bg-color: #0a0a12;
-            --grid-color: #1a1a2e;
-            --text-color: #fff;
-            --neon-blue: #00f2ff;
-            --neon-magenta: #ff00e4;
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --neon-border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
         }
 
         body {
             margin: 0; padding: 0;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: sans-serif;
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
             overflow: hidden; touch-action: none;
-            display: flex; flex-direction: column; align-items: center; height: 100vh;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
         }
 
-        #game-container {
+        #game-wrapper {
+            display: flex;
+            width: 95vw; height: 85vh; /* 화면 높이를 줄여 하단 여유 확보 */
+            max-width: 600px;
+            gap: 10px;
+        }
+
+        /* 1. 경기장을 왼쪽으로 배치 */
+        #stage-area {
+            flex: 1.2;
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; max-width: 400px; height: 100%; padding: 10px; box-sizing: border-box;
         }
 
-        #header {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 5px; border-bottom: 2px solid var(--grid-color); padding-bottom: 5px;
+        #canvas {
+            border: 2px solid var(--neon-border);
+            background: #000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 8px;
         }
 
-        #title { font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+        /* 2. 조작 키 및 정보를 오른쪽으로 배치 */
+        #sidebar {
+            flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+        }
+
+        .info-panel {
+            background: var(--panel-bg);
+            border-radius: 12px; padding: 10px;
+            text-align: center; margin-bottom: 10px;
+        }
+
+        .info-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+        .info-value { font-size: 18px; font-weight: 800; color: #38bdf8; }
+
+        /* 3. 물리 버튼 형태의 컨트롤러 */
+        #controller {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-border);
+            border-radius: 12px;
+            height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: white;
+            cursor: pointer; transition: 0.1s;
+        }
+        .btn:active { background: #334155; transform: scale(0.9); }
+        .btn.wide { grid-column: span 3; background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; }
 
         #start-btn {
-            background: rgba(0, 242, 255, 0.1); border: 2px solid var(--neon-blue);
-            color: var(--neon-blue); padding: 5px 12px; font-size: 0.8rem; font-weight: bold;
-            border-radius: 6px; cursor: pointer; box-shadow: 0 0 8px var(--neon-blue);
-        }
-
-        #next-canvas { border: 1px solid var(--grid-color); background: #000; }
-
-        #stage { 
-            flex: 1; 
-            display: flex; justify-content: center; align-items: center; 
-            position: relative; width: 100%; 
-            margin: 5px 0;
-            overflow: hidden;
-        }
-        #canvas { border: 3px solid var(--grid-color); background: #000; }
-
-        #scoreboard {
-            width: 100%; display: flex; justify-content: space-around; 
-            padding: 10px 0; border-top: 2px solid var(--grid-color);
-            background: var(--bg-color);
-            z-index: 5;
-        }
-        .stat-box { text-align: center; }
-        .stat-label { font-size: 0.6rem; color: rgba(255, 255, 255, 0.5); }
-        .stat-value { font-size: 1.1rem; font-weight: bold; }
-        #level-value { color: var(--neon-blue); }
-        #score-value { color: var(--neon-magenta); }
-
-        #game-over {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none;
-            flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+            width: 100%; padding: 10px; background: #38bdf8; color: #0f172a;
+            border: none; border-radius: 8px; font-weight: bold; margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="header">
-        <div id="title">NEON<br>TETRIS</div>
-        <button id="start-btn" onclick="startGame()">START</button>
-        <div style="text-align:center;">
-            <div style="font-size:0.5rem; color:rgba(255,255,255,0.5)">NEXT</div>
-            <canvas id="next-canvas" width="40" height="40"></canvas>
-        </div>
-    </div>
-
-    <div id="stage">
+<div id="game-wrapper">
+    <div id="stage-area">
+        <button id="start-btn" onclick="startGame()">GAME START</button>
         <canvas id="canvas"></canvas>
-        <div id="game-over">
-            <h2 style="color: #ff3333;">GAME OVER</h2>
-            <button id="start-btn" onclick="startGame()">RETRY</button>
-        </div>
     </div>
 
-    <div id="scoreboard">
-        <div class="stat-box"><div class="stat-label">LEVEL</div><div id="level-value">1</div></div>
-        <div class="stat-box"><div class="stat-label">SCORE</div><div id="score-value">0</div></div>
-        <div class="stat-box"><div class="stat-label">LINES</div><div id="lines-value">0</div></div>
+    <div id="sidebar">
+        <div class="info-panel">
+            <div class="info-label">NEXT</div>
+            <canvas id="next-canvas" width="50" height="50"></canvas>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-label">SCORE</div>
+            <div id="score-val" class="info-value">0</div>
+        </div>
+
+        <div id="controller">
+            <div class="btn wide" onclick="hardDrop()">▲ (DROP)</div>
+            <div class="btn" onclick="move(-1)">◀</div>
+            <div class="btn" onclick="rotate()">↻</div>
+            <div class="btn" onclick="move(1)">▶</div>
+            <div class="btn wide" id="down-btn">▼ (DOWN)</div>
+        </div>
     </div>
 </div>
 
@@ -103,154 +119,175 @@
     const nextCanvas = document.getElementById('next-canvas');
     const nextCtx = nextCanvas.getContext('2d');
 
-    const GAME_WIDTH = 10, GAME_HEIGHT = 20;
-    let BLOCK_SIZE, grid, currentPiece, nextPiece, currentX, currentY;
-    let score, level, linesCleared, isGameOver, dropCounter, lastTime, animationId;
-    let longPressTimer;
+    const COLS = 10, ROWS = 20;
+    let BLOCK_SIZE = 18; // 블록 크기를 줄여서 공간 확보
+    let grid, current, next, score, isGameOver, lastTime, dropCounter, animationId;
+    let clearingLines = []; // 애니메이션용 줄 정보
+
+    // 파스텔 톤 & 입체 그래픽 데이터
+    const COLORS = [
+        null,
+        { base: '#FFB7B2', light: '#FFD1CF', shadow: '#FF8A84' }, // 로즈
+        { base: '#B2E2F2', light: '#D1F0FA', shadow: '#84D1E8' }, // 스카이
+        { base: '#B2F2BB', light: '#D1FAD9', shadow: '#84E894' }, // 민트
+        { base: '#E2B2F2', light: '#F0D1FA', shadow: '#D184E8' }, // 라벤더
+        { base: '#F2E2B2', light: '#FAF0D1', shadow: '#E8D184' }, // 레몬
+        { base: '#F2B2D1', light: '#FAD1E2', shadow: '#E884B2' }, // 피치
+        { base: '#D1D1D1', light: '#E8E8E8', shadow: '#A0A0A0' }  // 실버
+    ];
 
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
-    const COLORS = [null,{main:'#00f2ff',glow:'rgba(0,242,255,0.4)'},{main:'#ffaa00',glow:'rgba(255,170,0,0.4)'},{main:'#0044ff',glow:'rgba(0,68,255,0.4)'},{main:'#ffe600',glow:'rgba(255,230,0,0.4)'},{main:'#33ff00',glow:'rgba(51,255,0,0.4)'},{main:'#9900ff',glow:'rgba(153,0,255,0.4)'},{main:'#ff0044',glow:'rgba(255,0,68,0.4)'}];
 
-    function resizeCanvas() {
-        // 스코어보드 노출을 위해 높이 비율을 더 축소 (0.8)
-        const availableHeight = document.getElementById('stage').offsetHeight * 0.8;
-        BLOCK_SIZE = Math.floor(availableHeight / GAME_HEIGHT);
-        canvas.width = GAME_WIDTH * BLOCK_SIZE;
-        canvas.height = GAME_HEIGHT * BLOCK_SIZE;
-        draw();
+    function resize() {
+        const h = document.getElementById('stage-area').offsetHeight - 80;
+        BLOCK_SIZE = Math.floor(h / ROWS);
+        canvas.width = COLS * BLOCK_SIZE;
+        canvas.height = ROWS * BLOCK_SIZE;
     }
 
     function startGame() {
         if(animationId) cancelAnimationFrame(animationId);
-        grid = Array(GAME_HEIGHT).fill().map(() => Array(GAME_WIDTH).fill(0));
-        score = 0; level = 1; linesCleared = 0; isGameOver = false; dropCounter = 0; lastTime = 0;
-        document.getElementById('game-over').style.display = 'none';
-        document.getElementById('start-btn').innerText = "RESET";
-        updateUI();
-        nextPiece = { matrix: PIECES[Math.floor(Math.random()*7)], colorIndex: Math.floor(Math.random()*7)+1 };
-        spawnPiece();
+        grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        score = 0; isGameOver = false; dropCounter = 0; lastTime = 0;
+        document.getElementById('score-val').innerText = '0';
+        next = createPiece();
+        spawn();
         animationId = requestAnimationFrame(update);
     }
 
-    function spawnPiece() {
-        currentPiece = nextPiece;
-        nextPiece = { matrix: PIECES[Math.floor(Math.random()*7)], colorIndex: Math.floor(Math.random()*7)+1 };
-        currentX = 3; currentY = 0;
-        drawNextPiece();
-        if (collision(currentX, currentY, currentPiece.matrix)) {
-            isGameOver = true;
-            document.getElementById('game-over').style.display = 'flex';
-        }
+    function createPiece() {
+        const idx = Math.floor(Math.random() * PIECES.length);
+        return { matrix: PIECES[idx], color: idx + 1, x: 0, y: 0 };
     }
 
-    function collision(x, y, matrix) {
-        for (let r = 0; r < matrix.length; r++) {
-            for (let c = 0; c < matrix[r].length; c++) {
-                if (matrix[r][c] && (grid[y+r] === undefined || grid[y+r][x+c] === undefined || grid[y+r][x+c])) return true;
+    function spawn() {
+        current = next;
+        next = createPiece();
+        current.x = Math.floor(COLS/2) - Math.floor(current.matrix[0].length/2);
+        current.y = 0;
+        drawNext();
+        if(collision(0,0,current.matrix)) isGameOver = true;
+    }
+
+    function collision(dx, dy, m) {
+        for(let r=0; r<m.length; r++) {
+            for(let c=0; c<m[r].length; c++) {
+                if(m[r][c]) {
+                    let nx = current.x + c + dx, ny = current.y + r + dy;
+                    if(nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && grid[ny][nx])) return true;
+                }
             }
         }
         return false;
     }
 
-    // 🔄 반시계 방향 회전 (Counter-Clockwise)
-    function rotateCCW(matrix) {
-        return matrix[0].map((_, i) => matrix.map(row => row[row.length - 1 - i]));
+    // 입체 블록 그리기 함수
+    function drawBlock(tCtx, x, y, colorIdx, size, alpha = 1) {
+        const color = COLORS[colorIdx];
+        const px = x * size, py = y * size;
+
+        tCtx.globalAlpha = alpha;
+        // 메인 바디
+        tCtx.fillStyle = color.base;
+        tCtx.fillRect(px, py, size, size);
+        
+        // 하이라이트 (상단, 좌측)
+        tCtx.fillStyle = color.light;
+        tCtx.fillRect(px, py, size, size*0.15);
+        tCtx.fillRect(px, py, size*0.15, size);
+
+        // 그림자 (하단, 우측)
+        tCtx.fillStyle = color.shadow;
+        tCtx.fillRect(px, py + size*0.85, size, size*0.15);
+        tCtx.fillRect(px + size*0.85, py, size*0.15, size);
+        
+        tCtx.strokeStyle = 'rgba(0,0,0,0.1)';
+        tCtx.strokeRect(px, py, size, size);
+        tCtx.globalAlpha = 1;
     }
 
     function update(time = 0) {
-        if (isGameOver) return;
-        const deltaTime = time - lastTime; lastTime = time;
-        dropCounter += deltaTime;
-        if (dropCounter > Math.max(100, 1000 - (level-1)*80)) {
-            playerDrop();
-        }
+        if(isGameOver) return;
+        const dt = time - lastTime; lastTime = time;
+        dropCounter += dt;
+        if(dropCounter > 800) { moveDown(); dropCounter = 0; }
         draw();
         animationId = requestAnimationFrame(update);
     }
 
-    function playerDrop() {
-        currentY++;
-        if (collision(currentX, currentY, currentPiece.matrix)) {
-            currentY--;
-            currentPiece.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) grid[currentY+r][currentX+c] = currentPiece.colorIndex; }));
-            checkLines();
-            spawnPiece();
-        }
-        dropCounter = 0;
+    function moveDown() {
+        if(!collision(0,1,current.matrix)) { current.y++; }
+        else { lock(); }
+    }
+
+    function lock() {
+        current.matrix.forEach((row, r) => row.forEach((v, c) => {
+            if(v) grid[current.y + r][current.x + c] = current.color;
+        }));
+        checkLines();
+        spawn();
     }
 
     function checkLines() {
-        let count = 0;
-        for (let r = GAME_HEIGHT-1; r >= 0; r--) {
-            if (grid[r].every(v => v !== 0)) { grid.splice(r, 1); grid.unshift(Array(GAME_WIDTH).fill(0)); count++; r++; }
+        let lines = [];
+        for(let r=ROWS-1; r>=0; r--) {
+            if(grid[r].every(v => v !== 0)) lines.push(r);
         }
-        if (count > 0) { linesCleared += count; score += [0, 100, 300, 500, 1000][count] * level; level = Math.floor(linesCleared/10)+1; updateUI(); }
-    }
-
-    function updateUI() {
-        document.getElementById('score-value').innerText = score;
-        document.getElementById('level-value').innerText = level;
-        document.getElementById('lines-value').innerText = linesCleared;
-    }
-
-    function drawBlock(tCtx, x, y, cIdx, size) {
-        const color = COLORS[cIdx];
-        tCtx.fillStyle = color.main;
-        tCtx.fillRect(x*size+1, y*size+1, size-2, size-2);
+        if(lines.length > 0) {
+            clearingLines = lines;
+            // 0.3초 동안 스스륵 사라지는 효과 연출을 위해 잠시 멈춤
+            setTimeout(() => {
+                lines.forEach(r => {
+                    grid.splice(r, 1);
+                    grid.unshift(Array(COLS).fill(0));
+                });
+                score += lines.length * 100;
+                document.getElementById('score-val').innerText = score;
+                clearingLines = [];
+            }, 300);
+        }
     }
 
     function draw() {
-        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        grid.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x, y, v, BLOCK_SIZE); }));
-        if (currentPiece) currentPiece.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, currentX+x, currentY+y, currentPiece.colorIndex, BLOCK_SIZE); }));
-    }
-
-    function drawNextPiece() {
-        nextCtx.fillStyle = '#000'; nextCtx.fillRect(0, 0, 40, 40);
-        const m = nextPiece.matrix;
-        m.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(nextCtx, x+0.5, y+0.5, nextPiece.colorIndex, 8); }));
-    }
-
-    // 📱 터치 컨트롤 (좌/우/회전/하강/롱프레스)
-    canvas.addEventListener('touchstart', e => {
-        if(isGameOver) return;
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        const touchY = e.touches[0].clientY - rect.top;
-        const canvasWidth = rect.width;
-        const canvasHeight = rect.height;
-
-        if (touchX < canvasWidth * 0.3) {
-            // 좌측: 이동
-            if(!collision(currentX - 1, currentY, currentPiece.matrix)) currentX--;
-        } else if (touchX > canvasWidth * 0.7) {
-            // 우측: 이동
-            if(!collision(currentX + 1, currentY, currentPiece.matrix)) currentX++;
-        } else {
-            // 중앙 영역
-            if (touchY < canvasHeight * 0.5) {
-                // 중앙 상단: 반시계 회전
-                const r = rotateCCW(currentPiece.matrix);
-                if(!collision(currentX, currentY, r)) currentPiece.matrix = r;
-            } else {
-                // 중앙 하단: 하강 (짧게 누르면 한칸, 길게 누르면 쭉)
-                playerDrop();
-                longPressTimer = setInterval(() => {
-                    playerDrop();
-                    draw();
-                }, 50); 
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        grid.forEach((row, r) => row.forEach((v, c) => {
+            if(v) {
+                // 사라지는 줄인 경우 투명도 조절
+                let alpha = clearingLines.includes(r) ? 0.3 : 1;
+                drawBlock(ctx, c, r, v, BLOCK_SIZE, alpha);
             }
-        }
+        }));
+        if(current) current.matrix.forEach((row, r) => row.forEach((v, c) => {
+            if(v) drawBlock(ctx, current.x + c, current.y + r, current.color, BLOCK_SIZE);
+        }));
+    }
+
+    function drawNext() {
+        nextCtx.clearRect(0, 0, 50, 50);
+        next.matrix.forEach((row, r) => row.forEach((v, c) => {
+            if(v) drawBlock(nextCtx, c+0.5, r+0.5, next.color, 12);
+        }));
+    }
+
+    // 컨트롤 함수들
+    function move(dx) { if(!collision(dx, 0, current.matrix)) current.x += dx; draw(); }
+    function rotate() { 
+        // 반시계 방향 회전
+        const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i]));
+        if(!collision(0, 0, m)) current.matrix = m;
         draw();
+    }
+    function hardDrop() { while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); }
+
+    // ▼ 버튼 누르고 있을 때 가속 하강
+    let downInterval;
+    document.getElementById('down-btn').addEventListener('touchstart', (e) => {
         e.preventDefault();
-    }, {passive: false});
-
-    canvas.addEventListener('touchend', () => {
-        clearInterval(longPressTimer);
+        downInterval = setInterval(moveDown, 50);
     });
+    document.getElementById('down-btn').addEventListener('touchend', () => clearInterval(downInterval));
 
-    window.onload = () => { resizeCanvas(); };
-    window.onresize = resizeCanvas;
+    window.onload = () => { resize(); };
 </script>
 </body>
 </html>
