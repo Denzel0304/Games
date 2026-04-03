@@ -20,7 +20,7 @@
         }
 
         #game-container {
-            display: flex; width: 96vw; height: 92vh; gap: 8px; align-items: flex-start;
+            display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start;
         }
 
         #stage-area {
@@ -37,27 +37,31 @@
             justify-content: flex-start;
         }
 
-        /* 정보창 레이아웃 수정: 가로 배치 및 크기 조정 */
+        /* 정보창 뭉치 확대 및 가로 배치 수정 */
         .info-panel {
-            background: var(--panel-bg); padding: 10px 8px; border-radius: 10px;
-            display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
+            background: var(--panel-bg); padding: 12px 8px; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;
         }
         
         #next-container { 
             text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333;
         }
+        
+        /* NEXT 조각 크기 확대 */
+        #next-canvas { display: block; margin: 5px auto; }
 
         .info-item { 
-            display: flex; justify-content: space-between; align-items: center; padding: 2px 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 4px;
         }
-        .info-label { font-size: 10px; color: #aaa; font-weight: bold; }
-        .info-value { font-size: 16px; font-weight: bold; color: var(--neon-blue); }
+        .info-label { font-size: 11px; color: #888; font-weight: bold; }
+        .info-value { font-size: 18px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 조작 버튼 영역 간격 및 위치 최적화 */
+        /* 조작 버튼 영역: 간격을 16px(기존의 2배)로 조정 */
         #controls { 
-            display: flex; flex-direction: column; gap: 14px; 
-            margin-top: auto; /* 상단 정보창 공간 확보 후 아래로 밀착 */
-            margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 16px; 
+            margin-top: 20px; 
+            padding-bottom: 20px; 
         }
         
         .btn-row { display: flex; gap: 8px; }
@@ -65,20 +69,19 @@
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: white; flex: 1; cursor: pointer;
-            height: 48px;
+            font-size: 22px; color: white; flex: 1; cursor: pointer;
+            height: 50px;
             box-shadow: 0 3px 0 rgba(0,0,0,0.5);
         }
         .btn:active { background: #444; transform: translateY(1px); box-shadow: none; }
         
-        /* 회전 버튼 높이 고정 */
-        #rotate-btn { height: 90px; font-size: 30px; border-color: var(--neon-blue); }
+        #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
-            padding: 12px; background: var(--pastel-green); border: none;
+            padding: 14px; background: var(--pastel-green); border: none;
             border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px;
-            width: 100%; cursor: pointer; font-size: 14px;
+            width: 100%; cursor: pointer; font-size: 15px;
         }
 
         #game-over {
@@ -103,12 +106,12 @@
     <div id="sidebar">
         <div class="info-panel">
             <div id="next-container">
-                <div class="info-label" style="margin-bottom:5px;">NEXT</div>
+                <div class="info-label">NEXT</div>
                 <canvas id="next-canvas" width="60" height="60"></canvas>
             </div>
-            <div class="info-item"><div class="info-label">LEVEL</div><div id="level" class="info-value">1</div></div>
-            <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
-            <div class="info-item"><div class="info-label">BEST</div><div id="best" class="info-value">0</div></div>
+            <div class="info-item"><div class="info-label">Level</div><div id="level" class="info-value">1</div></div>
+            <div class="info-item"><div class="info-label">Score</div><div id="score" class="info-value">0</div></div>
+            <div class="info-item"><div class="info-label">Best</div><div id="best" class="info-value">0</div></div>
         </div>
 
         <div id="controls">
@@ -258,12 +261,10 @@
 
     function drawNext() {
         nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-        const nSize = 14;
+        const nSize = 13; // 넥스트 조각 크기 확대
         const offsetX = (nextCanvas.width - next.matrix[0].length * nSize) / 2;
         const offsetY = (nextCanvas.height - next.matrix.length * nSize) / 2;
-        next.matrix.forEach((row, r) => row.forEach((v, c) => { 
-            if(v) draw3DBlock(nextCtx, (offsetX/nSize)+c, (offsetY/nSize)+r, next.color, nSize); 
-        }));
+        next.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) draw3DBlock(nextCtx, (offsetX/nSize)+c, (offsetY/nSize)+r, next.color, nSize); }));
     }
 
     let ivs = {};
