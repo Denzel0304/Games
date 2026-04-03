@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS</title>
+    <title>PRO TETRIS - Flip Mode</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -19,8 +19,15 @@
             display: flex; justify-content: center; align-items: center; height: 100vh;
         }
 
+        /* [수정] 좌우 반전을 위해 클래스로 제어 */
         #game-container {
             display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start;
+            transition: flex-direction 0.3s ease;
+        }
+        
+        /* 왼손잡이 모드 클래스 */
+        #game-container.left-handed {
+            flex-direction: row-reverse;
         }
 
         #stage-area {
@@ -85,12 +92,25 @@
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
         
         #save-btn { 
-            margin-top: 30px;
+            margin-top: 10px;
             background: rgba(119, 221, 119, 0.15); 
             color: var(--pastel-green); 
             border-color: var(--pastel-green); 
             font-size: 14px; 
             font-weight: bold;
+        }
+
+        /* [추가] 모드 전환 버튼 스타일 */
+        #mode-toggle-btn {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
         }
 
         #start-btn {
@@ -112,6 +132,9 @@
     <div id="stage-area">
         <button id="start-btn">START / RESET</button>
         <canvas id="canvas"></canvas>
+        
+        <button id="mode-toggle-btn">Left-handed</button>
+
         <div id="game-over">
             <h2 style="color:var(--neon-pink)">GAME OVER</h2>
             <button onclick="startGame()" style="padding:10px 20px; background:var(--neon-blue); border:none; border-radius:5px; font-weight:bold;">RETRY</button>
@@ -143,6 +166,7 @@
 </div>
 
 <script>
+    // --- 기존 로직 변수들 ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const nextCanvas = document.getElementById('next-canvas');
@@ -152,13 +176,22 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // 최고 점수 로딩 함수
+    // --- [추가] 좌우 반전 모드 전환 로직 ---
+    const modeBtn = document.getElementById('mode-toggle-btn');
+    const gameContainer = document.getElementById('game-container');
+
+    modeBtn.addEventListener('click', () => {
+        const isLeftHanded = gameContainer.classList.toggle('left-handed');
+        modeBtn.innerText = isLeftHanded ? 'Right-handed' : 'Left-handed';
+        // 레이아웃이 바뀌었으므로 캔버스 크기 재계산 (안전장치)
+        resize();
+    });
+
+    // --- 이하 기존 게임 로직 (수정 없음) ---
     function loadBestScore() {
         const saved = localStorage.getItem('tetris_best');
         bestScore = saved ? parseInt(saved, 10) : 0;
     }
-
-    // 초기화 시점에 즉시 한 번 로드
     loadBestScore();
 
     const COLORS = [null, 
@@ -174,7 +207,9 @@
 
     function resize() {
         const startBtnH = document.getElementById('start-btn').offsetHeight;
-        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - 20;
+        const modeBtnH = document.getElementById('mode-toggle-btn').offsetHeight;
+        // 여유 공간 계산 (버튼들 높이 제외)
+        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - modeBtnH - 40;
         BLOCK_SIZE = Math.floor(availableH / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -186,10 +221,8 @@
         if(animationId) cancelAnimationFrame(animationId);
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
-        
         loadBestScore();
         updateUI(); 
-        
         next = createPiece(); spawn();
         animationId = requestAnimationFrame(update);
     }
@@ -263,7 +296,6 @@
     function checkLines() {
         let linesCleared = 0;
         const linePoints = [0, 100, 300, 500, 800];
-
         for(let r = ROWS - 1; r >= 0; r--) {
             if(grid[r].every(v => v !== 0)) {
                 for(let c = 0; c < COLS; c++) {
@@ -286,7 +318,6 @@
                 r++; 
             }
         }
-
         if (linesCleared > 0) {
             score += linePoints[linesCleared] * level;
             level = Math.floor(lines / 10) + 1;
@@ -339,11 +370,10 @@
 
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
-    // [중요] 실행 순서 변경: UI 업데이트를 가장 먼저 확실하게 처리
     window.onload = () => { 
-        loadBestScore(); // 1. 데이터 로드
-        updateUI();      // 2. UI 표시 (화면에 숫자 찍기)
-        resize();        // 3. 캔버스 크기 조정 및 그리기
+        loadBestScore();
+        updateUI();
+        resize();
     };
 </script>
 </body>
