@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>별멍 - 마음 정화</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%); touch-action: none; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: rgba(255, 255, 255, 0.6); font-family: sans-serif; pointer-events: none;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">화면을 부드럽게 드래그해보세요</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `hsla(${Math.random() * 40 + 180}, 80%, 70%, 1)`; // 푸른색 계열 별빛
+                this.life = 1.0; // 투명도
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= 0.01; // 천천히 사라짐
+                if (this.size > 0.1) this.size -= 0.02;
+            }
+            draw() {
+                ctx.fillStyle = this.color.replace('1)', `${this.life})`);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                // 빛번짐 효과 추가
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+            }
+        }
+
+        function createParticles(e) {
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            for (let i = 0; i < 3; i++) {
+                particles.push(new Particle(x, y));
+            }
+        }
+
+        // 마우스 및 터치 이벤트
+        window.addEventListener('mousemove', createParticles);
+        window.addEventListener('touchmove', createParticles);
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
