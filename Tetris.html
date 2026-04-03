@@ -158,6 +158,9 @@
         bestScore = saved ? parseInt(saved, 10) : 0;
     }
 
+    // 초기화 시점에 즉시 한 번 로드
+    loadBestScore();
+
     const COLORS = [null, 
         { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' },
         { base: '#ff007f', light: '#ff66b2', dark: '#b30059' },
@@ -336,11 +339,11 @@
 
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
-    // 페이지 로딩 완료 시 실행되는 핵심 부분
+    // [중요] 실행 순서 변경: UI 업데이트를 가장 먼저 확실하게 처리
     window.onload = () => { 
-        resize(); 
-        loadBestScore(); // 1. 데이터를 가져오고
-        updateUI();      // 2. 화면에 즉시 표시 (START 누르기 전)
+        loadBestScore(); // 1. 데이터 로드
+        updateUI();      // 2. UI 표시 (화면에 숫자 찍기)
+        resize();        // 3. 캔버스 크기 조정 및 그리기
     };
 </script>
 </body>
