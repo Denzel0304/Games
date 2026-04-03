@@ -210,352 +210,180 @@
     const nextCanvas = document.getElementById('next-canvas');
     const nextCtx = nextCanvas.getContext('2d');
 
-    // 모바일 대응: 화면 크기에 맞춰 캔버스 크기 조정
+    // 1. 모바일 크기 계산 로직 전면 수정 (절대값 방식)
     const GAME_WIDTH = 10;
     const GAME_HEIGHT = 20;
-    let BLOCK_SIZE;
+    let BLOCK_SIZE = 20; // 기본값
 
     function resizeCanvas() {
-        const container = document.getElementById('stage');
-        const availableHeight = container.offsetHeight;
-        const availableWidth = container.offsetWidth;
+        // 모바일 화면 너비에 맞춰 유연하게 조절
+        const padding = 60;
+        const availableWidth = window.innerWidth - padding;
+        const availableHeight = window.innerHeight * 0.6; // 화면의 60%만 사용
 
-        // 높이 기준으로 블록 크기 결정
-        BLOCK_SIZE = Math.floor((availableHeight - 10) / GAME_HEIGHT);
+        // 너비 기준과 높이 기준 중 더 작은 것에 맞춰 블록 크기 결정
+        const sizeByWidth = Math.floor(availableWidth / GAME_WIDTH);
+        const sizeByHeight = Math.floor(availableHeight / GAME_HEIGHT);
+        
+        BLOCK_SIZE = Math.min(sizeByWidth, sizeByHeight);
+        
+        // 너무 작아지는 것 방지
+        if (BLOCK_SIZE < 15) BLOCK_SIZE = 15;
 
         canvas.width = GAME_WIDTH * BLOCK_SIZE;
         canvas.height = GAME_HEIGHT * BLOCK_SIZE;
-
-        draw(); // 크기 조정 후 다시 그리기
+        
+        draw(); 
     }
 
-    // 초기 크기 설정 및 리사이즈 이벤트 등록
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // 테트리미노 블록 디자인 및 색상 (고급 네온)
+    // 2. 테트리미노 데이터
     const PIECES = [
-        [ [1, 1, 1, 1] ], // I
-        [ [1, 1, 1], [0, 0, 1] ], // L
-        [ [1, 1, 1], [1, 0, 0] ], // J
-        [ [1, 1], [1, 1] ], // O
-        [ [0, 1, 1], [1, 1, 0] ], // S
-        [ [1, 1, 1], [0, 1, 0] ], // T
-        [ [1, 1, 0], [0, 1, 1] ]  // Z
+        [ [1, 1, 1, 1] ], 
+        [ [1, 1, 1], [0, 0, 1] ], 
+        [ [1, 1, 1], [1, 0, 0] ], 
+        [ [1, 1], [1, 1] ], 
+        [ [0, 1, 1], [1, 1, 0] ], 
+        [ [1, 1, 1], [0, 1, 0] ], 
+        [ [1, 1, 0], [0, 1, 1] ]
     ];
 
     const COLORS = [
         null,
-        { main: '#00f2ff', glow: 'rgba(0, 242, 255, 0.6)' }, // I: Cyan
-        { main: '#ffaa00', glow: 'rgba(255, 170, 0, 0.6)' }, // L: Orange
-        { main: '#0044ff', glow: 'rgba(0, 68, 255, 0.6)' },  // J: Blue
-        { main: '#ffe600', glow: 'rgba(255, 230, 0, 0.6)' }, // O: Yellow
-        { main: '#33ff00', glow: 'rgba(51, 255, 0, 0.6)' },  // S: Green
-        { main: '#9900ff', glow: 'rgba(153, 0, 255, 0.6)' }, // T: Purple
-        { main: '#ff0044', glow: 'rgba(255, 0, 68, 0.6)' }   // Z: Red
+        { main: '#00f2ff', glow: 'rgba(0, 242, 255, 0.6)' },
+        { main: '#ffaa00', glow: 'rgba(255, 170, 0, 0.6)' },
+        { main: '#0044ff', glow: 'rgba(0, 68, 255, 0.6)' },
+        { main: '#ffe600', glow: 'rgba(255, 230, 0, 0.6)' },
+        { main: '#33ff00', glow: 'rgba(51, 255, 0, 0.6)' },
+        { main: '#9900ff', glow: 'rgba(153, 0, 255, 0.6)' },
+        { main: '#ff0044', glow: 'rgba(255, 0, 68, 0.6)' }
     ];
 
-    // 게임 상태 변수
-    let grid = Array(GAME_HEIGHT).fill().map(() => Array(GAME_WIDTH).fill(0));
-    let currentPiece, nextPiece, currentX, currentY;
-    let score = 0, level = 1, linesCleard = 0;
-    let isGameOver = false;
-    let dropCounter = 0;
-    let lastTime = 0;
+    let grid, currentPiece, nextPiece, currentX, currentY, score, level, linesCleared, isGameOver, dropCounter, lastTime;
 
-    // 🚀 속도 및 레벨 로직 (완전 구현)
-    // 레벨 1: 1000ms, 레벨이 오를수록 빨라짐. 최소 100ms.
-    function getDropInterval() {
-        return Math.max(100, 1000 - (level - 1) * 60); // 레벨당 60ms씩 단축
+    function resetGame() {
+        grid = Array(GAME_HEIGHT).fill().map(() => Array(GAME_WIDTH).fill(0));
+        score = 0; level = 1; linesCleared = 0; isGameOver = false;
+        dropCounter = 0; lastTime = 0;
+        document.getElementById('game-over').style.display = 'none';
+        updateUI();
+        nextPiece = createPieceData();
+        spawnPiece();
+        requestAnimationFrame(update);
     }
 
-    // 블록 생성
-    function createPiece(isNext = false) {
-        const pieceIndex = Math.floor(Math.random() * PIECES.length);
-        const matrix = PIECES[pieceIndex];
-        const colorIndex = pieceIndex + 1;
+    function createPieceData() {
+        const index = Math.floor(Math.random() * PIECES.length);
+        return { matrix: PIECES[index], colorIndex: index + 1 };
+    }
 
-        if (isNext) {
-            return { matrix, colorIndex };
-        } else {
-            currentPiece = nextPiece || { matrix, colorIndex };
-            nextPiece = { matrix, colorIndex: Math.floor(Math.random() * PIECES.length) + 1 };
-            currentX = Math.floor(GAME_WIDTH / 2) - Math.floor(currentPiece.matrix[0].length / 2);
-            currentY = 0;
-
-            drawNextPiece();
-
-            if (collision(currentX, currentY, currentPiece.matrix)) {
-                isGameOver = true;
-                document.getElementById('game-over').style.display = 'flex';
-            }
+    function spawnPiece() {
+        currentPiece = nextPiece;
+        nextPiece = createPieceData();
+        currentX = Math.floor(GAME_WIDTH / 2) - Math.floor(currentPiece.matrix[0].length / 2);
+        currentY = 0;
+        drawNextPiece();
+        if (collision(currentX, currentY, currentPiece.matrix)) {
+            isGameOver = true;
+            document.getElementById('game-over').style.display = 'flex';
         }
     }
 
-    // 충돌 감지
     function collision(x, y, matrix) {
         for (let r = 0; r < matrix.length; r++) {
             for (let c = 0; c < matrix[r].length; c++) {
-                if (matrix[r][c] &&
-                    (grid[y + r] === undefined || grid[y + r][x + c] === undefined || grid[y + r][x + c])) {
-                    return true;
+                if (matrix[r][c]) {
+                    let newX = x + c;
+                    let newY = y + r;
+                    if (newX < 0 || newX >= GAME_WIDTH || newY >= GAME_HEIGHT || (newY >= 0 && grid[newY][newX])) return true;
                 }
             }
         }
         return false;
     }
 
-    // 블록 회전
     function rotate(matrix) {
-        const rows = matrix.length;
-        const cols = matrix[0].length;
-        let newMatrix = Array(cols).fill().map(() => Array(rows).fill(0));
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                newMatrix[c][rows - 1 - r] = matrix[r][c];
-            }
-        }
-        return newMatrix;
-    }
-
-    // 블록 고정
-    function merge() {
-        currentPiece.matrix.forEach((row, r) => {
-            row.forEach((value, c) => {
-                if (value) {
-                    grid[currentY + r][currentX + c] = currentPiece.colorIndex;
-                }
-            });
-        });
-    }
-
-    // 라인 삭제 및 스코어링
-    function clearLines() {
-        let linesInThisDrop = 0;
-        outer: for (let r = GAME_HEIGHT - 1; r >= 0; r--) {
-            for (let c = 0; c < GAME_WIDTH; c++) {
-                if (grid[r][c] === 0) continue outer;
-            }
-            const row = grid.splice(r, 1)[0].fill(0);
-            grid.unshift(row);
-            linesInThisDrop++;
-            r++; // 같은 줄 다시 검사
-        }
-
-        if (linesInThisDrop > 0) {
-            linesCleard += linesInThisDrop;
-            // 스코어 계산 (고급)
-            const lineScores = [0, 40, 100, 300, 1200];
-            score += lineScores[linesInThisDrop] * level;
-
-            // 레벨 업 로직 (10줄마다)
-            level = Math.floor(linesCleard / 10) + 1;
-
-            updateUI();
-        }
-    }
-
-    // UI 업데이트
-    function updateUI() {
-        document.getElementById('score-value').innerText = score;
-        document.getElementById('level-value').innerText = level;
-        document.getElementById('lines-value').innerText = linesCleard;
-    }
-
-    // 그리기 (핵심 네온 디자인)
-    function drawBlock(ctx, x, y, colorIndex, blockSize, targetCanvas = canvas) {
-        const color = COLORS[colorIndex];
-        if (!color) return;
-
-        ctx.save();
-        ctx.translate(x * blockSize, y * blockSize);
-
-        // 1. 네온 글로우 효과 (Shadow)
-        if (targetCanvas === canvas) { // 메인 보드에만 글로우 적용
-            ctx.shadowColor = color.glow;
-            ctx.shadowBlur = 15;
-        }
-
-        // 2. 블록 메인 색상
-        ctx.fillStyle = color.main;
-        ctx.fillRect(1, 1, blockSize - 2, blockSize - 2); // 테두리 공간 확보
-
-        // 3. 고급 내부 하이라이트 (베벨 효과)
-        ctx.shadowBlur = 0; // 하이라이트에는 shadow 안 씀
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(2, 2, blockSize - 4, blockSize / 4);
-
-        ctx.restore();
-    }
-
-    function draw() {
-        // 배경 청소
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 격자선 그리기 (고급)
-        ctx.strokeStyle = var(--grid-color);
-        ctx.lineWidth = 0.5;
-        for (let x = 0; x <= GAME_WIDTH; x++) {
-            ctx.beginPath();
-            ctx.moveTo(x * BLOCK_SIZE, 0);
-            ctx.lineTo(x * BLOCK_SIZE, canvas.height);
-            ctx.stroke();
-        }
-        for (let y = 0; y <= GAME_HEIGHT; y++) {
-            ctx.beginPath();
-            ctx.moveTo(0, y * BLOCK_SIZE);
-            ctx.lineTo(canvas.width, y * BLOCK_SIZE);
-            ctx.stroke();
-        }
-
-        // 고정된 블록 그리기
-        grid.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value) {
-                    drawBlock(ctx, x, y, value, BLOCK_SIZE);
-                }
-            });
-        });
-
-        // 현재 떨어지는 블록 그리기
-        if (currentPiece) {
-            currentPiece.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
-                        drawBlock(ctx, currentX + x, currentY + y, currentPiece.colorIndex, BLOCK_SIZE);
-                    }
-                });
-            });
-        }
-    }
-
-    // '다음 블록' 미리보기 그리기
-    function drawNextPiece() {
-        nextCtx.fillStyle = '#000';
-        nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-
-        if (nextPiece) {
-            const blockSize = 12; // 미리보기용 작은 블록
-            const matrix = nextPiece.matrix;
-            const rows = matrix.length;
-            const cols = matrix[0].length;
-            const offsetX = (nextCanvas.width - cols * blockSize) / 2;
-            const offsetY = (nextCanvas.height - rows * blockSize) / 2;
-
-            nextCtx.save();
-            nextCtx.translate(offsetX, offsetY);
-            matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value) {
-                        drawBlock(nextCtx, x, y, nextPiece.colorIndex, blockSize, nextCanvas);
-                    }
-                });
-            });
-            nextCtx.restore();
-        }
-    }
-
-    // 메인 게임 루프
-    function update(time = 0) {
-        if (isGameOver) return;
-
-        const deltaTime = time - lastTime;
-        lastTime = time;
-        dropCounter += deltaTime;
-
-        // 자동으로 떨어지는 시간
-        if (dropCounter > getDropInterval()) {
-            playerDrop();
-        }
-
-        draw();
-        requestAnimationFrame(update);
+        return matrix[0].map((_, i) => matrix.map(row => row[i]).reverse());
     }
 
     function playerDrop() {
         currentY++;
         if (collision(currentX, currentY, currentPiece.matrix)) {
             currentY--;
-            merge();
+            currentPiece.matrix.forEach((row, r) => {
+                row.forEach((val, c) => { if (val) grid[currentY + r][currentX + c] = currentPiece.colorIndex; });
+            });
             clearLines();
-            createPiece();
+            spawnPiece();
         }
         dropCounter = 0;
     }
 
-    // 📱 모바일 터치 컨트롤 (완전 구현)
-    let touchStartX = 0, touchStartY = 0;
-    let swipeThreshold = 30; // 스와이프 인식 민감도
-
-    canvas.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        e.preventDefault();
-    }, false);
-
-    canvas.addEventListener('touchend', (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const dx = touchEndX - touchStartX;
-        const dy = touchEndY - touchStartY;
-
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
-            // 좌우 스와이프: 이동
-            const moveX = dx > 0 ? 1 : -1;
-            if (!collision(currentX + moveX, currentY, currentPiece.matrix)) {
-                currentX += moveX;
-            }
-        } else if (dy > swipeThreshold * 2) {
-            // 아래 스와이프 (빠르게): 하드 드롭
-            while (!collision(currentX, currentY + 1, currentPiece.matrix)) {
-                currentY++;
-            }
-            playerDrop();
-        } else if (Math.abs(dx) < swipeThreshold && Math.abs(dy) < swipeThreshold) {
-            // 탭 (화면 중앙): 회전
-            const rotated = rotate(currentPiece.matrix);
-            if (!collision(currentX, currentY, rotated)) {
-                currentPiece.matrix = rotated;
+    function clearLines() {
+        let count = 0;
+        for (let r = GAME_HEIGHT - 1; r >= 0; r--) {
+            if (grid[r].every(val => val !== 0)) {
+                grid.splice(r, 1);
+                grid.unshift(Array(GAME_WIDTH).fill(0));
+                count++; r++;
             }
         }
-        e.preventDefault();
-        draw(); // 터치 후 즉시 그리기
-    }, false);
-
-    // 게임 리셋 및 시작
-    function resetGame() {
-        grid = Array(GAME_HEIGHT).fill().map(() => Array(GAME_WIDTH).fill(0));
-        score = 0;
-        level = 1;
-        linesCleard = 0;
-        isGameOver = false;
-        document.getElementById('game-over').style.display = 'none';
-        updateUI();
-        createPiece(true); // nextPiece 초기화
-        createPiece();     // currentPiece 초기화
-        update();
+        if (count > 0) {
+            linesCleared += count;
+            score += [0, 40, 100, 300, 1200][count] * level;
+            level = Math.floor(linesCleared / 10) + 1;
+            updateUI();
+        }
     }
 
-    // 키보드 컨트롤 (PC 테스트용)
-    document.addEventListener('keydown', e => {
+    function updateUI() {
+        document.getElementById('score-value').innerText = score;
+        document.getElementById('level-value').innerText = level;
+        document.getElementById('lines-value').innerText = linesCleared;
+    }
+
+    function draw() {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        grid.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(ctx, x, y, val, BLOCK_SIZE); }));
+        if (currentPiece) currentPiece.matrix.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(ctx, currentX + x, currentY + y, currentPiece.colorIndex, BLOCK_SIZE); }));
+    }
+
+    function drawBlock(targetCtx, x, y, colorIdx, size) {
+        const color = COLORS[colorIdx];
+        targetCtx.shadowColor = color.glow; targetCtx.shadowBlur = 10;
+        targetCtx.fillStyle = color.main;
+        targetCtx.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+        targetCtx.shadowBlur = 0;
+    }
+
+    function drawNextPiece() {
+        nextCtx.fillStyle = '#000'; nextCtx.fillRect(0, 0, 60, 60);
+        const m = nextPiece.matrix;
+        m.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(nextCtx, x + 0.5, y + 0.5, nextPiece.colorIndex, 12); }));
+    }
+
+    function update(time = 0) {
         if (isGameOver) return;
-        if (e.key === 'ArrowLeft') {
-            if (!collision(currentX - 1, currentY, currentPiece.matrix)) currentX--;
-        } else if (e.key === 'ArrowRight') {
-            if (!collision(currentX + 1, currentY, currentPiece.matrix)) currentX++;
-        } else if (e.key === 'ArrowDown') {
-            playerDrop();
-        } else if (e.key === 'ArrowUp') {
-            const rotated = rotate(currentPiece.matrix);
-            if (!collision(currentX, currentY, rotated)) currentPiece.matrix = rotated;
-        }
+        const deltaTime = time - lastTime; lastTime = time;
+        dropCounter += deltaTime;
+        if (dropCounter > Math.max(100, 1000 - (level - 1) * 100)) playerDrop();
         draw();
+        requestAnimationFrame(update);
+    }
+
+    // 터치 및 키보드 이벤트
+    let startX, startY;
+    canvas.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; e.preventDefault(); });
+    canvas.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 30) { if (dx > 0) { if (!collision(currentX + 1, currentY, currentPiece.matrix)) currentX++; } else { if (!collision(currentX - 1, currentY, currentPiece.matrix)) currentX--; } }
+        else if (dy > 50) { while (!collision(currentX, currentY + 1, currentPiece.matrix)) currentY++; playerDrop(); }
+        else { const r = rotate(currentPiece.matrix); if (!collision(currentX, currentY, r)) currentPiece.matrix = r; }
+        e.preventDefault(); draw();
     });
 
-    // 시작
-    resetGame();
-
+    window.addEventListener('load', () => { resizeCanvas(); resetGame(); });
+    window.addEventListener('resize', resizeCanvas);
 </script>
 </body>
 </html>
