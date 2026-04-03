@@ -3,35 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>별 가르기 - 속도 고정 버전</title>
+    <title>별 가르기 - Healing Games</title>
     <style>
         body { margin: 0; overflow: hidden; background: #010105; touch-action: none; font-family: 'Pretendard', sans-serif; }
         canvas { display: block; }
+        
         #header {
-            position: absolute; top: 0; left: 0; width: 100%; height: 65px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 70px;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; box-sizing: border-box; background: rgba(0, 0, 0, 0.2);
+            padding: 0 15px; box-sizing: border-box; background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px); color: white; z-index: 10;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .stats-group { display: flex; flex-direction: column; }
-        .stats { font-size: 14px; font-weight: 600; color: #fff; }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-weight: 600;
+        }
+
+        .nav-btn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
+        .home-btn { border-color: rgba(0, 210, 255, 0.5); color: #00d2ff; }
+
+        .stats-group { display: flex; flex-direction: column; align-items: flex-end; }
+        .stats { font-size: 14px; font-weight: 700; }
         .stats span { color: #ffeb3b; }
-        .best-label { font-size: 11px; color: #00d2ff; font-weight: 400; opacity: 0.8; }
-        #reset-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 7px 14px; border-radius: 6px; font-size: 12px;
-            cursor: pointer;
-        }
+        .best-label { font-size: 11px; color: rgba(0, 210, 255, 0.8); letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
     <div id="header">
+        <div class="btn-group">
+            <button class="nav-btn home-btn" onclick="location.href='index.html'">🏠 홈</button>
+            <button class="nav-btn" onclick="location.reload()">다시 하기</button>
+        </div>
+
         <div class="stats-group">
             <div class="stats">LV.<span id="level">1</span> STARS <span id="score">0</span></div>
             <div class="best-label">BEST: <span id="best">0</span></div>
         </div>
-        <button id="reset-btn" onclick="location.reload()">다시 하기</button>
     </div>
     <canvas id="canvas"></canvas>
 
@@ -64,29 +79,22 @@
                 this.x = Math.random() * canvas.width;
                 this.y = -20;
                 this.size = Math.random() * 2 + 2.5;
-                
-                // 속도 값을 고정 상수로 관리 (드래그 영향을 받지 않음)
                 this.baseVY = 0.6 + (level * 0.12); 
                 this.speedY = this.baseVY + (Math.random() * 0.3);
                 this.speedX = (Math.random() - 0.5) * 0.6; 
-                
                 this.color = colors[Math.floor(Math.random() * colors.length)];
                 this.broken = false;
             }
 
             update() {
-                // 드래그 상태와 상관없이 매 프레임 정해진 속도만큼만 이동
                 this.y += this.speedY;
                 this.x += this.speedX;
-
                 if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
 
-                // 충돌 감지 로직을 별의 이동 로직과 분리
                 if (mouse.active && !this.broken) {
                     const dx = this.x - mouse.x;
                     const dy = this.y - mouse.y;
-                    const distSq = dx*dx + dy*dy; // 성능을 위해 제곱근 생략
-                    if (distSq < 900) { // 30px의 제곱인 900
+                    if (dx*dx + dy*dy < 1200) { 
                         this.broken = true;
                         this.explode();
                         updateScore();
@@ -126,7 +134,7 @@
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.05; // 중력
+                this.vy += 0.05;
                 this.life -= 0.02;
             }
             draw() {
@@ -151,7 +159,6 @@
             levelEl.innerText = level;
         }
 
-        // 입력 처리 최적화
         function setMousePos(e) {
             const t = e.touches ? e.touches[0] : e;
             mouse.x = t.clientX;
@@ -161,30 +168,18 @@
         window.addEventListener('mousedown', (e) => { mouse.active = true; setMousePos(e); });
         window.addEventListener('mousemove', (e) => { if (mouse.active) setMousePos(e); });
         window.addEventListener('mouseup', () => { mouse.active = false; });
-        
-        window.addEventListener('touchstart', (e) => { 
-            mouse.active = true; 
-            setMousePos(e); 
-        }, { passive: false });
-        
-        window.addEventListener('touchmove', (e) => { 
-            e.preventDefault(); 
-            setMousePos(e); 
-        }, { passive: false });
-        
+        window.addEventListener('touchstart', (e) => { mouse.active = true; setMousePos(e); }, { passive: false });
+        window.addEventListener('touchmove', (e) => { e.preventDefault(); setMousePos(e); }, { passive: false });
         window.addEventListener('touchend', () => { mouse.active = false; });
 
         function animate() {
-            // 잔상 효과를 주면서 배경 초기화
             ctx.fillStyle = 'rgba(1, 1, 5, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 레벨에 따른 생성 빈도
             if (Math.random() < 0.01 + (level * 0.002)) {
                 fallingStars.push(new FallingStar());
             }
 
-            // 별 업데이트 및 그리기
             for (let i = fallingStars.length - 1; i >= 0; i--) {
                 fallingStars[i].update();
                 fallingStars[i].draw();
@@ -193,7 +188,6 @@
                 }
             }
 
-            // 파티클 업데이트 및 그리기
             for (let i = debris.length - 1; i >= 0; i--) {
                 debris[i].update();
                 debris[i].draw();
