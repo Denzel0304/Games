@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS - Hard Mode</title>
+    <title>PRO TETRIS - Fixed Layout</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -11,7 +11,7 @@
             --neon-blue: #00f2ff;
             --neon-pink: #ff007f;
             --pastel-green: #77dd77;
-            --pastel-blue: #A2D2FF; /* 새로 정의한 파스텔 블루 */
+            --pastel-blue: #A2D2FF;
         }
 
         body {
@@ -22,41 +22,54 @@
 
         #game-container {
             display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start;
-            transition: flex-direction 0.3s ease;
         }
         
+        /* [중요] 레이아웃 반전 시에도 내부 요소 크기에 영향을 주지 않도록 설정 */
         #game-container.left-handed { flex-direction: row-reverse; }
 
-        #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; }
+        #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; overflow: hidden; }
 
         #canvas {
             border: 2px solid rgba(255, 255, 255, 0.1); background: #000;
             width: 100%; border-radius: 4px; flex-shrink: 0;
         }
 
-        /* [추가/수정] 하단 버튼 영역 레이아웃 */
+        /* [수정] 하단 버튼 영역: 높이를 고정하여 리사이즈 시 흔들림 방지 */
         .bottom-btn-row {
-            display: flex; gap: 10px; margin-top: 30px; width: 100%;
+            display: flex; 
+            gap: 8px; 
+            margin-top: 25px; 
+            width: 100%; 
+            height: 45px; /* 높이 고정 */
+            flex-shrink: 0; /* 크기 변형 방지 */
         }
 
-        /* 공통 버튼 스타일 */
         .sub-btn {
-            padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold;
-            cursor: pointer; flex: 1; transition: all 0.2s; text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px; 
+            font-size: 13px; 
+            font-weight: bold;
+            cursor: pointer; 
+            flex: 1; /* 반반씩 정확히 배분 */
+            transition: all 0.1s; 
+            text-align: center;
+            box-sizing: border-box;
         }
 
-        /* Left-handed 버튼 (파스텔 블루 채워짐) */
+        /* Left-handed 버튼 (파스텔 블루) */
         #mode-toggle-btn {
             background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000;
         }
         #mode-toggle-btn:active { background: transparent; color: var(--pastel-blue); }
 
-        /* Reverse 버튼 (기본은 비어있음) */
+        /* Reverse 버튼 (기본 테두리) */
         #reverse-toggle-btn {
             background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue);
         }
         
-        /* [핵심] Reverse 모드 활성화 시 스타일 (파스텔 블루로 반전) */
+        /* Reverse 모드 활성화 시 반전 스타일 */
         .reverse-active #reverse-toggle-btn,
         .reverse-active #left-btn,
         .reverse-active #right-btn {
@@ -65,6 +78,7 @@
             color: #000 !important;
         }
 
+        /* 사이드바 및 컨트롤러 */
         #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
         .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
         #next-container { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333; }
@@ -79,26 +93,27 @@
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px; display: flex; align-items: center; justify-content: center;
             font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.5); transition: all 0.1s;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
         }
         .btn:active { transform: translateY(1px); box-shadow: none; }
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
         #save-btn { margin-top: 10px; background: rgba(119, 221, 119, 0.15); color: var(--pastel-green); border-color: var(--pastel-green); font-size: 14px; font-weight: bold; }
         #start-btn { padding: 14px; background: var(--pastel-green); border: none; border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px; width: 100%; cursor: pointer; font-size: 15px; }
+        
         #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
     </style>
 </head>
-<body class=""> <div id="game-container">
+<body>
+
+<div id="game-container">
     <div id="stage-area">
         <button id="start-btn">START / RESET</button>
         <canvas id="canvas"></canvas>
-        
         <div class="bottom-btn-row">
             <div id="mode-toggle-btn" class="sub-btn">Left-handed</div>
             <div id="reverse-toggle-btn" class="sub-btn">Reverse</div>
         </div>
-
         <div id="game-over">
             <h2 style="color:var(--neon-pink)">GAME OVER</h2>
             <button onclick="startGame()" style="padding:10px 20px; background:var(--neon-blue); border:none; border-radius:5px; font-weight:bold;">RETRY</button>
@@ -139,41 +154,35 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // --- 모드 제어 변수 ---
     let isReversed = false; 
     const modeBtn = document.getElementById('mode-toggle-btn');
     const reverseBtn = document.getElementById('reverse-toggle-btn');
     const gameContainer = document.getElementById('game-container');
 
-    // 1. 레이아웃 반전 (Left-handed)
     modeBtn.addEventListener('click', () => {
         const isLeft = gameContainer.classList.toggle('left-handed');
         modeBtn.innerText = isLeft ? 'Right-handed' : 'Left-handed';
+        // 레이아웃 변경 후 즉시 리사이즈 실행하여 위치 고정
         resize();
     });
 
-    // 2. 조작 방향 반전 (Reverse)
     reverseBtn.addEventListener('click', () => {
         isReversed = !isReversed;
         document.body.classList.toggle('reverse-active');
     });
 
-    // --- 조작 로직 (반전 적용) ---
     function moveLeft() {
-        // isReversed가 true면 오른쪽(+1)으로, false면 왼쪽(-1)으로
         const dir = isReversed ? 1 : -1;
         if(!collision(dir, 0, current.matrix)) current.x += dir;
         draw();
     }
 
     function moveRight() {
-        // isReversed가 true면 왼쪽(-1)으로, false면 오른쪽(+1)으로
         const dir = isReversed ? -1 : 1;
         if(!collision(dir, 0, current.matrix)) current.x += dir;
         draw();
     }
 
-    // --- 기존 게임 로직 ---
     function loadBestScore() {
         const saved = localStorage.getItem('tetris_best');
         bestScore = saved ? parseInt(saved, 10) : 0;
@@ -186,7 +195,8 @@
     function resize() {
         const startBtnH = document.getElementById('start-btn').offsetHeight;
         const bottomRowH = document.querySelector('.bottom-btn-row').offsetHeight;
-        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - bottomRowH - 60;
+        // 여유 공간 계산 최적화 (버튼 간격 포함 65px)
+        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - bottomRowH - 65;
         BLOCK_SIZE = Math.floor(availableH / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -301,7 +311,6 @@
     function sA(id, f) { if(isGameOver || ivs[id]) return; f(); ivs[id] = setInterval(f, 90); }
     function pA(id) { clearInterval(ivs[id]); delete ivs[id]; }
 
-    // 조작 이벤트 핸들러 (수정된 moveLeft/moveRight 호출)
     document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', moveLeft); });
     document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', moveRight); });
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
