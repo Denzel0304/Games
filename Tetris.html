@@ -84,7 +84,6 @@
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
         
-        /* 세이브 버튼 배치 수정: 퀵드랍 버튼과 간격(30px) 확보 */
         #save-btn { 
             margin-top: 30px;
             background: rgba(119, 221, 119, 0.15); 
@@ -153,12 +152,11 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // 로딩 시 확실하게 숫자로 변환 (값이 없으면 0)
+    // 최고 점수 로딩 함수
     function loadBestScore() {
         const saved = localStorage.getItem('tetris_best');
         bestScore = saved ? parseInt(saved, 10) : 0;
     }
-    loadBestScore();
 
     const COLORS = [null, 
         { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' },
@@ -186,7 +184,6 @@
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
         
-        // 게임 시작 전 다시 로드해서 BestScore 동기화
         loadBestScore();
         updateUI(); 
         
@@ -326,7 +323,6 @@
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
     
-    // SAVE BEST 버튼 클릭 이벤트 수정
     document.getElementById('save-btn').addEventListener('click', () => {
         if(score > bestScore) {
             bestScore = score;
@@ -340,10 +336,11 @@
 
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
+    // 페이지 로딩 완료 시 실행되는 핵심 부분
     window.onload = () => { 
         resize(); 
-        loadBestScore(); // 윈도우 로드 시 다시 한번 로드 보장
-        updateUI(); 
+        loadBestScore(); // 1. 데이터를 가져오고
+        updateUI();      // 2. 화면에 즉시 표시 (START 누르기 전)
     };
 </script>
 </body>
