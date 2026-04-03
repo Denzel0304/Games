@@ -42,19 +42,20 @@
 
         #next-canvas { border: 1px solid var(--grid-color); background: #000; }
 
-        /* 게임 스테이지 크기 조정: 스코어보드가 보일 수 있도록 높이 제한 */
         #stage { 
             flex: 1; 
             display: flex; justify-content: center; align-items: center; 
             position: relative; width: 100%; 
-            overflow: hidden;
             margin: 5px 0;
+            overflow: hidden;
         }
         #canvas { border: 3px solid var(--grid-color); background: #000; }
 
         #scoreboard {
             width: 100%; display: flex; justify-content: space-around; 
             padding: 10px 0; border-top: 2px solid var(--grid-color);
+            background: var(--bg-color);
+            z-index: 5;
         }
         .stat-box { text-align: center; }
         .stat-label { font-size: 0.6rem; color: rgba(255, 255, 255, 0.5); }
@@ -105,13 +106,14 @@
     const GAME_WIDTH = 10, GAME_HEIGHT = 20;
     let BLOCK_SIZE, grid, currentPiece, nextPiece, currentX, currentY;
     let score, level, linesCleared, isGameOver, dropCounter, lastTime, animationId;
+    let longPressTimer;
 
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
     const COLORS = [null,{main:'#00f2ff',glow:'rgba(0,242,255,0.4)'},{main:'#ffaa00',glow:'rgba(255,170,0,0.4)'},{main:'#0044ff',glow:'rgba(0,68,255,0.4)'},{main:'#ffe600',glow:'rgba(255,230,0,0.4)'},{main:'#33ff00',glow:'rgba(51,255,0,0.4)'},{main:'#9900ff',glow:'rgba(153,0,255,0.4)'},{main:'#ff0044',glow:'rgba(255,0,68,0.4)'}];
 
     function resizeCanvas() {
-        // 스코어보드가 잘리지 않도록 스테이지 영역의 90%만 사용
-        const availableHeight = document.getElementById('stage').offsetHeight * 0.9;
+        // 스코어보드 노출을 위해 높이 비율을 더 축소 (0.8)
+        const availableHeight = document.getElementById('stage').offsetHeight * 0.8;
         BLOCK_SIZE = Math.floor(availableHeight / GAME_HEIGHT);
         canvas.width = GAME_WIDTH * BLOCK_SIZE;
         canvas.height = GAME_HEIGHT * BLOCK_SIZE;
@@ -150,25 +152,31 @@
         return false;
     }
 
-    // 시계방향 회전
-    function rotate(matrix) { return matrix[0].map((_, i) => matrix.map(row => row[i]).reverse()); }
+    // 🔄 반시계 방향 회전 (Counter-Clockwise)
+    function rotateCCW(matrix) {
+        return matrix[0].map((_, i) => matrix.map(row => row[row.length - 1 - i]));
+    }
 
     function update(time = 0) {
         if (isGameOver) return;
         const deltaTime = time - lastTime; lastTime = time;
         dropCounter += deltaTime;
         if (dropCounter > Math.max(100, 1000 - (level-1)*80)) {
-            currentY++;
-            if (collision(currentX, currentY, currentPiece.matrix)) {
-                currentY--;
-                currentPiece.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) grid[currentY+r][currentX+c] = currentPiece.colorIndex; }));
-                checkLines();
-                spawnPiece();
-            }
-            dropCounter = 0;
+            playerDrop();
         }
         draw();
         animationId = requestAnimationFrame(update);
+    }
+
+    function playerDrop() {
+        currentY++;
+        if (collision(currentX, currentY, currentPiece.matrix)) {
+            currentY--;
+            currentPiece.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) grid[currentY+r][currentX+c] = currentPiece.colorIndex; }));
+            checkLines();
+            spawnPiece();
+        }
+        dropCounter = 0;
     }
 
     function checkLines() {
@@ -203,31 +211,43 @@
         m.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(nextCtx, x+0.5, y+0.5, nextPiece.colorIndex, 8); }));
     }
 
-    // 🚀 새로운 컨트롤 시스템: 클릭 영역별 분할
+    // 📱 터치 컨트롤 (좌/우/회전/하강/롱프레스)
     canvas.addEventListener('touchstart', e => {
         if(isGameOver) return;
         const rect = canvas.getBoundingClientRect();
         const touchX = e.touches[0].clientX - rect.left;
+        const touchY = e.touches[0].clientY - rect.top;
         const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
 
-        // 영역 계산: 좌측 30%, 중앙 40%, 우측 30%
         if (touchX < canvasWidth * 0.3) {
-            // 좌측: 왼쪽 이동
+            // 좌측: 이동
             if(!collision(currentX - 1, currentY, currentPiece.matrix)) currentX--;
         } else if (touchX > canvasWidth * 0.7) {
-            // 우측: 오른쪽 이동
+            // 우측: 이동
             if(!collision(currentX + 1, currentY, currentPiece.matrix)) currentX++;
         } else {
-            // 중앙: 시계방향 회전
-            const r = rotate(currentPiece.matrix);
-            if(!collision(currentX, currentY, r)) currentPiece.matrix = r;
+            // 중앙 영역
+            if (touchY < canvasHeight * 0.5) {
+                // 중앙 상단: 반시계 회전
+                const r = rotateCCW(currentPiece.matrix);
+                if(!collision(currentX, currentY, r)) currentPiece.matrix = r;
+            } else {
+                // 중앙 하단: 하강 (짧게 누르면 한칸, 길게 누르면 쭉)
+                playerDrop();
+                longPressTimer = setInterval(() => {
+                    playerDrop();
+                    draw();
+                }, 50); 
+            }
         }
-        
-        // 아래로 빠르게 내리는 건 짧은 스와이프나 다른 방식으로 추가 가능하지만, 
-        // 일단 요청하신 "클릭 이동"에 집중했습니다.
         draw();
         e.preventDefault();
     }, {passive: false});
+
+    canvas.addEventListener('touchend', () => {
+        clearInterval(longPressTimer);
+    });
 
     window.onload = () => { resizeCanvas(); };
     window.onresize = resizeCanvas;
