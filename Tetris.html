@@ -19,58 +19,63 @@
         }
 
         #game-container {
-            display: flex; width: 98vw; height: 85vh; gap: 8px; align-items: flex-start;
+            display: flex; width: 95vw; height: 80vh; gap: 8px; align-items: stretch;
         }
 
         #stage-area {
-            flex: 1.4; display: flex; flex-direction: column;
+            flex: 1.5; display: flex; flex-direction: column; position: relative;
         }
 
         #canvas {
             border: 2px solid rgba(255, 255, 255, 0.1); background: #000;
-            width: 100%; border-radius: 4px;
+            width: 100%; border-radius: 4px; flex-grow: 1;
         }
 
         #sidebar {
-            flex: 1; display: flex; flex-direction: column; height: 100%;
+            flex: 1; display: flex; flex-direction: column; gap: 6px;
         }
 
-        /* 정보창 레이아웃 */
+        /* 정보창 */
         .info-panel {
-            background: var(--panel-bg); padding: 8px; border-radius: 8px;
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
-            margin-bottom: 8px;
+            background: var(--panel-bg); padding: 6px; border-radius: 8px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
         }
         .info-item { text-align: center; }
-        .info-label { font-size: 8px; color: #888; }
-        .info-value { font-size: 13px; font-weight: bold; color: var(--neon-blue); }
+        .info-label { font-size: 7px; color: #888; }
+        .info-value { font-size: 11px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 버튼 영역: 경기장 높이에 맞춰 늘어남 */
+        /* 조작 버튼 영역: 경기장 높이를 넘지 않도록 flex 조절 */
         #controls { 
-            display: flex; flex-direction: column; gap: 8px; 
-            flex-grow: 1; justify-content: space-between; /* 버튼들을 위아래로 균등 배치 */
+            display: flex; flex-direction: column; gap: 6px; flex-grow: 1;
         }
         
-        .btn-row { display: flex; gap: 8px; flex: 1.5; }
+        .btn-row { display: flex; gap: 6px; flex: 1; }
 
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: white; flex: 1; cursor: pointer;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: white; flex: 1; cursor: pointer;
         }
-        /* 버튼 높이 1.5배 강조를 위해 flex 비율 조정 */
-        #rotate-btn { flex: 1.5; }
-        #down-btn { flex: 1.5; }
-        #drop-btn { flex: 1.5; }
-
-        .btn:active { background: #444; transform: translateY(2px); box-shadow: none; }
-        .btn.special { background: rgba(255, 0, 127, 0.2); color: var(--neon-pink); border-color: var(--neon-pink); }
+        .btn:active { background: #444; }
+        #rotate-btn { flex: 1; }
+        #down-btn { flex: 1; }
+        #drop-btn { flex: 0.8; background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
-            padding: 12px; background: var(--neon-blue); border: none;
-            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 8px;
-            width: 100%; cursor: pointer; z-index: 10;
+            padding: 10px; background: var(--neon-blue); border: none;
+            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 6px; width: 100%;
+        }
+
+        /* 게임 오버 레이어 */
+        #game-over {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; flex-direction: column;
+            justify-content: center; align-items: center; border-radius: 4px; z-index: 100;
+        }
+        #game-over h2 { color: var(--neon-pink); margin-bottom: 20px; }
+        #retry-btn {
+            padding: 10px 20px; background: var(--neon-blue); border: none;
+            border-radius: 5px; font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
@@ -80,12 +85,16 @@
     <div id="stage-area">
         <button id="start-btn" onclick="startGame()">START / RESET</button>
         <canvas id="canvas"></canvas>
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <button id="retry-btn" onclick="startGame()">RETRY</button>
+        </div>
     </div>
 
     <div id="sidebar">
         <div class="info-panel">
-            <div class="info-item" style="grid-column: span 3; margin-bottom: 5px;">
-                <canvas id="next-canvas" width="40" height="40" style="display:block; margin:0 auto;"></canvas>
+            <div class="info-item" style="grid-column: span 3; margin-bottom: 2px;">
+                <canvas id="next-canvas" width="30" height="30" style="display:block; margin:0 auto;"></canvas>
             </div>
             <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
             <div class="info-item"><div class="info-label">BEST</div><div id="best" class="info-value">0</div></div>
@@ -99,7 +108,7 @@
                 <div class="btn" id="right-btn">▶</div>
             </div>
             <div class="btn" id="down-btn">▼</div>
-            <div class="btn special" id="drop-btn">▼▼</div>
+            <div class="btn" id="drop-btn">▼▼</div>
         </div>
     </div>
 </div>
@@ -112,7 +121,7 @@
 
     const COLS = 12, ROWS = 22;
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
-    let isGameOver = true; // 초기값을 true로 설정하여 시작 버튼 전에는 멈춤
+    let isGameOver = true;
     let animationId, lastTime, dropCounter;
     let particles = [];
 
@@ -120,7 +129,7 @@
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
 
     function resize() {
-        const h = document.getElementById('stage-area').offsetHeight - document.getElementById('start-btn').offsetHeight - 15;
+        const h = document.getElementById('stage-area').offsetHeight - document.getElementById('start-btn').offsetHeight - 10;
         BLOCK_SIZE = Math.floor(h / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -128,9 +137,10 @@
     }
 
     function startGame() {
+        document.getElementById('game-over').style.display = 'none';
         if(animationId) cancelAnimationFrame(animationId);
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-        score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = 0; particles = [];
+        score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now(); particles = [];
         updateUI();
         next = createPiece();
         spawn();
@@ -148,10 +158,7 @@
         current.y = 0;
         drawNext();
         if(collision(0,0,current.matrix)) {
-            isGameOver = true;
-            if(score > bestScore) bestScore = score;
-            updateUI();
-            alert("GAME OVER!");
+            gameOver();
         }
     }
 
@@ -167,19 +174,12 @@
         return false;
     }
 
-    function createExplosion(r) {
-        for(let c=0; c<COLS; c++) {
-            const color = COLORS[grid[r][c]];
-            for(let i=0; i<6; i++) {
-                particles.push({
-                    x: c * BLOCK_SIZE + BLOCK_SIZE/2,
-                    y: r * BLOCK_SIZE + BLOCK_SIZE/2,
-                    vx: (Math.random() - 0.5) * 12,
-                    vy: (Math.random() - 0.5) * 12,
-                    life: 1.0, color: color
-                });
-            }
-        }
+    function gameOver() {
+        isGameOver = true;
+        if(score > bestScore) bestScore = score;
+        updateUI();
+        document.getElementById('game-over').style.display = 'flex';
+        cancelAnimationFrame(animationId);
     }
 
     function update(time = 0) {
@@ -202,25 +202,36 @@
 
     function lock() {
         current.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) grid[current.y + r][current.x + c] = current.color;
+            if(v) {
+                let finalY = current.y + r;
+                if(finalY < 0) { gameOver(); return; }
+                grid[finalY][current.x + c] = current.color;
+            }
         }));
-        checkLines();
-        spawn();
+        if(!isGameOver) { checkLines(); spawn(); }
     }
 
     function checkLines() {
         let count = 0;
         for(let r=ROWS-1; r>=0; r--) {
             if(grid[r].every(v => v !== 0)) {
-                createExplosion(r);
+                for(let c=0; c<COLS; c++) {
+                    const color = COLORS[grid[r][c]];
+                    for(let i=0; i<4; i++) {
+                        particles.push({
+                            x: c * BLOCK_SIZE + BLOCK_SIZE/2, y: r * BLOCK_SIZE + BLOCK_SIZE/2,
+                            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+                            life: 1.0, color: color
+                        });
+                    }
+                }
                 grid.splice(r, 1);
                 grid.unshift(Array(COLS).fill(0));
                 count++; r++;
             }
         }
         if(count > 0) {
-            lines += count;
-            score += count * 100 * level;
+            lines += count; score += count * 100 * level;
             level = Math.floor(lines / 10) + 1;
             updateUI();
         }
@@ -248,9 +259,9 @@
     }
 
     function drawNext() {
-        nextCtx.clearRect(0, 0, 40, 40);
+        nextCtx.clearRect(0, 0, 30, 30);
         next.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*6+10, r*6+10, 5, 5); }
+            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*5+5, r*5+5, 4, 4); }
         }));
     }
 
@@ -275,7 +286,7 @@
 
     ['touchend', 'touchcancel'].forEach(ev => { window.addEventListener(ev, () => { ['left', 'right', 'down'].forEach(stopAction); }); });
 
-    window.onload = () => { resize(); };
+    window.onload = resize;
     window.onresize = resize;
 </script>
 </body>
