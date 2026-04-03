@@ -20,11 +20,11 @@
         }
 
         #game-container {
-            display: flex; width: 96vw; height: 90vh; gap: 15px; align-items: flex-start;
+            display: flex; width: 96vw; height: 92vh; gap: 8px; align-items: flex-start;
         }
 
         #stage-area {
-            flex: 2; display: flex; flex-direction: column; position: relative; height: 100%;
+            flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%;
         }
 
         #canvas {
@@ -37,47 +37,48 @@
             justify-content: flex-start;
         }
 
-        /* 정보창 3배 확대 및 한 줄 배치 */
+        /* 정보창 레이아웃 수정: 가로 배치 및 크기 조정 */
         .info-panel {
-            background: var(--panel-bg); padding: 15px; border-radius: 12px;
-            display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;
+            background: var(--panel-bg); padding: 10px 8px; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
         }
         
         #next-container { 
-            text-align: center; padding: 10px; border-bottom: 1px solid #444; margin-bottom: 5px;
+            text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333;
         }
 
         .info-item { 
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            display: flex; justify-content: space-between; align-items: center; padding: 2px 0;
         }
-        .info-label { font-size: 12px; color: #aaa; letter-spacing: 1px; }
-        .info-value { font-size: 24px; font-weight: bold; color: var(--neon-blue); }
+        .info-label { font-size: 10px; color: #aaa; font-weight: bold; }
+        .info-value { font-size: 16px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 조작 버튼 영역: 간격을 16px(기존의 2배)로 조정 */
+        /* 조작 버튼 영역 간격 및 위치 최적화 */
         #controls { 
-            display: flex; flex-direction: column; gap: 16px; 
-            margin-top: 20px; 
-            padding-bottom: 40px; 
+            display: flex; flex-direction: column; gap: 14px; 
+            margin-top: auto; /* 상단 정보창 공간 확보 후 아래로 밀착 */
+            margin-bottom: 20px;
         }
         
-        .btn-row { display: flex; gap: 10px; }
+        .btn-row { display: flex; gap: 8px; }
 
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: white; flex: 1; cursor: pointer;
-            height: 55px;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: white; flex: 1; cursor: pointer;
+            height: 48px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
         }
-        .btn:active { background: #444; transform: translateY(2px); box-shadow: none; }
+        .btn:active { background: #444; transform: translateY(1px); box-shadow: none; }
         
-        #rotate-btn { height: 110px; font-size: 35px; border-color: var(--neon-blue); }
+        /* 회전 버튼 높이 고정 */
+        #rotate-btn { height: 90px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
-            padding: 15px; background: var(--pastel-green); border: none;
-            border-radius: 8px; font-weight: bold; color: #222; margin-bottom: 10px;
-            width: 100%; cursor: pointer; font-size: 16px;
+            padding: 12px; background: var(--pastel-green); border: none;
+            border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px;
+            width: 100%; cursor: pointer; font-size: 14px;
         }
 
         #game-over {
@@ -102,8 +103,8 @@
     <div id="sidebar">
         <div class="info-panel">
             <div id="next-container">
-                <div class="info-label">NEXT</div>
-                <canvas id="next-canvas" width="80" height="80" style="margin-top:10px;"></canvas>
+                <div class="info-label" style="margin-bottom:5px;">NEXT</div>
+                <canvas id="next-canvas" width="60" height="60"></canvas>
             </div>
             <div class="info-item"><div class="info-label">LEVEL</div><div id="level" class="info-value">1</div></div>
             <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
@@ -147,7 +148,7 @@
 
     function resize() {
         const startBtnH = document.getElementById('start-btn').offsetHeight;
-        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - 15;
+        const availableH = document.getElementById('stage-area').offsetHeight - startBtnH - 20;
         BLOCK_SIZE = Math.floor(availableH / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -242,8 +243,8 @@
     }
 
     function updateUI() {
-        document.getElementById('score').innerText = score;
-        document.getElementById('best').innerText = bestScore;
+        document.getElementById('score').innerText = score.toLocaleString();
+        document.getElementById('best').innerText = bestScore.toLocaleString();
         document.getElementById('level').innerText = level;
     }
 
@@ -257,8 +258,7 @@
 
     function drawNext() {
         nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-        // 다음 조각 크기 확대해서 그리기
-        const nSize = 18;
+        const nSize = 14;
         const offsetX = (nextCanvas.width - next.matrix[0].length * nSize) / 2;
         const offsetY = (nextCanvas.height - next.matrix.length * nSize) / 2;
         next.matrix.forEach((row, r) => row.forEach((v, c) => { 
