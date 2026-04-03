@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELITE TETRIS</title>
+    <title>PRO TETRIS</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -19,11 +19,12 @@
         }
 
         #game-container {
-            display: flex; width: 95vw; height: 80vh; gap: 8px; align-items: stretch;
+            display: flex; width: 98vw; height: 85vh; gap: 8px; align-items: stretch;
         }
 
+        /* 좌측 경기장 비율 확대 */
         #stage-area {
-            flex: 1.5; display: flex; flex-direction: column; position: relative;
+            flex: 2.2; display: flex; flex-direction: column; position: relative;
         }
 
         #canvas {
@@ -31,11 +32,11 @@
             width: 100%; border-radius: 4px; flex-grow: 1;
         }
 
+        /* 우측 조작키 비율 축소 */
         #sidebar {
-            flex: 1; display: flex; flex-direction: column; gap: 6px;
+            flex: 0.8; display: flex; flex-direction: column; gap: 6px;
         }
 
-        /* 정보창 */
         .info-panel {
             background: var(--panel-bg); padding: 6px; border-radius: 8px;
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
@@ -44,37 +45,34 @@
         .info-label { font-size: 7px; color: #888; }
         .info-value { font-size: 11px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 조작 버튼 영역: 경기장 높이를 넘지 않도록 flex 조절 */
         #controls { 
             display: flex; flex-direction: column; gap: 6px; flex-grow: 1;
+            justify-content: flex-end; /* 바닥선 맞춤 */
         }
         
-        .btn-row { display: flex; gap: 6px; flex: 1; }
+        .btn-row { display: flex; gap: 6px; height: 45px; } /* 높이 대폭 축소 */
 
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: white; flex: 1; cursor: pointer;
+            font-size: 20px; color: white; flex: 1; cursor: pointer;
+            height: 45px; /* 조작키 높이 40% 이상 축소 */
         }
         .btn:active { background: #444; }
-        #rotate-btn { flex: 1; }
-        #down-btn { flex: 1; }
-        #drop-btn { flex: 0.8; background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
+        #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
             padding: 10px; background: var(--neon-blue); border: none;
             border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 6px; width: 100%;
         }
 
-        /* 게임 오버 레이어 */
         #game-over {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; flex-direction: column;
+            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
             justify-content: center; align-items: center; border-radius: 4px; z-index: 100;
         }
-        #game-over h2 { color: var(--neon-pink); margin-bottom: 20px; }
         #retry-btn {
-            padding: 10px 20px; background: var(--neon-blue); border: none;
+            padding: 12px 24px; background: var(--neon-blue); border: none;
             border-radius: 5px; font-weight: bold; cursor: pointer;
         }
     </style>
@@ -86,15 +84,15 @@
         <button id="start-btn" onclick="startGame()">START / RESET</button>
         <canvas id="canvas"></canvas>
         <div id="game-over">
-            <h2>GAME OVER</h2>
+            <h2 style="color:var(--neon-pink)">GAME OVER</h2>
             <button id="retry-btn" onclick="startGame()">RETRY</button>
         </div>
     </div>
 
     <div id="sidebar">
         <div class="info-panel">
-            <div class="info-item" style="grid-column: span 3; margin-bottom: 2px;">
-                <canvas id="next-canvas" width="30" height="30" style="display:block; margin:0 auto;"></canvas>
+            <div class="info-item" style="grid-column: span 3; margin-bottom: 4px;">
+                <canvas id="next-canvas" width="40" height="40" style="display:block; margin:0 auto;"></canvas>
             </div>
             <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
             <div class="info-item"><div class="info-label">BEST</div><div id="best" class="info-value">0</div></div>
@@ -125,7 +123,20 @@
     let animationId, lastTime, dropCounter;
     let particles = [];
 
-    const COLORS = [null, '#FFB7B2', '#B2E2F2', '#B2F2BB', '#E2B2F2', '#F2E2B2', '#F2B2D1', '#D1D1D1'];
+    // 베스트 스코어 로드
+    bestScore = localStorage.getItem('tetris_best') || 0;
+
+    const COLORS = [
+        null,
+        { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' }, // I
+        { base: '#ff007f', light: '#ff66b2', dark: '#b30059' }, // J
+        { base: '#00ff41', light: '#80ff9f', dark: '#00b32e' }, // L
+        { base: '#ffff00', light: '#ffff80', dark: '#b3b300' }, // O
+        { base: '#ff8c00', light: '#ffc180', dark: '#b36200' }, // S
+        { base: '#7b00ff', light: '#bc80ff', dark: '#5600b3' }, // T
+        { base: '#ff0000', light: '#ff8080', dark: '#b30000' }  // Z
+    ];
+    
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
 
     function resize() {
@@ -147,9 +158,27 @@
         animationId = requestAnimationFrame(update);
     }
 
-    function createPiece() {
-        const idx = Math.floor(Math.random() * PIECES.length);
-        return { matrix: PIECES[idx], color: idx + 1 };
+    // 입체 블록 그리기 함수
+    function draw3DBlock(tCtx, x, y, colorIdx, size) {
+        if (!colorIdx) return;
+        const color = COLORS[colorIdx];
+        const px = x * size, py = y * size;
+
+        tCtx.fillStyle = color.base;
+        tCtx.fillRect(px, py, size, size);
+
+        // 하이라이트 (상단, 좌측)
+        tCtx.fillStyle = color.light;
+        tCtx.fillRect(px, py, size, size * 0.15);
+        tCtx.fillRect(px, py, size * 0.15, size);
+
+        // 그림자 (하단, 우측)
+        tCtx.fillStyle = color.dark;
+        tCtx.fillRect(px, py + size * 0.85, size, size * 0.15);
+        tCtx.fillRect(px + size * 0.85, py, size * 0.15, size);
+        
+        tCtx.strokeStyle = 'rgba(0,0,0,0.3)';
+        tCtx.strokeRect(px, py, size, size);
     }
 
     function spawn() {
@@ -157,9 +186,7 @@
         current.x = Math.floor(COLS/2) - Math.floor(current.matrix[0].length/2);
         current.y = 0;
         drawNext();
-        if(collision(0,0,current.matrix)) {
-            gameOver();
-        }
+        if(collision(0,0,current.matrix)) gameOver();
     }
 
     function collision(dx, dy, m) {
@@ -176,21 +203,26 @@
 
     function gameOver() {
         isGameOver = true;
-        if(score > bestScore) bestScore = score;
+        if(score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('tetris_best', bestScore);
+        }
         updateUI();
         document.getElementById('game-over').style.display = 'flex';
-        cancelAnimationFrame(animationId);
     }
 
     function update(time = 0) {
         if(isGameOver) return;
         const dt = time - lastTime; lastTime = time;
         dropCounter += dt;
-        if(dropCounter > Math.max(100, 800 - (level-1)*100)) { moveDown(); dropCounter = 0; }
+        if(dropCounter > Math.max(100, 800 - (level-1)*80)) { moveDown(); dropCounter = 0; }
+        
         particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+            p.x += p.vx; p.y += p.vy; p.vy += 0.15; // 중력 적용
+            p.life -= 0.01; // 천천히 사라짐
             if(p.life <= 0) particles.splice(i, 1);
         });
+        
         draw();
         animationId = requestAnimationFrame(update);
     }
@@ -212,28 +244,27 @@
     }
 
     function checkLines() {
-        let count = 0;
         for(let r=ROWS-1; r>=0; r--) {
             if(grid[r].every(v => v !== 0)) {
+                // 천천히 많이 흩뿌려지는 파티클 생성
                 for(let c=0; c<COLS; c++) {
                     const color = COLORS[grid[r][c]];
-                    for(let i=0; i<4; i++) {
+                    for(let i=0; i<12; i++) { // 개수 증가
                         particles.push({
-                            x: c * BLOCK_SIZE + BLOCK_SIZE/2, y: r * BLOCK_SIZE + BLOCK_SIZE/2,
-                            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                            life: 1.0, color: color
+                            x: c * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
+                            y: r * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: (Math.random() - 1.5) * 5,
+                            life: 1.2, color: color.base
                         });
                     }
                 }
                 grid.splice(r, 1);
                 grid.unshift(Array(COLS).fill(0));
-                count++; r++;
+                score += 100; lines++; r++;
+                level = Math.floor(lines / 10) + 1;
+                updateUI();
             }
-        }
-        if(count > 0) {
-            lines += count; score += count * 100 * level;
-            level = Math.floor(lines / 10) + 1;
-            updateUI();
         }
     }
 
@@ -246,22 +277,22 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         grid.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { ctx.fillStyle = COLORS[v]; ctx.fillRect(c*BLOCK_SIZE+1, r*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2); }
+            if(v) draw3DBlock(ctx, c, r, v, BLOCK_SIZE);
         }));
         if(current && !isGameOver) current.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { ctx.fillStyle = COLORS[current.color]; ctx.fillRect((current.x+c)*BLOCK_SIZE+1, (current.y+r)*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2); }
+            if(v) draw3DBlock(ctx, current.x + c, current.y + r, current.color, BLOCK_SIZE);
         }));
         particles.forEach(p => {
             ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+            ctx.fillRect(p.x, p.y, 3, 3);
         });
         ctx.globalAlpha = 1.0;
     }
 
     function drawNext() {
-        nextCtx.clearRect(0, 0, 30, 30);
+        nextCtx.clearRect(0, 0, 40, 40);
         next.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*5+5, r*5+5, 4, 4); }
+            if(v) draw3DBlock(nextCtx, c+0.5, r+0.5, next.color, 8);
         }));
     }
 
@@ -269,8 +300,7 @@
     function startAction(id, action) {
         if(isGameOver) return;
         if(intervals[id]) return;
-        action();
-        intervals[id] = setInterval(action, 90);
+        action(); intervals[id] = setInterval(action, 90);
     }
     function stopAction(id) { clearInterval(intervals[id]); delete intervals[id]; }
 
@@ -286,7 +316,7 @@
 
     ['touchend', 'touchcancel'].forEach(ev => { window.addEventListener(ev, () => { ['left', 'right', 'down'].forEach(stopAction); }); });
 
-    window.onload = resize;
+    window.onload = () => { resize(); updateUI(); };
     window.onresize = resize;
 </script>
 </body>
