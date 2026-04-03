@@ -3,36 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>별 가르기 - 마스터 버전</title>
+    <title>별 가르기 - 속도 고정 버전</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #02020a; touch-action: none; font-family: 'Pretendard', -apple-system, sans-serif; }
+        body { margin: 0; overflow: hidden; background: #010105; touch-action: none; font-family: 'Pretendard', sans-serif; }
         canvas { display: block; }
-        
         #header {
-            position: absolute; top: 0; left: 0; width: 100%; height: 70px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 65px;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; box-sizing: border-box; background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(8px); color: white; z-index: 10;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 0 20px; box-sizing: border-box; background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px); color: white; z-index: 10;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .stats-group { display: flex; flex-direction: column; gap: 2px; }
-        .stats { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.7); }
-        .stats span { font-weight: 700; color: #ffeb3b; }
-        .best-label { font-size: 11px; color: #00d2ff; text-transform: uppercase; letter-spacing: 1px; }
-
+        .stats-group { display: flex; flex-direction: column; }
+        .stats { font-size: 14px; font-weight: 600; color: #fff; }
+        .stats span { color: #ffeb3b; }
+        .best-label { font-size: 11px; color: #00d2ff; font-weight: 400; opacity: 0.8; }
         #reset-btn {
-            background: transparent; border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px;
-            cursor: pointer; transition: all 0.2s;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 7px 14px; border-radius: 6px; font-size: 12px;
+            cursor: pointer;
         }
-        #reset-btn:active { background: white; color: black; }
     </style>
 </head>
 <body>
     <div id="header">
         <div class="stats-group">
-            <div class="stats">Lv.<span id="level">1</span> Stars <span id="score">0</span></div>
-            <div class="best-label">Best: <span id="best">0</span></div>
+            <div class="stats">LV.<span id="level">1</span> STARS <span id="score">0</span></div>
+            <div class="best-label">BEST: <span id="best">0</span></div>
         </div>
         <button id="reset-btn" onclick="location.reload()">다시 하기</button>
     </div>
@@ -50,17 +47,10 @@
         let mouse = { x: null, y: null, active: false };
         let score = 0;
         let level = 1;
-        
-        // 최고 점수 불러오기 (캐시 활용)
         let bestScore = localStorage.getItem('starBestScore') || 0;
         bestEl.innerText = bestScore;
 
-        const colors = [
-            'hsla(0, 0%, 100%, 1)',    // 흰색
-            'hsla(190, 100%, 75%, 1)', // 라이트 블루
-            'hsla(45, 100%, 70%, 1)',  // 골드
-            'hsla(210, 100%, 85%, 1)'  // 실버 블루
-        ];
+        const colors = ['#ffffff', '#a2d2ff', '#ffe66d', '#caf0f8'];
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -72,47 +62,52 @@
         class FallingStar {
             constructor() {
                 this.x = Math.random() * canvas.width;
-                this.y = -50;
-                this.size = Math.random() * 2.5 + 2.5;
+                this.y = -20;
+                this.size = Math.random() * 2 + 2.5;
                 
-                // 레벨업 속도 밸런스 조정: 초기 속도를 더 낮추고 증가폭을 완만하게 함
-                const baseSpeed = 0.5 + (level * 0.15);
-                this.speedY = baseSpeed + Math.random() * 0.4;
-                this.speedX = (Math.random() - 0.5) * 0.8; 
+                // 속도 값을 고정 상수로 관리 (드래그 영향을 받지 않음)
+                this.baseVY = 0.6 + (level * 0.12); 
+                this.speedY = this.baseVY + (Math.random() * 0.3);
+                this.speedX = (Math.random() - 0.5) * 0.6; 
                 
                 this.color = colors[Math.floor(Math.random() * colors.length)];
                 this.broken = false;
             }
+
             update() {
+                // 드래그 상태와 상관없이 매 프레임 정해진 속도만큼만 이동
                 this.y += this.speedY;
                 this.x += this.speedX;
 
                 if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
 
+                // 충돌 감지 로직을 별의 이동 로직과 분리
                 if (mouse.active && !this.broken) {
                     const dx = this.x - mouse.x;
                     const dy = this.y - mouse.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 30) { // 터치 판정 살짝 넉넉하게 조정
+                    const distSq = dx*dx + dy*dy; // 성능을 위해 제곱근 생략
+                    if (distSq < 900) { // 30px의 제곱인 900
                         this.broken = true;
                         this.explode();
                         updateScore();
                     }
                 }
             }
+
             draw() {
                 if (this.broken) return;
                 ctx.save();
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = this.color;
                 ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             }
+
             explode() {
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < 12; i++) {
                     debris.push(new Debris(this.x, this.y, this.color));
                 }
             }
@@ -122,88 +117,88 @@
             constructor(x, y, color) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 2 + 1;
-                this.speedX = (Math.random() - 0.5) * 5;
-                this.speedY = (Math.random() - 0.5) * 5;
+                this.size = Math.random() * 1.5 + 1;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
                 this.color = color;
                 this.life = 1.0;
-                this.decay = 0.015 + Math.random() * 0.01;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.speedY += 0.08;
-                this.life -= this.decay;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.05; // 중력
+                this.life -= 0.02;
             }
             draw() {
-                ctx.fillStyle = this.color.replace('1)', `${this.life})`);
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.globalAlpha = 1.0;
             }
         }
 
         function updateScore() {
             score++;
             scoreEl.innerText = score;
-
-            // 최고 점수 업데이트 및 캐시 저장
             if (score > bestScore) {
                 bestScore = score;
                 bestEl.innerText = bestScore;
                 localStorage.setItem('starBestScore', bestScore);
             }
-
-            // 레벨업 기준: 100개로 조정
-            const newLevel = Math.floor(score / 100) + 1;
-            if (newLevel !== level) {
-                level = newLevel;
-                levelEl.innerText = level;
-            }
+            level = Math.floor(score / 100) + 1;
+            levelEl.innerText = level;
         }
 
-        function handleInput(e) {
-            mouse.active = true;
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            mouse.x = clientX - rect.left;
-            mouse.y = clientY - rect.top;
+        // 입력 처리 최적화
+        function setMousePos(e) {
+            const t = e.touches ? e.touches[0] : e;
+            mouse.x = t.clientX;
+            mouse.y = t.clientY;
         }
 
-        window.addEventListener('mousedown', (e) => { handleInput(e); mouse.active = true; });
-        window.addEventListener('mousemove', (e) => { if(mouse.active) handleInput(e); });
-        window.addEventListener('touchstart', (e) => { handleInput(e); mouse.active = true; }, {passive: false});
-        window.addEventListener('touchmove', (e) => { 
-            e.preventDefault(); 
-            handleInput(e); 
+        window.addEventListener('mousedown', (e) => { mouse.active = true; setMousePos(e); });
+        window.addEventListener('mousemove', (e) => { if (mouse.active) setMousePos(e); });
+        window.addEventListener('mouseup', () => { mouse.active = false; });
+        
+        window.addEventListener('touchstart', (e) => { 
+            mouse.active = true; 
+            setMousePos(e); 
         }, { passive: false });
         
-        const stopInput = () => { mouse.active = false; mouse.x = null; mouse.y = null; };
-        window.addEventListener('mouseup', stopInput);
-        window.addEventListener('touchend', stopInput);
+        window.addEventListener('touchmove', (e) => { 
+            e.preventDefault(); 
+            setMousePos(e); 
+        }, { passive: false });
+        
+        window.addEventListener('touchend', () => { mouse.active = false; });
 
         function animate() {
-            ctx.fillStyle = 'rgba(2, 2, 10, 0.25)';
+            // 잔상 효과를 주면서 배경 초기화
+            ctx.fillStyle = 'rgba(1, 1, 5, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 생성 빈도 조절
-            const spawnChance = 0.015 + (level * 0.003);
-            if (Math.random() < Math.min(spawnChance, 0.08)) {
+            // 레벨에 따른 생성 빈도
+            if (Math.random() < 0.01 + (level * 0.002)) {
                 fallingStars.push(new FallingStar());
             }
 
-            fallingStars.forEach((star, i) => {
-                star.update();
-                star.draw();
-                if (star.y > canvas.height + 50) fallingStars.splice(i, 1);
-            });
+            // 별 업데이트 및 그리기
+            for (let i = fallingStars.length - 1; i >= 0; i--) {
+                fallingStars[i].update();
+                fallingStars[i].draw();
+                if (fallingStars[i].y > canvas.height + 20 || fallingStars[i].broken) {
+                    fallingStars.splice(i, 1);
+                }
+            }
 
-            debris.forEach((p, i) => {
-                p.update();
-                p.draw();
-                if (p.life <= 0) debris.splice(i, 1);
-            });
+            // 파티클 업데이트 및 그리기
+            for (let i = debris.length - 1; i >= 0; i--) {
+                debris[i].update();
+                debris[i].draw();
+                if (debris[i].life <= 0) debris.splice(i, 1);
+            }
 
             requestAnimationFrame(animate);
         }
