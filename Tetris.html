@@ -10,6 +10,7 @@
             --panel-bg: rgba(25, 25, 40, 0.9);
             --neon-blue: #00f2ff;
             --neon-pink: #ff007f;
+            --pastel-green: #77dd77; /* 파스텔 그린 추가 */
         }
 
         body {
@@ -44,10 +45,9 @@
         .info-label { font-size: 7px; color: #888; }
         .info-value { font-size: 11px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 조작 버튼 영역 최종 위치 조정: margin-top 210px 적용 */
         #controls { 
             display: flex; flex-direction: column; gap: 8px; 
-            margin-top: 210px; /* 이전 180px에서 30px을 더 내려 210px로 설정 */
+            margin-top: 210px; 
             padding-bottom: 20px; 
         }
         
@@ -64,12 +64,15 @@
         
         #rotate-btn { height: 98px; font-size: 28px; }
         
+        /* 퀵 드랍 버튼 스타일 */
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
 
+        /* Start 버튼 파스텔 그린 적용 */
         #start-btn {
-            padding: 12px; background: var(--neon-blue); border: none;
-            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 5px;
+            padding: 12px; background: var(--pastel-green); border: none;
+            border-radius: 6px; font-weight: bold; color: #333; margin-bottom: 5px;
             width: 100%; cursor: pointer; display: block !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         #game-over {
@@ -107,6 +110,7 @@
                 <div class="btn" id="right-btn">▶</div>
             </div>
             <div class="btn" id="rotate-btn">↻</div>
+            <div class="btn" id="down-btn">▼</div>
             <div class="btn" id="drop-btn">▼▼</div>
         </div>
     </div>
@@ -256,8 +260,11 @@
 
     document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', () => { if(!collision(-1,0,current.matrix)) current.x--; draw(); }); });
     document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', () => { if(!collision(1,0,current.matrix)) current.x++; draw(); }); });
+    // 아래 방향 버튼 이벤트 (꾹 누르기 지원)
+    document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
+    
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
     window.onload = () => { resize(); updateUI(); };
