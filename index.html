@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>별멍 - 마음 정화</title>
+    <title>별멍 - 별을 가르는 밤</title>
     <style>
-        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%); touch-action: none; }
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #101020 0%, #000000 100%); touch-action: none; }
         canvas { display: block; }
         #ui {
-            position: absolute; top: 20px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.6); font-family: sans-serif; pointer-events: none;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            position: absolute; bottom: 30px; width: 100%; text-align: center;
+            color: rgba(255, 255, 255, 0.5); font-family: sans-serif; pointer-events: none;
+            font-size: 14px; text-shadow: 0 0 5px rgba(255,255,255,0.3);
         }
     </style>
 </head>
 <body>
-    <div id="ui">화면을 부드럽게 드래그해보세요</div>
+    <div id="ui">떨어지는 별을 가로질러 보세요</div>
     <canvas id="canvas"></canvas>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
+        
+        let fallingStars = []; // 떨어지는 별들
+        let debris = [];      // 부서진 조각들
+        let mouse = { x: null, y: null, active: false };
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -30,55 +33,118 @@
         window.addEventListener('resize', resize);
         resize();
 
-        class Particle {
-            constructor(x, y) {
+        // 1. 떨어지는 별 클래스
+        class FallingStar {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -20; // 화면 위에서 시작
+                this.size = Math.random() * 4 + 2; // 크기 다양화 (2~6)
+                this.speed = Math.random() * 1.5 + 0.5; // 속도 다양화
+                this.color = `hsla(${Math.random() * 30 + 50}, 100%, 80%, 1)`; // 따뜻한 노란/흰색 계열
+                this.broken = false;
+            }
+            update() {
+                this.y += this.speed;
+                // 드래그 중이고, 별과 마우스가 가까우면 부서짐
+                if (mouse.active && !this.broken) {
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 20) { // 충돌 반경
+                        this.broken = true;
+                        this.explode();
+                    }
+                }
+            }
+            draw() {
+                if (this.broken) return;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0; // 다른 그리기에 영향 안 주게 초기화
+            }
+            explode() {
+                // 부서질 때 10~15개의 작은 조각 생성
+                const count = Math.floor(Math.random() * 6) + 10;
+                for (let i = 0; i < count; i++) {
+                    debris.push(new Debris(this.x, this.y, this.color));
+                }
+            }
+        }
+
+        // 2. 부서진 조각(파티클) 클래스
+        class Debris {
+            constructor(x, y, color) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 3 + 1;
-                this.speedX = Math.random() * 2 - 1;
-                this.speedY = Math.random() * 2 - 1;
-                this.color = `hsla(${Math.random() * 40 + 180}, 80%, 70%, 1)`; // 푸른색 계열 별빛
-                this.life = 1.0; // 투명도
+                this.size = Math.random() * 2 + 1;
+                // 사방으로 퍼지는 속도
+                this.speedX = Math.random() * 4 - 2;
+                this.speedY = Math.random() * 4 - 2;
+                this.color = color;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.015; // 사라지는 속도
             }
             update() {
                 this.x += this.speedX;
                 this.y += this.speedY;
-                this.life -= 0.01; // 천천히 사라짐
-                if (this.size > 0.1) this.size -= 0.02;
+                this.speedY += 0.05; // 미세한 중력 효과
+                this.life -= this.decay;
+                if (this.size > 0.1) this.size -= 0.05;
             }
             draw() {
                 ctx.fillStyle = this.color.replace('1)', `${this.life})`);
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
-                // 빛번짐 효과 추가
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
             }
         }
 
-        function createParticles(e) {
-            const x = e.touches ? e.touches[0].clientX : e.clientX;
-            const y = e.touches ? e.touches[0].clientY : e.clientY;
-            for (let i = 0; i < 3; i++) {
-                particles.push(new Particle(x, y));
-            }
+        // 이벤트 리스너
+        function updateMouse(e) {
+            mouse.active = true;
+            mouse.x = e.touches ? e.touches[0].clientX : e.clientX;
+            mouse.y = e.touches ? e.touches[0].clientY : e.clientY;
         }
+        window.addEventListener('mousemove', updateMouse);
+        window.addEventListener('touchmove', updateMouse);
+        window.addEventListener('touchend', () => mouse.active = false);
+        window.addEventListener('mouseup', () => mouse.active = false);
 
-        // 마우스 및 터치 이벤트
-        window.addEventListener('mousemove', createParticles);
-        window.addEventListener('touchmove', createParticles);
-
+        // 메인 애니메이션 루프
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-                if (particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                    i--;
-                }
+            // 배경을 아주 약간 투명하게 지워 잔상 효과(trail) 생성
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 일정 확률로 새로운 별 생성
+            if (Math.random() < 0.03) {
+                fallingStars.push(new FallingStar());
             }
+
+            // 떨어지는 별 업데이트 및 그리기
+            fallingStars.forEach((star, index) => {
+                star.update();
+                star.draw();
+                // 화면 아래로 벗어나거나 부서진 별 제거
+                if (star.y > canvas.height + 20 || star.broken) {
+                    fallingStars.splice(index, 1);
+                }
+            });
+
+            // 부서진 조각 업데이트 및 그리기
+            debris.forEach((piece, index) => {
+                piece.update();
+                piece.draw();
+                // 수명이 다한 조각 제거
+                if (piece.life <= 0) {
+                    debris.splice(index, 1);
+                }
+            });
+
             requestAnimationFrame(animate);
         }
         animate();
