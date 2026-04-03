@@ -3,88 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MODERN TETRIS</title>
+    <title>ELITE TETRIS</title>
     <style>
         :root {
-            --bg-color: #05050a;
-            --panel-bg: rgba(20, 20, 35, 0.8);
+            --bg-color: #030305;
+            --panel-bg: rgba(25, 25, 40, 0.9);
             --neon-blue: #00f2ff;
             --neon-pink: #ff007f;
-            --text-color: #ffffff;
         }
 
         body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Pretendard', sans-serif;
-            overflow: hidden; touch-action: none;
+            margin: 0; padding: 0; background: var(--bg-color); color: white;
+            font-family: sans-serif; overflow: hidden; touch-action: none;
             display: flex; justify-content: center; align-items: center; height: 100vh;
         }
 
         #game-container {
-            display: flex;
-            width: 98vw; height: 90vh;
-            max-width: 500px;
-            gap: 8px;
+            display: flex; width: 98vw; height: 92vh; gap: 5px;
         }
 
-        /* 좌측 경기장: 너비를 조금 줄이고 높이 확보 */
+        /* 경기장 영역 확대 */
         #stage-area {
-            flex: 1.1;
-            display: flex; flex-direction: column;
-            justify-content: flex-start;
+            flex: 1.5; display: flex; flex-direction: column;
         }
 
         #canvas {
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: #000;
-            border-radius: 4px;
-            width: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.1); background: #000;
+            width: 100%; border-radius: 4px;
         }
 
-        /* 우측 사이드바: 버튼과 정보 배치 */
+        /* 우측 조작계 영역 축소 */
         #sidebar {
-            flex: 1;
-            display: flex; flex-direction: column;
-            gap: 10px;
+            flex: 0.8; display: flex; flex-direction: column; gap: 8px;
         }
 
-        .info-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
-            background: var(--panel-bg); padding: 8px; border-radius: 10px;
+        .info-panel {
+            background: var(--panel-bg); padding: 8px; border-radius: 8px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
         }
-
         .info-item { text-align: center; }
-        .info-label { font-size: 9px; color: #888; }
-        .info-value { font-size: 14px; font-weight: bold; color: var(--neon-blue); }
+        .info-label { font-size: 8px; color: #888; }
+        .info-value { font-size: 13px; font-weight: bold; color: var(--neon-blue); }
 
-        /* 조작 버튼: 크기를 키우고 중앙 배치 */
-        #controls {
-            display: flex; flex-direction: column; gap: 12px;
-            margin-top: 10px;
-        }
-
-        .btn-row { display: flex; gap: 10px; justify-content: center; }
+        #controls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+        .btn-row { display: flex; gap: 8px; }
 
         .btn {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: white;
-            flex: 1; height: 70px; /* 버튼 크기 대폭 확대 */
-            cursor: pointer;
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: white; flex: 1; height: 65px; cursor: pointer;
         }
-        .btn:active { background: #333; transform: scale(0.95); }
-        .btn.drop { background: rgba(0, 242, 255, 0.2); color: var(--neon-blue); height: 50px; font-size: 16px; font-weight: bold; }
+        .btn:active { background: #444; transform: scale(0.95); }
+        .btn.special { background: rgba(255, 0, 127, 0.2); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
-            padding: 12px; background: var(--neon-pink); border: none;
-            border-radius: 8px; font-weight: bold; color: white; cursor: pointer;
+            padding: 10px; background: var(--neon-blue); border: none;
+            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 5px;
         }
-
-        #next-canvas { background: #000; border-radius: 5px; align-self: center; }
     </style>
 </head>
 <body>
@@ -96,25 +71,22 @@
     </div>
 
     <div id="sidebar">
-        <div class="info-grid">
+        <div class="info-panel">
             <div class="info-item" style="grid-column: span 2;">
-                <div class="info-label">NEXT</div>
-                <canvas id="next-canvas" width="60" height="60"></canvas>
+                <canvas id="next-canvas" width="50" height="50"></canvas>
             </div>
             <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
             <div class="info-item"><div class="info-label">BEST</div><div id="best" class="info-value">0</div></div>
-            <div class="info-item"><div class="info-label">LINES</div><div id="lines" class="info-value">0</div></div>
-            <div class="info-item"><div class="info-label">LEVEL</div><div id="level" class="info-value">1</div></div>
         </div>
 
         <div id="controls">
-            <div class="btn drop" onclick="hardDrop()">QUICK DROP ▲</div>
+            <div class="btn" id="rotate-btn">↻</div>
             <div class="btn-row">
-                <div class="btn" onclick="move(-1)">◀</div>
-                <div class="btn" onclick="rotate()">↻</div>
-                <div class="btn" onclick="move(1)">▶</div>
+                <div class="btn" id="left-btn">◀</div>
+                <div class="btn" id="right-btn">▶</div>
             </div>
-            <div class="btn" id="down-btn" style="height: 80px;">▼ DOWN</div>
+            <div class="btn" id="down-btn">▼</div>
+            <div class="btn special" id="drop-btn">▼▼</div>
         </div>
     </div>
 </div>
@@ -125,30 +97,18 @@
     const nextCanvas = document.getElementById('next-canvas');
     const nextCtx = nextCanvas.getContext('2d');
 
-    // 블록 크기 2배 축소 -> 경기장 밀도 2배 증가
-    const COLS = 12; // 가로 칸수 증가
-    const ROWS = 22; // 세로 칸수 증가
-    let BLOCK_SIZE = 12; // 블록 크기를 작게 설정
+    const COLS = 12, ROWS = 22;
+    let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, isGameOver, animationId, lastTime, dropCounter;
+    
+    // 파티클 효과용 배열
+    let particles = [];
 
-    let grid, current, next, score, lines, level, bestScore = 0;
-    let isGameOver, animationId, lastTime, dropCounter;
-
-    const COLORS = [
-        null,
-        { base: '#FFB7B2', light: '#FFD1CF', shadow: '#FF8A84' },
-        { base: '#B2E2F2', light: '#D1F0FA', shadow: '#84D1E8' },
-        { base: '#B2F2BB', light: '#D1FAD9', shadow: '#84E894' },
-        { base: '#E2B2F2', light: '#F0D1FA', shadow: '#D184E8' },
-        { base: '#F2E2B2', light: '#FAF0D1', shadow: '#E8D184' },
-        { base: '#F2B2D1', light: '#FAD1E2', shadow: '#E884B2' },
-        { base: '#D1D1D1', light: '#E8E8E8', shadow: '#A0A0A0' }
-    ];
-
+    const COLORS = [null, '#FFB7B2', '#B2E2F2', '#B2F2BB', '#E2B2F2', '#F2E2B2', '#F2B2D1', '#D1D1D1'];
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
 
     function resize() {
-        const availableHeight = document.getElementById('stage-area').offsetHeight - 50;
-        BLOCK_SIZE = Math.floor(availableHeight / ROWS);
+        const h = document.getElementById('stage-area').offsetHeight - 60;
+        BLOCK_SIZE = Math.floor(h / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
     }
@@ -156,7 +116,7 @@
     function startGame() {
         if(animationId) cancelAnimationFrame(animationId);
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-        score = 0; lines = 0; level = 1; isGameOver = false; dropCounter = 0; lastTime = 0;
+        score = 0; isGameOver = false; dropCounter = 0; lastTime = 0; particles = [];
         updateUI();
         next = createPiece();
         spawn();
@@ -169,17 +129,11 @@
     }
 
     function spawn() {
-        current = next;
-        next = createPiece();
+        current = next; next = createPiece();
         current.x = Math.floor(COLS/2) - Math.floor(current.matrix[0].length/2);
         current.y = 0;
         drawNext();
-        if(collision(0,0,current.matrix)) {
-            isGameOver = true;
-            if(score > bestScore) bestScore = score;
-            updateUI();
-            alert("GAME OVER!");
-        }
+        if(collision(0,0,current.matrix)) isGameOver = true;
     }
 
     function collision(dx, dy, m) {
@@ -194,19 +148,35 @@
         return false;
     }
 
-    function drawBlock(tCtx, x, y, colorIdx, size) {
-        const color = COLORS[colorIdx];
-        tCtx.fillStyle = color.base;
-        tCtx.fillRect(x * size, y * size, size, size);
-        tCtx.strokeStyle = "rgba(0,0,0,0.2)";
-        tCtx.strokeRect(x * size, y * size, size, size);
+    // 파티클(부서지는 효과) 생성
+    function createExplosion(r) {
+        for(let c=0; c<COLS; c++) {
+            const color = COLORS[grid[r][c]];
+            for(let i=0; i<4; i++) {
+                particles.push({
+                    x: c * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
+                    y: r * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
     }
 
     function update(time = 0) {
         if(isGameOver) return;
         const dt = time - lastTime; lastTime = time;
         dropCounter += dt;
-        if(dropCounter > Math.max(100, 1000 - (level-1)*100)) { moveDown(); dropCounter = 0; }
+        if(dropCounter > 800) { moveDown(); dropCounter = 0; }
+        
+        // 파티클 업데이트
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            if(p.life <= 0) particles.splice(i, 1);
+        });
+
         draw();
         animationId = requestAnimationFrame(update);
     }
@@ -225,48 +195,88 @@
     }
 
     function checkLines() {
-        let count = 0;
         for(let r=ROWS-1; r>=0; r--) {
-            if(grid[r].every(v => v !== 0)) { grid.splice(r, 1); grid.unshift(Array(COLS).fill(0)); count++; r++; }
-        }
-        if(count > 0) { 
-            lines += count; score += count * 100 * level; 
-            level = Math.floor(lines / 10) + 1;
-            updateUI(); 
+            if(grid[r].every(v => v !== 0)) {
+                createExplosion(r); // 부서지는 효과 발생
+                grid.splice(r, 1);
+                grid.unshift(Array(COLS).fill(0));
+                score += 100; r++;
+                updateUI();
+            }
         }
     }
 
     function updateUI() {
         document.getElementById('score').innerText = score;
+        if(score > bestScore) bestScore = score;
         document.getElementById('best').innerText = bestScore;
-        document.getElementById('lines').innerText = lines;
-        document.getElementById('level').innerText = level;
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        grid.forEach((row, r) => row.forEach((v, c) => { if(v) drawBlock(ctx, c, r, v, BLOCK_SIZE); }));
-        if(current) current.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) drawBlock(ctx, current.x + c, current.y + r, current.color, BLOCK_SIZE); }));
+        
+        // 격자 미세하게 그리기
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        for(let i=0; i<=COLS; i++) { ctx.beginPath(); ctx.moveTo(i*BLOCK_SIZE,0); ctx.lineTo(i*BLOCK_SIZE,canvas.height); ctx.stroke(); }
+        for(let i=0; i<=ROWS; i++) { ctx.beginPath(); ctx.moveTo(0,i*BLOCK_SIZE); ctx.lineTo(canvas.width,i*BLOCK_SIZE); ctx.stroke(); }
+
+        // 쌓인 블록
+        grid.forEach((row, r) => row.forEach((v, c) => {
+            if(v) {
+                ctx.fillStyle = COLORS[v];
+                ctx.fillRect(c*BLOCK_SIZE+1, r*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2);
+            }
+        }));
+
+        // 현재 블록
+        if(current) current.matrix.forEach((row, r) => row.forEach((v, c) => {
+            if(v) {
+                ctx.fillStyle = COLORS[current.color];
+                ctx.fillRect((current.x+c)*BLOCK_SIZE+1, (current.y+r)*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2);
+            }
+        }));
+
+        // 파티클 그리기
+        particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 3, 3);
+        });
+        ctx.globalAlpha = 1.0;
     }
 
     function drawNext() {
-        nextCtx.clearRect(0, 0, 60, 60);
-        next.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) drawBlock(nextCtx, c+1, r+1, next.color, 15); }));
+        nextCtx.clearRect(0, 0, 50, 50);
+        next.matrix.forEach((row, r) => row.forEach((v, c) => {
+            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*10+10, r*10+10, 8, 8); }
+        }));
     }
 
-    function move(dx) { if(!collision(dx, 0, current.matrix)) current.x += dx; draw(); }
-    function rotate() { 
+    // 🚀 버튼 연속 동작 시스템
+    let intervals = {};
+    function startAction(id, action) {
+        if(intervals[id]) return;
+        action();
+        intervals[id] = setInterval(action, 100);
+    }
+    function stopAction(id) { clearInterval(intervals[id]); delete intervals[id]; }
+
+    // 이벤트 리스너 연결
+    document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('left', () => { if(!collision(-1,0,current.matrix)) current.x--; draw(); }); });
+    document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('right', () => { if(!collision(1,0,current.matrix)) current.x++; draw(); }); });
+    document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('down', moveDown); });
+    document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { 
+        e.preventDefault();
         const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i]));
-        if(!collision(0, 0, m)) current.matrix = m;
-        draw();
-    }
-    function hardDrop() { while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); }
+        if(!collision(0,0,m)) current.matrix = m; draw();
+    });
+    document.getElementById('drop-btn').addEventListener('touchstart', (e) => { e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
 
-    let downInterval;
-    document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); downInterval = setInterval(moveDown, 50); });
-    document.getElementById('down-btn').addEventListener('touchend', () => clearInterval(downInterval));
+    ['touchend', 'touchcancel'].forEach(ev => {
+        window.addEventListener(ev, () => { ['left', 'right', 'down'].forEach(stopAction); });
+    });
 
-    window.onload = resize;
+    window.onload = () => { resize(); startGame(); };
     window.onresize = resize;
 </script>
 </body>
