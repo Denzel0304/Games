@@ -37,7 +37,6 @@
             justify-content: flex-start;
         }
 
-        /* 정보창 뭉치 확대 및 가로 배치 수정 */
         .info-panel {
             background: var(--panel-bg); padding: 12px 8px; border-radius: 10px;
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;
@@ -47,7 +46,6 @@
             text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333;
         }
         
-        /* NEXT 조각 크기 확대 */
         #next-canvas { display: block; margin: 5px auto; }
 
         .info-item { 
@@ -56,17 +54,16 @@
         }
         .info-label { font-size: 11px; color: #888; font-weight: bold; }
         .info-value { 
-    font-size: 14px; /* 기존 18px에서 14px로 축소 */
-    font-weight: bold; 
-    color: var(--neon-blue);
-    white-space: nowrap; /* 숫자가 길어져도 줄바꿈 방지 */
-    overflow: hidden;
-    text-overflow: ellipsis; /* 혹시나 칸을 넘어가면 ... 처리 (안전장치) */
-    max-width: 80px; /* 숫자 영역 최대 너비 제한 */
-    text-align: right;
-}
+            font-size: 14px; 
+            font-weight: bold; 
+            color: var(--neon-blue);
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            max-width: 80px; 
+            text-align: right;
+        }
 
-        /* 조작 버튼 영역: 간격을 16px(기존의 2배)로 조정 */
         #controls { 
             display: flex; flex-direction: column; gap: 16px; 
             margin-top: 20px; 
@@ -86,6 +83,15 @@
         
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
+        
+        /* 추가된 세이브 버튼 스타일 */
+        #save-btn { 
+            background: rgba(119, 221, 119, 0.15); 
+            color: var(--pastel-green); 
+            border-color: var(--pastel-green); 
+            font-size: 14px; 
+            font-weight: bold;
+        }
 
         #start-btn {
             padding: 14px; background: var(--pastel-green); border: none;
@@ -131,6 +137,7 @@
             <div class="btn" id="rotate-btn">↻</div>
             <div class="btn" id="down-btn">▼</div>
             <div class="btn" id="drop-btn">▼▼</div>
+            <div class="btn" id="save-btn">SAVE BEST</div>
         </div>
     </div>
 </div>
@@ -145,7 +152,7 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    bestScore = localStorage.getItem('tetris_best') || 0;
+    bestScore = parseInt(localStorage.getItem('tetris_best')) || 0;
 
     const COLORS = [null, 
         { base: '#00f2ff', light: '#70f9ff', dark: '#00a8b1' },
@@ -240,42 +247,38 @@
     }
 
     function checkLines() {
-    let linesCleared = 0; // 이번에 지운 줄 수를 카운트
-    const linePoints = [0, 100, 300, 500, 800]; // 1줄, 2줄, 3줄, 4줄(테트리스) 보너스 점수
+        let linesCleared = 0;
+        const linePoints = [0, 100, 300, 500, 800];
 
-    for(let r = ROWS - 1; r >= 0; r--) {
-        if(grid[r].every(v => v !== 0)) {
-            // 파티클 생성 로직 (기존 유지)
-            for(let c = 0; c < COLS; c++) {
-                const color = COLORS[grid[r][c]];
-                for(let i = 0; i < 15; i++) {
-                    particles.push({ 
-                        x: c * BLOCK_SIZE + BLOCK_SIZE/2, 
-                        y: r * BLOCK_SIZE + BLOCK_SIZE/2, 
-                        vx: (Math.random()-0.5)*5, 
-                        vy: (Math.random()-1.5)*4, 
-                        life: 1.5, 
-                        color: color.base 
-                    });
+        for(let r = ROWS - 1; r >= 0; r--) {
+            if(grid[r].every(v => v !== 0)) {
+                for(let c = 0; c < COLS; c++) {
+                    const color = COLORS[grid[r][c]];
+                    for(let i = 0; i < 15; i++) {
+                        particles.push({ 
+                            x: c * BLOCK_SIZE + BLOCK_SIZE/2, 
+                            y: r * BLOCK_SIZE + BLOCK_SIZE/2, 
+                            vx: (Math.random()-0.5)*5, 
+                            vy: (Math.random()-1.5)*4, 
+                            life: 1.5, 
+                            color: color.base 
+                        });
+                    }
                 }
+                grid.splice(r, 1);
+                grid.unshift(Array(COLS).fill(0));
+                linesCleared++;
+                lines++;
+                r++; 
             }
-            grid.splice(r, 1);
-            grid.unshift(Array(COLS).fill(0));
-            linesCleared++; // 지운 줄 수 증가
-            lines++;
-            r++; 
+        }
+
+        if (linesCleared > 0) {
+            score += linePoints[linesCleared] * level;
+            level = Math.floor(lines / 10) + 1;
+            updateUI();
         }
     }
-
-    if (linesCleared > 0) {
-        // 보너스 점수 계산: (기본 보너스 * 현재 레벨)
-        score += linePoints[linesCleared] * level;
-        
-        // 레벨업 판단 (10줄마다)
-        level = Math.floor(lines / 10) + 1;
-        updateUI();
-    }
-}
 
     function updateUI() {
         document.getElementById('score').innerText = score.toLocaleString();
@@ -293,7 +296,7 @@
 
     function drawNext() {
         nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-        const nSize = 13; // 넥스트 조각 크기 확대
+        const nSize = 13;
         const offsetX = (nextCanvas.width - next.matrix[0].length * nSize) / 2;
         const offsetY = (nextCanvas.height - next.matrix.length * nSize) / 2;
         next.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) draw3DBlock(nextCtx, (offsetX/nSize)+c, (offsetY/nSize)+r, next.color, nSize); }));
@@ -309,6 +312,18 @@
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
     
+    // SAVE BEST 버튼 클릭 이벤트 추가
+    document.getElementById('save-btn').addEventListener('click', () => {
+        if(score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('tetris_best', bestScore);
+            updateUI();
+            alert("최고 기록(" + bestScore.toLocaleString() + ")이 저장되었습니다!");
+        } else {
+            alert("현재 점수가 최고 기록보다 낮거나 같습니다.");
+        }
+    });
+
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
     window.onload = () => { resize(); updateUI(); };
