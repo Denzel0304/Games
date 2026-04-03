@@ -9,198 +9,95 @@
             --bg-color: #0a0a12;
             --grid-color: #1a1a2e;
             --text-color: #fff;
-            --shadow-color: rgba(255, 255, 255, 0.1);
             --neon-blue: #00f2ff;
             --neon-magenta: #ff00e4;
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Prevent scrolling */
-            touch-action: none; /* Disable default touch behavior */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
+            font-family: sans-serif;
+            overflow: hidden; touch-action: none;
+            display: flex; flex-direction: column; align-items: center; height: 100vh;
         }
 
         #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-            height: 100%;
-            padding: 20px;
-            box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 400px; height: 100%; padding: 15px; box-sizing: border-box;
         }
 
-        /* 고급 UI 헤더 */
+        /* 헤더 구성: 좌(제목) - 중(시작버튼) - 우(다음블록) */
         #header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--grid-color);
-            padding-bottom: 10px;
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border-bottom: 2px solid var(--grid-color); padding-bottom: 10px;
         }
 
-        #title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px var(--neon-blue);
-        }
+        #title { font-size: 1rem; font-weight: bold; color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); line-height: 1.2; }
 
-        #next-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        #next-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        #next-canvas {
-            border: 1px solid var(--grid-color);
-            background-color: #000;
-        }
-
-        /* 메인 게임 보드 */
-        #stage {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            width: 100%;
-        }
-
-        #canvas {
-            border: 4px solid var(--grid-color);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.05);
-            background-color: #000;
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        /* 고급 점수판 */
-        #scoreboard {
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            margin-top: auto;
-            border-top: 2px solid var(--grid-color);
-            background: rgba(10, 10, 18, 0.9);
-            position: sticky;
-            bottom: 0;
-        }
-
-        .stat-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 1px;
-        }
-
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: bold;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        #level-value { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-        #score-value { color: var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta); }
-
-        /* 게임 오버 오버레이 */
-        #game-over {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        #game-over h1 {
-            color: #ff3333;
-            font-size: 3rem;
-            text-shadow: 0 0 15px #ff3333;
-            margin-bottom: 20px;
-        }
-
-        #restart-btn {
-            background: transparent;
+        /* 중앙 시작 버튼 스타일 */
+        #start-btn {
+            background: rgba(0, 242, 255, 0.1);
             border: 2px solid var(--neon-blue);
             color: var(--neon-blue);
-            padding: 10px 25px;
-            font-size: 1.2rem;
-            text-transform: uppercase;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
             box-shadow: 0 0 10px var(--neon-blue);
+            transition: 0.2s;
         }
+        #start-btn:active { background: var(--neon-blue); color: #000; }
 
-        #restart-btn:active {
-            background-color: var(--neon-blue);
-            color: #000;
+        #next-container { display: flex; flex-direction: column; align-items: center; }
+        #next-label { font-size: 0.6rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 2px; }
+        #next-canvas { border: 1px solid var(--grid-color); background: #000; }
+
+        #stage { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; }
+        #canvas { border: 3px solid var(--grid-color); background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
+        #scoreboard {
+            width: 100%; display: flex; justify-content: space-around; padding: 10px 0;
+            border-top: 2px solid var(--grid-color); margin-top: auto;
         }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); }
+        .stat-value { font-size: 1.2rem; font-weight: bold; }
+        #level-value { color: var(--neon-blue); }
+        #score-value { color: var(--neon-magenta); }
 
+        #game-over {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="header">
-        <div id="title">Neon<br>Tetris</div>
+        <div id="title">NEON<br>TETRIS</div>
+        <button id="start-btn" onclick="startGame()">START</button>
         <div id="next-container">
-            <div id="next-label">Next</div>
-            <canvas id="next-canvas" width="60" height="60"></canvas>
+            <div id="next-label">NEXT</div>
+            <canvas id="next-canvas" width="50" height="50"></canvas>
         </div>
     </div>
 
     <div id="stage">
         <canvas id="canvas"></canvas>
         <div id="game-over">
-            <h1>GAME OVER</h1>
-            <button id="restart-btn" onclick="resetGame()">다시 시작</button>
+            <h2 style="color: #ff3333;">GAME OVER</h2>
+            <button id="start-btn" onclick="startGame()">RETRY</button>
         </div>
     </div>
 
     <div id="scoreboard">
-        <div class="stat-box">
-            <div class="stat-label">Level</div>
-            <div id="level-value" class="stat-value">1</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Score</div>
-            <div id="score-value" class="stat-value">0</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Lines</div>
-            <div id="lines-value" class="stat-value">0</div>
-        </div>
+        <div class="stat-box"><div class="stat-label">LEVEL</div><div id="level-value">1</div></div>
+        <div class="stat-box"><div class="stat-label">SCORE</div><div id="score-value">0</div></div>
+        <div class="stat-box"><div class="stat-label">LINES</div><div id="lines-value">0</div></div>
     </div>
 </div>
 
@@ -210,77 +107,37 @@
     const nextCanvas = document.getElementById('next-canvas');
     const nextCtx = nextCanvas.getContext('2d');
 
-    // 1. 모바일 크기 계산 로직 전면 수정 (절대값 방식)
-    const GAME_WIDTH = 10;
-    const GAME_HEIGHT = 20;
-    let BLOCK_SIZE = 20; // 기본값
+    const GAME_WIDTH = 10, GAME_HEIGHT = 20;
+    let BLOCK_SIZE, grid, currentPiece, nextPiece, currentX, currentY;
+    let score, level, linesCleared, isGameOver, dropCounter, lastTime, animationId;
+
+    const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
+    const COLORS = [null,{main:'#00f2ff',glow:'rgba(0,242,255,0.5)'},{main:'#ffaa00',glow:'rgba(255,170,0,0.5)'},{main:'#0044ff',glow:'rgba(0,68,255,0.5)'},{main:'#ffe600',glow:'rgba(255,230,0,0.5)'},{main:'#33ff00',glow:'rgba(51,255,0,0.5)'},{main:'#9900ff',glow:'rgba(153,0,255,0.5)'},{main:'#ff0044',glow:'rgba(255,0,68,0.5)'}];
 
     function resizeCanvas() {
-        // 모바일 화면 너비에 맞춰 유연하게 조절
-        const padding = 60;
-        const availableWidth = window.innerWidth - padding;
-        const availableHeight = window.innerHeight * 0.6; // 화면의 60%만 사용
-
-        // 너비 기준과 높이 기준 중 더 작은 것에 맞춰 블록 크기 결정
-        const sizeByWidth = Math.floor(availableWidth / GAME_WIDTH);
-        const sizeByHeight = Math.floor(availableHeight / GAME_HEIGHT);
-        
-        BLOCK_SIZE = Math.min(sizeByWidth, sizeByHeight);
-        
-        // 너무 작아지는 것 방지
-        if (BLOCK_SIZE < 15) BLOCK_SIZE = 15;
-
+        const availableHeight = document.getElementById('stage').offsetHeight - 20;
+        BLOCK_SIZE = Math.floor(availableHeight / GAME_HEIGHT);
         canvas.width = GAME_WIDTH * BLOCK_SIZE;
         canvas.height = GAME_HEIGHT * BLOCK_SIZE;
-        
-        draw(); 
+        draw();
     }
 
-    // 2. 테트리미노 데이터
-    const PIECES = [
-        [ [1, 1, 1, 1] ], 
-        [ [1, 1, 1], [0, 0, 1] ], 
-        [ [1, 1, 1], [1, 0, 0] ], 
-        [ [1, 1], [1, 1] ], 
-        [ [0, 1, 1], [1, 1, 0] ], 
-        [ [1, 1, 1], [0, 1, 0] ], 
-        [ [1, 1, 0], [0, 1, 1] ]
-    ];
-
-    const COLORS = [
-        null,
-        { main: '#00f2ff', glow: 'rgba(0, 242, 255, 0.6)' },
-        { main: '#ffaa00', glow: 'rgba(255, 170, 0, 0.6)' },
-        { main: '#0044ff', glow: 'rgba(0, 68, 255, 0.6)' },
-        { main: '#ffe600', glow: 'rgba(255, 230, 0, 0.6)' },
-        { main: '#33ff00', glow: 'rgba(51, 255, 0, 0.6)' },
-        { main: '#9900ff', glow: 'rgba(153, 0, 255, 0.6)' },
-        { main: '#ff0044', glow: 'rgba(255, 0, 68, 0.6)' }
-    ];
-
-    let grid, currentPiece, nextPiece, currentX, currentY, score, level, linesCleared, isGameOver, dropCounter, lastTime;
-
-    function resetGame() {
+    function startGame() {
+        cancelAnimationFrame(animationId);
         grid = Array(GAME_HEIGHT).fill().map(() => Array(GAME_WIDTH).fill(0));
-        score = 0; level = 1; linesCleared = 0; isGameOver = false;
-        dropCounter = 0; lastTime = 0;
+        score = 0; level = 1; linesCleared = 0; isGameOver = false; dropCounter = 0; lastTime = 0;
         document.getElementById('game-over').style.display = 'none';
+        document.getElementById('start-btn').innerText = "RESET";
         updateUI();
-        nextPiece = createPieceData();
+        nextPiece = { matrix: PIECES[Math.floor(Math.random()*7)], colorIndex: Math.floor(Math.random()*7)+1 };
         spawnPiece();
-        requestAnimationFrame(update);
-    }
-
-    function createPieceData() {
-        const index = Math.floor(Math.random() * PIECES.length);
-        return { matrix: PIECES[index], colorIndex: index + 1 };
+        animationId = requestAnimationFrame(update);
     }
 
     function spawnPiece() {
         currentPiece = nextPiece;
-        nextPiece = createPieceData();
-        currentX = Math.floor(GAME_WIDTH / 2) - Math.floor(currentPiece.matrix[0].length / 2);
-        currentY = 0;
+        nextPiece = { matrix: PIECES[Math.floor(Math.random()*7)], colorIndex: Math.floor(Math.random()*7)+1 };
+        currentX = 4; currentY = 0;
         drawNextPiece();
         if (collision(currentX, currentY, currentPiece.matrix)) {
             isGameOver = true;
@@ -291,48 +148,38 @@
     function collision(x, y, matrix) {
         for (let r = 0; r < matrix.length; r++) {
             for (let c = 0; c < matrix[r].length; c++) {
-                if (matrix[r][c]) {
-                    let newX = x + c;
-                    let newY = y + r;
-                    if (newX < 0 || newX >= GAME_WIDTH || newY >= GAME_HEIGHT || (newY >= 0 && grid[newY][newX])) return true;
-                }
+                if (matrix[r][c] && (grid[y+r] === undefined || grid[y+r][x+c] === undefined || grid[y+r][x+c])) return true;
             }
         }
         return false;
     }
 
-    function rotate(matrix) {
-        return matrix[0].map((_, i) => matrix.map(row => row[i]).reverse());
-    }
+    function rotate(matrix) { return matrix[0].map((_, i) => matrix.map(row => row[i]).reverse()); }
 
-    function playerDrop() {
-        currentY++;
-        if (collision(currentX, currentY, currentPiece.matrix)) {
-            currentY--;
-            currentPiece.matrix.forEach((row, r) => {
-                row.forEach((val, c) => { if (val) grid[currentY + r][currentX + c] = currentPiece.colorIndex; });
-            });
-            clearLines();
-            spawnPiece();
-        }
-        dropCounter = 0;
-    }
-
-    function clearLines() {
-        let count = 0;
-        for (let r = GAME_HEIGHT - 1; r >= 0; r--) {
-            if (grid[r].every(val => val !== 0)) {
-                grid.splice(r, 1);
-                grid.unshift(Array(GAME_WIDTH).fill(0));
-                count++; r++;
+    function update(time = 0) {
+        if (isGameOver) return;
+        const deltaTime = time - lastTime; lastTime = time;
+        dropCounter += deltaTime;
+        if (dropCounter > Math.max(100, 1000 - (level-1)*80)) {
+            currentY++;
+            if (collision(currentX, currentY, currentPiece.matrix)) {
+                currentY--;
+                currentPiece.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) grid[currentY+r][currentX+c] = currentPiece.colorIndex; }));
+                checkLines();
+                spawnPiece();
             }
+            dropCounter = 0;
         }
-        if (count > 0) {
-            linesCleared += count;
-            score += [0, 40, 100, 300, 1200][count] * level;
-            level = Math.floor(linesCleared / 10) + 1;
-            updateUI();
+        draw();
+        animationId = requestAnimationFrame(update);
+    }
+
+    function checkLines() {
+        let count = 0;
+        for (let r = GAME_HEIGHT-1; r >= 0; r--) {
+            if (grid[r].every(v => v !== 0)) { grid.splice(r, 1); grid.unshift(Array(GAME_WIDTH).fill(0)); count++; r++; }
         }
+        if (count > 0) { linesCleared += count; score += [0, 100, 300, 500, 1000][count] * level; level = Math.floor(linesCleared/10)+1; updateUI(); }
     }
 
     function updateUI() {
@@ -341,49 +188,38 @@
         document.getElementById('lines-value').innerText = linesCleared;
     }
 
-    function draw() {
-        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        grid.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(ctx, x, y, val, BLOCK_SIZE); }));
-        if (currentPiece) currentPiece.matrix.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(ctx, currentX + x, currentY + y, currentPiece.colorIndex, BLOCK_SIZE); }));
+    function drawBlock(tCtx, x, y, cIdx, size) {
+        const color = COLORS[cIdx];
+        tCtx.shadowColor = color.glow; tCtx.shadowBlur = 8;
+        tCtx.fillStyle = color.main;
+        tCtx.fillRect(x*size+1, y*size+1, size-2, size-2);
+        tCtx.shadowBlur = 0;
     }
 
-    function drawBlock(targetCtx, x, y, colorIdx, size) {
-        const color = COLORS[colorIdx];
-        targetCtx.shadowColor = color.glow; targetCtx.shadowBlur = 10;
-        targetCtx.fillStyle = color.main;
-        targetCtx.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-        targetCtx.shadowBlur = 0;
+    function draw() {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        grid.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x, y, v, BLOCK_SIZE); }));
+        if (currentPiece) currentPiece.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, currentX+x, currentY+y, currentPiece.colorIndex, BLOCK_SIZE); }));
     }
 
     function drawNextPiece() {
-        nextCtx.fillStyle = '#000'; nextCtx.fillRect(0, 0, 60, 60);
+        nextCtx.fillStyle = '#000'; nextCtx.fillRect(0, 0, 50, 50);
         const m = nextPiece.matrix;
-        m.forEach((row, y) => row.forEach((val, x) => { if (val) drawBlock(nextCtx, x + 0.5, y + 0.5, nextPiece.colorIndex, 12); }));
+        m.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(nextCtx, x+1, y+1, nextPiece.colorIndex, 10); }));
     }
 
-    function update(time = 0) {
-        if (isGameOver) return;
-        const deltaTime = time - lastTime; lastTime = time;
-        dropCounter += deltaTime;
-        if (dropCounter > Math.max(100, 1000 - (level - 1) * 100)) playerDrop();
-        draw();
-        requestAnimationFrame(update);
-    }
-
-    // 터치 및 키보드 이벤트
-    let startX, startY;
-    canvas.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; e.preventDefault(); });
+    let sX, sY;
+    canvas.addEventListener('touchstart', e => { sX = e.touches[0].clientX; sY = e.touches[0].clientY; e.preventDefault(); });
     canvas.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - startX;
-        const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) > 30) { if (dx > 0) { if (!collision(currentX + 1, currentY, currentPiece.matrix)) currentX++; } else { if (!collision(currentX - 1, currentY, currentPiece.matrix)) currentX--; } }
-        else if (dy > 50) { while (!collision(currentX, currentY + 1, currentPiece.matrix)) currentY++; playerDrop(); }
-        else { const r = rotate(currentPiece.matrix); if (!collision(currentX, currentY, r)) currentPiece.matrix = r; }
-        e.preventDefault(); draw();
+        const dX = e.changedTouches[0].clientX - sX, dY = e.changedTouches[0].clientY - sY;
+        if (Math.abs(dX) > 30) { if (dX > 0) { if(!collision(currentX+1, currentY, currentPiece.matrix)) currentX++; } else { if(!collision(currentX-1, currentY, currentPiece.matrix)) currentX--; } }
+        else if (dY > 50) { while(!collision(currentX, currentY+1, currentPiece.matrix)) currentY++; }
+        else { const r = rotate(currentPiece.matrix); if(!collision(currentX, currentY, r)) currentPiece.matrix = r; }
+        draw();
     });
 
-    window.addEventListener('load', () => { resizeCanvas(); resetGame(); });
-    window.addEventListener('resize', resizeCanvas);
+    window.onload = () => { resizeCanvas(); };
+    window.onresize = resizeCanvas;
 </script>
 </body>
 </html>
