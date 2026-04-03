@@ -19,46 +19,53 @@
         }
 
         #game-container {
-            display: flex; width: 98vw; height: 92vh; gap: 5px;
+            display: flex; width: 98vw; height: 85vh; gap: 5px; /* 높이를 85%로 줄여 절대 안잘리게 함 */
         }
 
-        /* 경기장 영역 확대 */
         #stage-area {
-            flex: 1.5; display: flex; flex-direction: column;
+            flex: 1.4; display: flex; flex-direction: column; height: 100%;
         }
 
         #canvas {
             border: 2px solid rgba(255, 255, 255, 0.1); background: #000;
-            width: 100%; border-radius: 4px;
+            width: 100%; border-radius: 4px; flex-shrink: 0;
         }
 
-        /* 우측 조작계 영역 축소 */
+        /* 우측 사이드바 레이아웃 */
         #sidebar {
-            flex: 0.8; display: flex; flex-direction: column; gap: 8px;
+            flex: 0.9; display: flex; flex-direction: column; 
+            justify-content: center; /* 모든 요소를 세로 중앙으로 집결 */
+            gap: 15px; height: 100%;
         }
 
         .info-panel {
-            background: var(--panel-bg); padding: 8px; border-radius: 8px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+            background: var(--panel-bg); padding: 10px; border-radius: 8px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
         }
         .info-item { text-align: center; }
-        .info-label { font-size: 8px; color: #888; }
-        .info-value { font-size: 13px; font-weight: bold; color: var(--neon-blue); }
+        .info-label { font-size: 8px; color: #888; text-transform: uppercase; }
+        .info-value { font-size: 14px; font-weight: bold; color: var(--neon-blue); }
 
-        #controls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
-        .btn-row { display: flex; gap: 8px; }
+        #controls { 
+            display: flex; flex-direction: column; gap: 10px; 
+            width: 100%;
+        }
+        
+        .btn-row { display: flex; gap: 10px; }
 
         .btn {
             background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-size: 22px; color: white; flex: 1; height: 65px; cursor: pointer;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-size: 26px; color: white; flex: 1; height: 75px; cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
         }
-        .btn:active { background: #444; transform: scale(0.95); }
+        .btn:active { background: #444; transform: translateY(2px); box-shadow: none; }
         .btn.special { background: rgba(255, 0, 127, 0.2); color: var(--neon-pink); border-color: var(--neon-pink); }
 
         #start-btn {
-            padding: 10px; background: var(--neon-blue); border: none;
-            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 5px;
+            padding: 12px; background: var(--neon-blue); border: none;
+            border-radius: 6px; font-weight: bold; color: #000; margin-bottom: 10px;
+            width: 100%; cursor: pointer;
         }
     </style>
 </head>
@@ -72,7 +79,7 @@
 
     <div id="sidebar">
         <div class="info-panel">
-            <div class="info-item" style="grid-column: span 2;">
+            <div class="info-item" style="grid-column: span 2; margin-bottom: 5px;">
                 <canvas id="next-canvas" width="50" height="50"></canvas>
             </div>
             <div class="info-item"><div class="info-label">SCORE</div><div id="score" class="info-value">0</div></div>
@@ -99,15 +106,13 @@
 
     const COLS = 12, ROWS = 22;
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, isGameOver, animationId, lastTime, dropCounter;
-    
-    // 파티클 효과용 배열
     let particles = [];
 
     const COLORS = [null, '#FFB7B2', '#B2E2F2', '#B2F2BB', '#E2B2F2', '#F2E2B2', '#F2B2D1', '#D1D1D1'];
     const PIECES = [[[1,1,1,1]],[[1,1,1],[0,0,1]],[[1,1,1],[1,0,0]],[[1,1],[1,1]],[[0,1,1],[1,1,0]],[[1,1,1],[0,1,0]],[[1,1,0],[0,1,1]]];
 
     function resize() {
-        const h = document.getElementById('stage-area').offsetHeight - 60;
+        const h = document.getElementById('stage-area').offsetHeight - 80;
         BLOCK_SIZE = Math.floor(h / ROWS);
         canvas.width = COLS * BLOCK_SIZE;
         canvas.height = ROWS * BLOCK_SIZE;
@@ -133,7 +138,11 @@
         current.x = Math.floor(COLS/2) - Math.floor(current.matrix[0].length/2);
         current.y = 0;
         drawNext();
-        if(collision(0,0,current.matrix)) isGameOver = true;
+        if(collision(0,0,current.matrix)) {
+            isGameOver = true;
+            if(score > bestScore) bestScore = score;
+            updateUI();
+        }
     }
 
     function collision(dx, dy, m) {
@@ -148,16 +157,15 @@
         return false;
     }
 
-    // 파티클(부서지는 효과) 생성
     function createExplosion(r) {
         for(let c=0; c<COLS; c++) {
             const color = COLORS[grid[r][c]];
-            for(let i=0; i<4; i++) {
+            for(let i=0; i<6; i++) {
                 particles.push({
-                    x: c * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
-                    y: r * BLOCK_SIZE + Math.random() * BLOCK_SIZE,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10,
+                    x: c * BLOCK_SIZE + BLOCK_SIZE/2,
+                    y: r * BLOCK_SIZE + BLOCK_SIZE/2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.5) * 12,
                     life: 1.0,
                     color: color
                 });
@@ -170,13 +178,10 @@
         const dt = time - lastTime; lastTime = time;
         dropCounter += dt;
         if(dropCounter > 800) { moveDown(); dropCounter = 0; }
-        
-        // 파티클 업데이트
         particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
             if(p.life <= 0) particles.splice(i, 1);
         });
-
         draw();
         animationId = requestAnimationFrame(update);
     }
@@ -197,7 +202,7 @@
     function checkLines() {
         for(let r=ROWS-1; r>=0; r--) {
             if(grid[r].every(v => v !== 0)) {
-                createExplosion(r); // 부서지는 효과 발생
+                createExplosion(r);
                 grid.splice(r, 1);
                 grid.unshift(Array(COLS).fill(0));
                 score += 100; r++;
@@ -208,39 +213,29 @@
 
     function updateUI() {
         document.getElementById('score').innerText = score;
-        if(score > bestScore) bestScore = score;
         document.getElementById('best').innerText = bestScore;
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // 격자 미세하게 그리기
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-        for(let i=0; i<=COLS; i++) { ctx.beginPath(); ctx.moveTo(i*BLOCK_SIZE,0); ctx.lineTo(i*BLOCK_SIZE,canvas.height); ctx.stroke(); }
-        for(let i=0; i<=ROWS; i++) { ctx.beginPath(); ctx.moveTo(0,i*BLOCK_SIZE); ctx.lineTo(canvas.width,i*BLOCK_SIZE); ctx.stroke(); }
-
-        // 쌓인 블록
         grid.forEach((row, r) => row.forEach((v, c) => {
             if(v) {
                 ctx.fillStyle = COLORS[v];
                 ctx.fillRect(c*BLOCK_SIZE+1, r*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2);
             }
         }));
-
-        // 현재 블록
         if(current) current.matrix.forEach((row, r) => row.forEach((v, c) => {
             if(v) {
                 ctx.fillStyle = COLORS[current.color];
                 ctx.fillRect((current.x+c)*BLOCK_SIZE+1, (current.y+r)*BLOCK_SIZE+1, BLOCK_SIZE-2, BLOCK_SIZE-2);
             }
         }));
-
-        // 파티클 그리기
         particles.forEach(p => {
             ctx.globalAlpha = p.life;
             ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, 3, 3);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2, 0, Math.PI*2);
+            ctx.fill();
         });
         ctx.globalAlpha = 1.0;
     }
@@ -248,20 +243,18 @@
     function drawNext() {
         nextCtx.clearRect(0, 0, 50, 50);
         next.matrix.forEach((row, r) => row.forEach((v, c) => {
-            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*10+10, r*10+10, 8, 8); }
+            if(v) { nextCtx.fillStyle = COLORS[next.color]; nextCtx.fillRect(c*8+12, r*8+12, 6, 6); }
         }));
     }
 
-    // 🚀 버튼 연속 동작 시스템
     let intervals = {};
     function startAction(id, action) {
         if(intervals[id]) return;
         action();
-        intervals[id] = setInterval(action, 100);
+        intervals[id] = setInterval(action, 90);
     }
     function stopAction(id) { clearInterval(intervals[id]); delete intervals[id]; }
 
-    // 이벤트 리스너 연결
     document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('left', () => { if(!collision(-1,0,current.matrix)) current.x--; draw(); }); });
     document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('right', () => { if(!collision(1,0,current.matrix)) current.x++; draw(); }); });
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startAction('down', moveDown); });
@@ -277,7 +270,6 @@
     });
 
     window.onload = () => { resize(); startGame(); };
-    window.onresize = resize;
 </script>
 </body>
 </html>
