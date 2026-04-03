@@ -55,7 +55,16 @@
             padding: 0 4px;
         }
         .info-label { font-size: 11px; color: #888; font-weight: bold; }
-        .info-value { font-size: 18px; font-weight: bold; color: var(--neon-blue); }
+        .info-value { 
+    font-size: 14px; /* 기존 18px에서 14px로 축소 */
+    font-weight: bold; 
+    color: var(--neon-blue);
+    white-space: nowrap; /* 숫자가 길어져도 줄바꿈 방지 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 혹시나 칸을 넘어가면 ... 처리 (안전장치) */
+    max-width: 80px; /* 숫자 영역 최대 너비 제한 */
+    text-align: right;
+}
 
         /* 조작 버튼 영역: 간격을 16px(기존의 2배)로 조정 */
         #controls { 
