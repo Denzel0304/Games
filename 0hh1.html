@@ -261,6 +261,22 @@
 
         // 최초 실행
         initGame();
+
+        // 브라우저 소리 잠금 해제를 위한 코드
+document.addEventListener('pointerdown', function unlock() {
+    const sound = document.getElementById('click-sound');
+    sound.play().then(() => {
+        // 성공적으로 재생되면 (무음 재생) 즉시 일시정지하고 위치 초기화
+        sound.pause();
+        sound.currentTime = 0;
+        // 한 번만 실행되면 되므로 이벤트 리스너 제거
+        document.removeEventListener('pointerdown', unlock);
+    }).catch(error => {
+        // 첫 터치 전에는 에러가 날 수 있지만 무시합니다.
+        console.log("Audio waiting for user interaction");
+    });
+}, { once: true });
+        
     </script>
 </body>
 </html>
