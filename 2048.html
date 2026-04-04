@@ -132,6 +132,8 @@
 </head>
 <body>
 
+    <audio id="merge-sound" src="effect 4.mp3" preload="auto"></audio>
+
     <div class="header">
         <div class="title-wrapper"><h1>2048</h1></div>
         <div class="score-container">
@@ -263,6 +265,12 @@
             }
 
             if (oldBoard !== JSON.stringify(board)) {
+                // --- 소리 재생 코드 추가 ---
+        const sound = document.getElementById('merge-sound');
+        sound.currentTime = 0;
+        sound.play();
+        // ------------------------
+                
                 // 렌더링 업데이트
                 gridContainer.querySelectorAll('.tile').forEach(tile => tile.remove());
                 for (let r = 0; r < 4; r++) {
@@ -310,6 +318,15 @@
         });
 
         startGame();
+// --- 여기에 추가: 첫 터치 소리 먹통 방지 ---
+        document.addEventListener('touchstart', function unlock() {
+            const sound = document.getElementById('merge-sound');
+            sound.play().then(() => {
+                sound.pause();
+                sound.currentTime = 0;
+            }).catch(() => {});
+        }, { once: true });
+        
     </script>
 </body>
 </html>
