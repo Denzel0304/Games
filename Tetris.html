@@ -158,6 +158,9 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
+    // [추가] 눈송이 저장용 배열
+    let snowFlakes = [];
+
     // 오디오 관련 변수
     let bgmIndex = 1;
     const bgm = new Audio();
@@ -178,6 +181,12 @@
     modeBtn.addEventListener('click', () => {
         const isLeft = gameContainer.classList.toggle('left-handed');
         modeBtn.innerText = isLeft ? 'Right-handed' : 'Left-handed';
+        
+        // [추가] 좌우 반전 시 눈송이들의 위치도 함께 거울 반전 시킴
+        snowFlakes.forEach(f => {
+            f.x = canvas.width - f.x;
+        });
+
         resize();
     });
 
@@ -321,8 +330,35 @@
         document.getElementById('level').innerText = level;
     }
 
+    // [추가] 눈송이 업데이트 및 그리기 함수
+    function updateSnow() {
+        if (snowFlakes.length < 50 && Math.random() < 0.1) {
+            snowFlakes.push({
+                x: Math.random() * canvas.width,
+                y: -10,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 0.5 + 0.3,
+                wind: (Math.random() - 0.5) * 0.3
+            });
+        }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        for (let i = snowFlakes.length - 1; i >= 0; i--) {
+            let f = snowFlakes[i];
+            f.y += f.speed;
+            f.x += f.wind;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (f.y > canvas.height) snowFlakes.splice(i, 1);
+        }
+    }
+
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // [추가] 배경에 눈 효과 그리기
+        updateSnow();
+
         grid.forEach((row, r) => row.forEach((v, c) => { if(v) draw3DBlock(ctx, c, r, v, BLOCK_SIZE); }));
         if(current && !isGameOver) current.matrix.forEach((row, r) => row.forEach((v, c) => { if(v) draw3DBlock(ctx, current.x + c, current.y + r, current.color, BLOCK_SIZE); }));
         particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 2, 2); });
