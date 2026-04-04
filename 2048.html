@@ -6,24 +6,22 @@
     <title>Neumorphic 2048</title>
     <style>
         :root {
-            /* 0h h1과 동일한 고급스러운 뉴모피즘 컬러 팔레트 - 절대로 바꾸지 않음 */
             --bg-color: #e0e5ec;
             --text-color: #37474f;
             --shadow-dark: rgba(163, 177, 198, 0.7);
             --shadow-light: rgba(255, 255, 255, 0.9);
             
-            /* 타일별 포인트 컬러 (숫자가 커질수록 진해짐) */
             --tile-2-bg: #e0e5ec; --tile-2-text: #78909c;
             --tile-4-bg: #dce1e9; --tile-4-text: #546e7a;
-            --tile-8-bg: #ffb74d; --tile-8-text: white; /* 오렌지 */
+            --tile-8-bg: #ffb74d; --tile-8-text: white;
             --tile-16-bg: #ff9800; --tile-16-text: white;
-            --tile-32-bg: #e57373; --tile-32-text: white; /* 레드 */
+            --tile-32-bg: #e57373; --tile-32-text: white;
             --tile-64-bg: #ef5350; --tile-64-text: white;
-            --tile-128-bg: #fff176; --tile-128-text: #546e7a; /* 옐로우 */
+            --tile-128-bg: #fff176; --tile-128-text: #546e7a;
             --tile-256-bg: #ffee58; --tile-256-text: #546e7a;
-            --tile-512-bg: #81d4fa; --tile-512-text: white; /* 블루 */
+            --tile-512-bg: #81d4fa; --tile-512-text: white;
             --tile-1024-bg: #29b6f6; --tile-1024-text: white;
-            --tile-2048-bg: #66bb6a; --tile-2048-text: white; /* 그린 - 최종 */
+            --tile-2048-bg: #66bb6a; --tile-2048-text: white;
         }
 
         html, body {
@@ -31,91 +29,66 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Segoe UI', Roboto, sans-serif;
-            overflow: hidden; /* 모바일 스크롤 방지 */
+            overflow: hidden;
             user-select: none; -webkit-user-select: none;
-            touch-action: none; /* 터치 스와이프 전용 */
+            touch-action: none;
         }
 
         body { display: flex; flex-direction: column; align-items: center; }
 
-        /* 상단 영역 (22%): 제목과 점수 - 높이 비율 유지 */
         .header {
             height: 22%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             width: 100%;
         }
 
-        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; } /* 폰트 크기 미세 조정 */
+        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
 
         .score-container {
-            display: flex;
-            gap: 20px; /* 0h h1 title-wrapper gap 계승 */
-            margin-top: 10px;
+            display: flex; gap: 20px; margin-top: 10px;
         }
 
-        /* 스코어 박스 디자인 수정: 높이 축소, 가로 확장 */
         .score-box {
-            padding: 8px 25px; /* 상하 패딩 축소, 좌우 패딩 확대 - 4자리 숫자 표시 */
-            border-radius: 12px;
-            background: var(--bg-color);
-            text-align: center;
+            padding: 8px 25px; border-radius: 12px;
+            background: var(--bg-color); text-align: center;
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            min-width: 80px; /* 최소 너비 확보 */
+            min-width: 85px;
         }
 
-        .score-label { font-size: 0.65rem; color: #78909c; font-weight: 500; text-transform: uppercase; } /* 폰트 크기 미세 조정 */
-        .score-value { font-size: 1.1rem; font-weight: 700; margin-top: 1px; } /* 폰트 크기 미세 조정 */
+        .score-label { font-size: 0.65rem; color: #78909c; font-weight: 500; text-transform: uppercase; }
+        .score-value { font-size: 1.1rem; font-weight: 700; margin-top: 1px; }
 
-        /* 중앙 게임 판 영역 (53%) - 높이 비율 유지 */
         .game-area {
-            height: 53%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 53%; width: 100%;
+            display: flex; justify-content: center; align-items: center;
         }
 
         #grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            width: 85vw; /* 0h h1과 동일 */
-            max-width: 340px; /* 0h h1과 동일 */
-            aspect-ratio: 1 / 1;
-            padding: 15px; /* 0h h1과 동일 */
-            background: var(--bg-color);
-            border-radius: 20px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+            width: 85vw; max-width: 340px; aspect-ratio: 1 / 1;
+            padding: 15px; background: var(--bg-color); border-radius: 20px;
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             position: relative;
         }
 
-        /* 빈 칸 디자인 - 0h h1 cell 디자인 계승 */
         .grid-cell {
-            background-color: var(--bg-color);
-            border-radius: 10px;
+            background-color: var(--bg-color); border-radius: 10px;
             box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
         }
 
-        /* 숫자 타일 디자인 - 입체감 유지 */
         .tile {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.8rem;
-            font-weight: 800;
-            border-radius: 10px;
+            position: absolute; display: flex;
+            justify-content: center; align-items: center;
+            font-size: 1.8rem; font-weight: 800; border-radius: 10px;
             transition: transform 0.15s ease-in-out, background-color 0.1s ease-in-out;
             box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
-            /* 모바일 최적화: grid gap과 padding을 고려한 크기 계산 */
             width: calc((100% - 30px - 36px) / 4); 
             height: calc((100% - 30px - 36px) / 4);
+            /* 초기 생성 시 튐 방지 */
+            left: 0; top: 0;
         }
 
-        /* 숫자별 스타일 적용 - 폰트 크기 미세 조정 */
         .tile-2 { background-color: var(--tile-2-bg); color: var(--tile-2-text); font-size: 2rem;}
         .tile-4 { background-color: var(--tile-4-bg); color: var(--tile-4-text); font-size: 2rem;}
         .tile-8 { background-color: var(--tile-8-bg); color: var(--tile-8-text); }
@@ -128,57 +101,36 @@
         .tile-1024 { background-color: var(--tile-1024-bg); color: var(--tile-1024-text); font-size: 1.1rem; }
         .tile-2048 { background-color: var(--tile-2048-bg); color: var(--tile-2048-text); font-size: 1.1rem; box-shadow: 0 0 15px rgba(102, 187, 106, 0.5); }
 
-        /* 생성 및 병합 애니메이션 */
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
         .tile-new { animation: popIn 0.2s ease-in-out; }
 
-        /* 하단 영역 (25%) - 높이 비율 유지 */
         .footer {
-            height: 25%;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            height: 25%; width: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             padding-bottom: 20px;
         }
 
         #status { margin-bottom: 15px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
 
-        /* 하단 버튼 영역 디자인 수정: 양끝 배치, 가로폭 확대 */
+        /* 버튼 중앙 정렬 수정 */
         .controls {
-            display: flex;
-            justify-content: space-between; /* 양끝 배치 */
-            width: 85vw; /* 게임 판과 동일 너비 */
-            max-width: 340px; /* 게임 판과 동일 최대 너비 */
+            display: flex; justify-content: center;
+            width: 85vw; max-width: 340px;
         }
 
-        /* 0h h1의 고급스러운 버튼 디자인 계승 - 절대로 바꾸지 않음 */
         .action-btn {
-            padding: 18px 0;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            background: var(--bg-color);
-            color: var(--text-color);
+            width: 70%; /* 중앙 배치를 위해 적절한 너비 설정 */
+            padding: 18px 0; border: none; border-radius: 15px;
+            font-size: 1.1rem; font-weight: 700;
+            background: var(--bg-color); color: var(--text-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-            cursor: pointer;
-            transition: transform 0.1s;
+            cursor: pointer; transition: transform 0.1s;
         }
 
-        /* 좌측 버튼 (새 게임) 디자인 수정: 좌측 배치, 가로 넓게 */
         #restart-btn {
-            width: 48%; /* 가로폭 확대 */
-            background: linear-gradient(145deg, #ff9800, #f57c00); /* 오렌지 그라데이션 - 절대로 바꾸지 않음 */
-            color: white;
-            box-shadow: 4px 4px 10px rgba(245, 124, 0, 0.3);
-        }
-
-        /* 우측 버튼 공간 확보 (필요시 추가) */
-        .right-btn-space {
-            width: 48%;
-            /* 비워둠 */
+            background: linear-gradient(145deg, #ff9800, #f57c00);
+            color: white; box-shadow: 4px 4px 10px rgba(245, 124, 0, 0.3);
         }
 
         .action-btn:active {
@@ -190,18 +142,10 @@
 <body>
 
     <div class="header">
-        <div class="title-wrapper">
-            <h1>2048</h1>
-        </div>
+        <div class="title-wrapper"><h1>2048</h1></div>
         <div class="score-container">
-            <div class="score-box">
-                <div class="score-label">Score</div>
-                <div id="score" class="score-value">0</div>
-            </div>
-            <div class="score-box">
-                <div class="score-label">Best</div>
-                <div id="best-score" class="score-value">0</div>
-            </div>
+            <div class="score-box"><div class="score-label">Score</div><div id="score" class="score-value">0</div></div>
+            <div class="score-box"><div class="score-label">Best</div><div id="best-score" class="score-value">0</div></div>
         </div>
     </div>
     
@@ -211,18 +155,17 @@
             <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
             <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
             <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
-            </div>
+        </div>
     </div>
 
     <div class="footer">
         <div id="status">화면을 쓸어넘겨 숫자를 합치세요!</div>
         <div class="controls">
             <button id="restart-btn" class="action-btn" onclick="startGame()">새 게임</button>
-            <div class="right-btn-space"></div> </div>
+        </div>
     </div>
 
     <script>
-        // 스크립트 로직은 이전과 동일하며, 렌더링 시 CSS 변수와 완벽하게 매칭됩니다.
         const gridContainer = document.getElementById('grid-container');
         const scoreElement = document.getElementById('score');
         const bestScoreElement = document.getElementById('best-score');
@@ -233,22 +176,18 @@
         let bestScore = localStorage.getItem('bestScore2048') || 0;
         let isGameOver = false;
 
-        // 초기화
         bestScoreElement.innerText = bestScore;
 
         function startGame() {
             gridContainer.querySelectorAll('.tile').forEach(tile => tile.remove());
             board = Array(4).fill().map(() => Array(4).fill(0));
-            score = 0;
-            updateScore(0);
+            score = 0; updateScore(0);
             isGameOver = false;
             statusElement.innerText = "게임을 시작합니다!";
             statusElement.style.color = "#78909c";
-            addRandomTile();
-            addRandomTile();
+            addRandomTile(); addRandomTile();
         }
 
-        // 빈 칸에 새로운 타일 추가
         function addRandomTile() {
             let cells = [];
             for (let r = 0; r < 4; r++) {
@@ -263,24 +202,22 @@
             }
         }
 
-        // 화면에 타일 그리기 (CSS 변수 계산 로직 준수)
         function drawTile(r, c, value, isNew = false) {
             const tile = document.createElement('div');
             tile.className = `tile tile-${value}`;
             tile.innerText = value;
             
-            // 위치 계산 (CSS 변수 값과 매칭)
             const gap = 12;
             const padding = 15;
-            const pos = `translate(calc(${padding}px + ${c * 100}% + ${c * gap}px), calc(${padding}px + ${r * 100}% + ${r * gap}px))`;
-            tile.style.transform = pos;
+            // 타일 생성 즉시 위치 계산하여 할당 (좌측 상단 잔상 방지)
+            const x = padding + (c * 100) + (c * gap);
+            const y = padding + (r * 100) + (r * gap);
+            tile.style.transform = `translate(calc(${padding}px + ${c * 100}% + ${c * gap}px), calc(${padding}px + ${r * 100}% + ${r * gap}px))`;
             
             if (isNew) tile.classList.add('tile-new');
-            
             gridContainer.appendChild(tile);
         }
 
-        // 점수 업데이트 및 최고 점수 저장
         function updateScore(newScore) {
             score = newScore;
             scoreElement.innerText = score;
@@ -291,25 +228,17 @@
             }
         }
 
-        // --- 핵심 게임 로직: 이동 및 병합 ---
         function slide(row) {
             let arr = row.filter(val => val);
-            let missing = 4 - arr.length;
-            let zeros = Array(missing).fill(0);
-            arr = arr.concat(zeros);
-
-            for (let i = 0; i < 3; i++) {
-                if (arr[i] === arr[i+1] && arr[i] !== 0) {
+            for (let i = 0; i < arr.length - 1; i++) {
+                if (arr[i] === arr[i+1]) {
                     arr[i] *= 2;
                     updateScore(score + arr[i]);
                     if (arr[i] === 2048) statusElement.innerText = "🎉 2048 달성!";
-                    arr[i+1] = 0;
+                    arr.splice(i + 1, 1);
                 }
             }
-            arr = arr.filter(val => val);
-            missing = 4 - arr.length;
-            zeros = Array(missing).fill(0);
-            arr = arr.concat(zeros);
+            while (arr.length < 4) arr.push(0);
             return arr;
         }
 
@@ -325,7 +254,7 @@
                     if (direction === 'right') newRow.reverse();
                     board[r] = newRow;
                 }
-            } else { // up or down
+            } else {
                 for (let c = 0; c < 4; c++) {
                     let col = [board[0][c], board[1][c], board[2][c], board[3][c]];
                     if (direction === 'down') col.reverse();
@@ -360,33 +289,27 @@
             statusElement.style.color = "#d32f2f";
         }
 
-        // --- 터치 스와이프 이벤트 처리 ---
         let touchStartX, touchStartY;
-
         window.addEventListener('touchstart', e => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        }, { passive: false }); // 스크롤 방지
+        }, { passive: false });
 
         window.addEventListener('touchmove', e => {
             if (touchStartX && touchStartY) e.preventDefault();
-        }, { passive: false }); // 스크롤 방지
+        }, { passive: false });
 
         window.addEventListener('touchend', e => {
             if (!touchStartX || !touchStartY) return;
-            
             let dx = e.changedTouches[0].clientX - touchStartX;
             let dy = e.changedTouches[0].clientY - touchStartY;
-            
-            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
-
-            if (Math.abs(dx) > Math.abs(dy)) handleMove(dx > 0 ? 'right' : 'left');
-            else handleMove(dy > 0 ? 'down' : 'up');
-            
+            if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+                if (Math.abs(dx) > Math.abs(dy)) handleMove(dx > 0 ? 'right' : 'left');
+                else handleMove(dy > 0 ? 'down' : 'up');
+            }
             touchStartX = null; touchStartY = null;
         });
 
-        // 최초 실행
         startGame();
     </script>
 </body>
