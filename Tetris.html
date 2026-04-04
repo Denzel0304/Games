@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS - Triple Bottom Buttons</title>
+    <title>PRO TETRIS - Sound Edition</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -29,12 +29,11 @@
         #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; overflow: hidden; }
 
         #canvas {
-    border: none; /* 테두리 제거 */
-    background: #000;
-    width: 100%; border-radius: 4px; flex-shrink: 0;
-}
+            border: none;
+            background: #000;
+            width: 100%; border-radius: 4px; flex-shrink: 0;
+        }
 
-        /* [수정] 하단 버튼 영역: 3개의 버튼이 나란히 배치되도록 수정 */
         .bottom-btn-row {
             display: flex; 
             gap: 6px; 
@@ -44,13 +43,12 @@
             flex-shrink: 0;
         }
 
-        /* [수정] 버튼 공통 스타일: 중앙 정렬 및 크기 통일 */
         .sub-btn {
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 6px; 
-            font-size: 11px; /* 3개가 들어가므로 폰트 살짝 조정 */
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer; 
             flex: 1; 
@@ -61,26 +59,14 @@
         }
 
         #mode-toggle-btn { background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000; }
-        #mode-toggle-btn:active { background: transparent; color: var(--pastel-blue); }
-
         #reverse-toggle-btn { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); }
-        
-        /* [추가] SAVE BEST 전용 스타일 (하단 이동) */
         #save-btn { 
             background: rgba(119, 221, 119, 0.15); 
             color: var(--pastel-green); 
             border: 2px solid var(--pastel-green); 
         }
-        #save-btn:active { background: var(--pastel-green); color: #000; }
 
-        /* Reverse 모드 활성화 시 스타일 */
-        .reverse-active #reverse-toggle-btn,
-        .reverse-active #left-btn,
-        .reverse-active #right-btn {
-            background: var(--pastel-blue) !important;
-            border-color: var(--pastel-blue) !important;
-            color: #000 !important;
-        }
+        .reverse-active #reverse-toggle-btn { background: var(--pastel-blue) !important; color: #000 !important; }
 
         #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
         .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
@@ -98,7 +84,6 @@
             font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px;
             box-shadow: 0 3px 0 rgba(0,0,0,0.5);
         }
-        .btn:active { transform: translateY(1px); box-shadow: none; }
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
         #start-btn { padding: 14px; background: var(--pastel-green); border: none; border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px; width: 100%; cursor: pointer; font-size: 15px; }
@@ -144,7 +129,7 @@
             <div class="btn" id="rotate-btn">↻</div>
             <div class="btn" id="down-btn">▼</div>
             <div class="btn" id="drop-btn">▼▼</div>
-            </div>
+        </div>
     </div>
 </div>
 
@@ -157,6 +142,20 @@
     const COLS = 12, ROWS = 22;
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
+
+    // --- [사운드 설정 영역] ---
+    const bgmFiles = ['music1.mp3', 'music2.mp3', 'music3.mp3', 'music4.mp3'];
+    let currentBgmIdx = 0;
+    const bgm = new Audio(bgmFiles[currentBgmIdx]);
+    const sfx1 = new Audio('effect1.mp3'); // 1줄용
+    const sfx2 = new Audio('effect2.mp3'); // 2줄 이상용
+
+    // 배경음악 순차 재생 로직
+    bgm.addEventListener('ended', () => {
+        currentBgmIdx = (currentBgmIdx + 1) % bgmFiles.length;
+        bgm.src = bgmFiles[currentBgmIdx];
+        bgm.play();
+    });
 
     let isReversed = false; 
     const modeBtn = document.getElementById('mode-toggle-btn');
@@ -208,6 +207,13 @@
     function startGame() {
         document.getElementById('game-over').style.display = 'none';
         if(animationId) cancelAnimationFrame(animationId);
+        
+        // 음악 시작 (재시작 시 1번 곡부터)
+        currentBgmIdx = 0;
+        bgm.src = bgmFiles[currentBgmIdx];
+        bgm.currentTime = 0;
+        bgm.play().catch(e => console.log("상호작용 대기중"));
+
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
         loadBestScore(); updateUI(); next = createPiece(); spawn();
@@ -250,6 +256,7 @@
 
     function gameOver() {
         isGameOver = true;
+        bgm.pause(); // 음악 정지
         if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); }
         updateUI(); document.getElementById('game-over').style.display = 'flex';
     }
@@ -284,7 +291,13 @@
                 linesCleared++; lines++; r++; 
             }
         }
-        if (linesCleared > 0) { score += linePoints[linesCleared] * level; level = Math.floor(lines / 10) + 1; updateUI(); }
+        if (linesCleared > 0) {
+            // [효과음 분기] 1줄 vs 2줄 이상
+            if(linesCleared === 1) { sfx1.currentTime = 0; sfx1.play(); }
+            else { sfx2.currentTime = 0; sfx2.play(); }
+
+            score += linePoints[linesCleared] * level; level = Math.floor(lines / 10) + 1; updateUI(); 
+        }
     }
 
     function updateUI() {
