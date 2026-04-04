@@ -321,33 +321,32 @@
         document.getElementById('level').innerText = level;
     }
 
-    // 눈 내리는 로직 (업데이트 및 그리기 통합)
-    function drawSnow() {
-        // 눈송이 생성
-        if (snowFlakes.length < 80 && Math.random() < 0.2) {
-            snowFlakes.push({
-                x: Math.random() * canvas.width,
-                y: -5,
-                size: Math.random() * 2 + 1,
-                speed: Math.random() * 0.3 + 0.05,
-                wind: (Math.random() - 0.5) * 0.05
-            });
-        }
-
-        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        for (let i = snowFlakes.length - 1; i >= 0; i--) {
-            let f = snowFlakes[i];
-            f.y += f.speed;
-            f.x += f.wind;
-
-            ctx.beginPath();
-            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 바닥에 닿으면 제거
-            if (f.y > canvas.height) snowFlakes.splice(i, 1);
-        }
+    // [수정된 로직] 훨씬 더 천천히 내리게 설정
+function drawSnow() {
+    if (snowFlakes.length < 80 && Math.random() < 0.2) {
+        snowFlakes.push({
+            x: Math.random() * canvas.width,
+            y: -5,
+            size: Math.random() * 1.5 + 0.5, // 눈송이 크기도 살짝 줄이면 더 멀리서 내리는 느낌이 나요
+            // 0.02 ~ 0.12 사이의 속도 (기존보다 3배 더 느림)
+            speed: Math.random() * 0.1 + 0.02, 
+            wind: (Math.random() - 0.5) * 0.02
+        });
     }
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)"; // 투명도를 살짝 낮추면 속도감이 덜 느껴집니다
+    for (let i = snowFlakes.length - 1; i >= 0; i--) {
+        let f = snowFlakes[i];
+        f.y += f.speed;
+        f.x += f.wind;
+
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (f.y > canvas.height) snowFlakes.splice(i, 1);
+    }
+}
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
