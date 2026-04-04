@@ -198,16 +198,7 @@
             }
         }
 
-        function toggleCell(r, c, element) {
-// 효과음 재생 코드 추가
-    const sound = document.getElementById('click-sound');
-    sound.currentTime = 0; // 재생 위치 초기화 (연속 클릭 대응)
-    sound.play();
-            
-            
-            board[r][c] = (board[r][c] + 1) % 3;
-            element.dataset.state = board[r][c];
-        }
+       
 
         function resetBoard() {
             initGame();
@@ -262,20 +253,27 @@
         // 최초 실행
         initGame();
 
-        // 브라우저 소리 잠금 해제를 위한 코드
-document.addEventListener('pointerdown', function unlock() {
-    const sound = document.getElementById('click-sound');
-    sound.play().then(() => {
-        // 성공적으로 재생되면 (무음 재생) 즉시 일시정지하고 위치 초기화
-        sound.pause();
-        sound.currentTime = 0;
-        // 한 번만 실행되면 되므로 이벤트 리스너 제거
-        document.removeEventListener('pointerdown', unlock);
-    }).catch(error => {
-        // 첫 터치 전에는 에러가 날 수 있지만 무시합니다.
-        console.log("Audio waiting for user interaction");
-    });
-}, { once: true, capture: true }); // capture를 true로 설정하여 최우선 실행
+        // --- 효과음
+        let isAudioUnlocked = false; 
+
+        function toggleCell(r, c, element) {
+            const sound = document.getElementById('click-sound');
+            
+            if (!isAudioUnlocked) {
+                // 첫 터치: 잠금 해제와 동시에 재생 시도
+                sound.play().then(() => {
+                    isAudioUnlocked = true;
+                }).catch(err => console.log("Waiting for interaction..."));
+            } else {
+                // 두 번째 터치부터: 일반 재생
+                sound.currentTime = 0;
+                sound.play();
+            }
+            
+            board[r][c] = (board[r][c] + 1) % 3;
+            element.dataset.state = board[r][c];
+        }
+        // --- 여기까지 ---
         
     </script>
 </body>
