@@ -143,7 +143,7 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // --- [사운드 설정 영역 - 보강됨] ---
+    // --- [사운드 설정 영역] ---
     const bgmFiles = ['music 1.mp3', 'music 2.mp3', 'music 3.mp3', 'music 4.mp3'];
     let currentBgmIdx = 0;
     const bgm = new Audio();
@@ -152,7 +152,6 @@
     const sfx1 = new Audio('effect 1.mp3');
     const sfx2 = new Audio('effect 2.mp3');
 
-    // 브라우저 오디오 잠금 해제 함수
     function unlockAudio() {
         bgm.play().then(() => { bgm.pause(); }).catch(e => {});
         sfx1.play().then(() => { sfx1.pause(); }).catch(e => {});
@@ -185,6 +184,7 @@
         document.body.classList.toggle('reverse-active');
     });
 
+    // 방향 제어 핵심 로직 (isReversed 상태를 반영)
     function moveLeft() {
         const dir = isReversed ? 1 : -1;
         if(!collision(dir, 0, current.matrix)) current.x += dir;
@@ -335,8 +335,10 @@
     function sA(id, f) { if(isGameOver || ivs[id]) return; f(); ivs[id] = setInterval(f, 90); }
     function pA(id) { clearInterval(ivs[id]); delete ivs[id]; }
 
+    // [중요 수정] 버튼 이벤트에서 moveLeft, moveRight 함수를 호출하게 하여 Reverse 상태를 즉시 반영
     document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', moveLeft); });
     document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', moveRight); });
+    
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
