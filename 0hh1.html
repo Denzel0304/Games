@@ -275,7 +275,7 @@ document.addEventListener('pointerdown', function unlock() {
         // 첫 터치 전에는 에러가 날 수 있지만 무시합니다.
         console.log("Audio waiting for user interaction");
     });
-}, { once: true });
+}, { once: true, capture: true }); // capture를 true로 설정하여 최우선 실행
         
     </script>
 </body>
