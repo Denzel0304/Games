@@ -37,6 +37,8 @@
     </style>
 </head>
 <body>
+    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+
     <div id="header">
         <div class="btn-group">
             <button class="nav-btn home-btn" onclick="location.href='index.html'">🏠 홈</button>
@@ -56,6 +58,7 @@
         const levelEl = document.getElementById('level');
         const scoreEl = document.getElementById('score');
         const bestEl = document.getElementById('best');
+        const sound = document.getElementById('click-sound');
 
         let fallingStars = [];
         let debris = [];
@@ -63,6 +66,8 @@
         let score = 0;
         let level = 1;
         let bestScore = localStorage.getItem('starBestScore') || 0;
+        let isAudioUnlocked = false; // 오디오 상태 변수
+        
         bestEl.innerText = bestScore;
 
         const colors = ['#ffffff', '#a2d2ff', '#ffe66d', '#caf0f8'];
@@ -73,6 +78,18 @@
         }
         window.addEventListener('resize', resize);
         resize();
+
+        // 소리 재생 함수 (중복 방지 및 잠금 해제 통합)
+        function playEffect() {
+            if (!isAudioUnlocked) {
+                sound.play().then(() => {
+                    isAudioUnlocked = true;
+                }).catch(() => {});
+            } else {
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
 
         class FallingStar {
             constructor() {
@@ -96,6 +113,7 @@
                     const dy = this.y - mouse.y;
                     if (dx*dx + dy*dy < 1200) { 
                         this.broken = true;
+                        playEffect(); // 별이 터질 때 소리 재생
                         this.explode();
                         updateScore();
                     }
@@ -165,11 +183,26 @@
             mouse.y = t.clientY;
         }
 
-        window.addEventListener('mousedown', (e) => { mouse.active = true; setMousePos(e); });
+        // 입력 이벤트에서 소리 잠금 해제 병행
+        window.addEventListener('mousedown', (e) => { 
+            mouse.active = true; 
+            setMousePos(e); 
+            if(!isAudioUnlocked) playEffect(); 
+        });
         window.addEventListener('mousemove', (e) => { if (mouse.active) setMousePos(e); });
         window.addEventListener('mouseup', () => { mouse.active = false; });
-        window.addEventListener('touchstart', (e) => { mouse.active = true; setMousePos(e); }, { passive: false });
-        window.addEventListener('touchmove', (e) => { e.preventDefault(); setMousePos(e); }, { passive: false });
+        
+        window.addEventListener('touchstart', (e) => { 
+            mouse.active = true; 
+            setMousePos(e); 
+            if(!isAudioUnlocked) playEffect();
+        }, { passive: false });
+        
+        window.addEventListener('touchmove', (e) => { 
+            e.preventDefault(); 
+            setMousePos(e); 
+        }, { passive: false });
+        
         window.addEventListener('touchend', () => { mouse.active = false; });
 
         function animate() {
