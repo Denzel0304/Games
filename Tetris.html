@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS - Sound Edition</title>
+    <title>PRO TETRIS - Perfect Reverse</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -13,61 +13,18 @@
             --pastel-green: #77dd77;
             --pastel-blue: #A2D2FF;
         }
-
-        body {
-            margin: 0; padding: 0; background: var(--bg-color); color: white;
-            font-family: sans-serif; overflow: hidden; touch-action: none;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
-        }
-
-        #game-container {
-            display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start;
-        }
-        
+        body { margin: 0; padding: 0; background: var(--bg-color); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #game-container { display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start; }
         #game-container.left-handed { flex-direction: row-reverse; }
-
         #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; overflow: hidden; }
-
-        #canvas {
-            border: none;
-            background: #000;
-            width: 100%; border-radius: 4px; flex-shrink: 0;
-        }
-
-        .bottom-btn-row {
-            display: flex; 
-            gap: 6px; 
-            margin-top: 25px; 
-            width: 100%; 
-            height: 45px; 
-            flex-shrink: 0;
-        }
-
-        .sub-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px; 
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer; 
-            flex: 1; 
-            transition: all 0.1s; 
-            text-align: center;
-            box-sizing: border-box;
-            line-height: 1.2;
-        }
-
+        #canvas { border: none; background: #000; width: 100%; border-radius: 4px; flex-shrink: 0; }
+        .bottom-btn-row { display: flex; gap: 6px; margin-top: 25px; width: 100%; height: 45px; flex-shrink: 0; }
+        .sub-btn { display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; flex: 1; transition: all 0.1s; text-align: center; box-sizing: border-box; line-height: 1.2; }
         #mode-toggle-btn { background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000; }
         #reverse-toggle-btn { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); }
-        #save-btn { 
-            background: rgba(119, 221, 119, 0.15); 
-            color: var(--pastel-green); 
-            border: 2px solid var(--pastel-green); 
-        }
-
-        .reverse-active #reverse-toggle-btn { background: var(--pastel-blue) !important; color: #000 !important; }
-
+        #save-btn { background: rgba(119, 221, 119, 0.15); color: var(--pastel-green); border: 2px solid var(--pastel-green); }
+        /* Reverse 활성화 시 버튼 스타일 변경 */
+        .reverse-active #reverse-toggle-btn { background: var(--neon-pink) !important; color: #fff !important; border-color: var(--neon-pink) !important; }
         #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
         .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
         #next-container { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333; }
@@ -75,19 +32,12 @@
         .info-item { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
         .info-label { font-size: 11px; color: #888; font-weight: bold; }
         .info-value { font-size: 14px; font-weight: bold; color: var(--neon-blue); text-align: right; }
-
         #controls { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; padding-bottom: 20px; }
         .btn-row { display: flex; gap: 8px; }
-        .btn {
-            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
-        }
+        .btn { background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px; box-shadow: 0 3px 0 rgba(0,0,0,0.5); }
         #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
         #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
         #start-btn { padding: 14px; background: var(--pastel-green); border: none; border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px; width: 100%; cursor: pointer; font-size: 15px; }
-        
         #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
     </style>
 </head>
@@ -97,19 +47,16 @@
     <div id="stage-area">
         <button id="start-btn">START / RESET</button>
         <canvas id="canvas"></canvas>
-        
         <div class="bottom-btn-row">
             <div id="mode-toggle-btn" class="sub-btn">Left-handed</div>
             <div id="reverse-toggle-btn" class="sub-btn">Reverse</div>
             <div id="save-btn" class="sub-btn">SAVE BEST</div>
         </div>
-
         <div id="game-over">
             <h2 style="color:var(--neon-pink)">GAME OVER</h2>
             <button onclick="startGame()" style="padding:10px 20px; background:var(--neon-blue); border:none; border-radius:5px; font-weight:bold;">RETRY</button>
         </div>
     </div>
-
     <div id="sidebar">
         <div class="info-panel">
             <div id="next-container">
@@ -120,7 +67,6 @@
             <div class="info-item"><div class="info-label">Score</div><div id="score" class="info-value">0</div></div>
             <div class="info-item"><div class="info-label">Best</div><div id="best" class="info-value">0</div></div>
         </div>
-
         <div id="controls">
             <div class="btn-row">
                 <div class="btn" id="left-btn">◀</div>
@@ -143,12 +89,11 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // --- [사운드 설정 영역] ---
+    // 사운드 설정
     const bgmFiles = ['music 1.mp3', 'music 2.mp3', 'music 3.mp3', 'music 4.mp3'];
     let currentBgmIdx = 0;
     const bgm = new Audio();
     bgm.src = bgmFiles[currentBgmIdx];
-
     const sfx1 = new Audio('effect 1.mp3');
     const sfx2 = new Audio('effect 2.mp3');
 
@@ -184,18 +129,9 @@
         document.body.classList.toggle('reverse-active');
     });
 
-    // 방향 제어 핵심 로직 (isReversed 상태를 반영)
-    function moveLeft() {
-        const dir = isReversed ? 1 : -1;
-        if(!collision(dir, 0, current.matrix)) current.x += dir;
-        draw();
-    }
-
-    function moveRight() {
-        const dir = isReversed ? -1 : 1;
-        if(!collision(dir, 0, current.matrix)) current.x += dir;
-        draw();
-    }
+    // 순수 이동 함수
+    function moveLeft() { if(!collision(-1, 0, current.matrix)) current.x--; draw(); }
+    function moveRight() { if(!collision(1, 0, current.matrix)) current.x++; draw(); }
 
     function loadBestScore() {
         const saved = localStorage.getItem('tetris_best');
@@ -219,12 +155,8 @@
     function startGame() {
         document.getElementById('game-over').style.display = 'none';
         if(animationId) cancelAnimationFrame(animationId);
-        
-        currentBgmIdx = 0;
-        bgm.src = bgmFiles[currentBgmIdx];
-        bgm.currentTime = 0;
-        bgm.play().catch(e => console.log("Sound interaction pending"));
-
+        currentBgmIdx = 0; bgm.src = bgmFiles[currentBgmIdx]; bgm.currentTime = 0;
+        bgm.play().catch(e => {});
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
         loadBestScore(); updateUI(); next = createPiece(); spawn();
@@ -265,12 +197,7 @@
         return false;
     }
 
-    function gameOver() {
-        isGameOver = true;
-        bgm.pause();
-        if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); }
-        updateUI(); document.getElementById('game-over').style.display = 'flex';
-    }
+    function gameOver() { isGameOver = true; bgm.pause(); if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); } updateUI(); document.getElementById('game-over').style.display = 'flex'; }
 
     function update(time = 0) {
         if(isGameOver) return;
@@ -309,11 +236,7 @@
         }
     }
 
-    function updateUI() {
-        document.getElementById('score').innerText = score.toLocaleString();
-        document.getElementById('best').innerText = bestScore.toLocaleString();
-        document.getElementById('level').innerText = level;
-    }
+    function updateUI() { document.getElementById('score').innerText = score.toLocaleString(); document.getElementById('best').innerText = bestScore.toLocaleString(); document.getElementById('level').innerText = level; }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -335,23 +258,33 @@
     function sA(id, f) { if(isGameOver || ivs[id]) return; f(); ivs[id] = setInterval(f, 90); }
     function pA(id) { clearInterval(ivs[id]); delete ivs[id]; }
 
-    // [중요 수정] 버튼 이벤트에서 moveLeft, moveRight 함수를 호출하게 하여 Reverse 상태를 즉시 반영
-    document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('l', moveLeft); });
-    document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('r', moveRight); });
+    // [최종 수정된 핵심 이벤트 리스너]
+    document.getElementById('left-btn').addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        // 누를 때마다 현재 isReversed를 체크하여 반대로 움직이게 함
+        sA('l', () => {
+            if(isReversed) moveRight(); // 반전이면 오른쪽으로
+            else moveLeft();            // 정상이면 왼쪽으로
+        }); 
+    });
+    
+    document.getElementById('right-btn').addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        sA('r', () => {
+            if(isReversed) moveLeft();  // 반전이면 왼쪽으로
+            else moveRight();           // 정상이면 오른쪽으로
+        }); 
+    });
     
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
     document.getElementById('rotate-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); const m = current.matrix[0].map((_, i) => current.matrix.map(row => row[row.length-1-i])); if(!collision(0,0,m)) current.matrix = m; draw(); });
     document.getElementById('drop-btn').addEventListener('touchstart', (e) => { if(isGameOver) return; e.preventDefault(); while(!collision(0,1,current.matrix)) current.y++; lock(); draw(); });
     
     document.getElementById('save-btn').addEventListener('click', () => {
-        if(score > bestScore) {
-            bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); updateUI();
-            alert("최고 기록(" + bestScore.toLocaleString() + ")이 저장되었습니다!");
-        } else { alert("현재 점수가 최고 기록(" + bestScore.toLocaleString() + ")보다 낮거나 같습니다."); }
+        if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); updateUI(); alert("최고 기록 저장!"); }
     });
 
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
-
     window.onload = () => { loadBestScore(); updateUI(); resize(); };
 </script>
 </body>
