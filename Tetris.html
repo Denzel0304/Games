@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO TETRIS - Perfect Reverse</title>
+    <title>PRO TETRIS - Consistent UI</title>
     <style>
         :root {
             --bg-color: #030305;
@@ -11,7 +11,7 @@
             --neon-blue: #00f2ff;
             --neon-pink: #ff007f;
             --pastel-green: #77dd77;
-            --pastel-blue: #A2D2FF;
+            --pastel-blue: #A2D2FF; /* Left-handed 버튼 및 활성 상태 공통 컬러 */
         }
         body { margin: 0; padding: 0; background: var(--bg-color); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-container { display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start; }
@@ -20,11 +20,19 @@
         #canvas { border: none; background: #000; width: 100%; border-radius: 4px; flex-shrink: 0; }
         .bottom-btn-row { display: flex; gap: 6px; margin-top: 25px; width: 100%; height: 45px; flex-shrink: 0; }
         .sub-btn { display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; flex: 1; transition: all 0.1s; text-align: center; box-sizing: border-box; line-height: 1.2; }
+        
+        /* 버튼 기본 스타일 */
         #mode-toggle-btn { background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000; }
         #reverse-toggle-btn { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); }
         #save-btn { background: rgba(119, 221, 119, 0.15); color: var(--pastel-green); border: 2px solid var(--pastel-green); }
-        /* Reverse 활성화 시 버튼 스타일 변경 */
-        .reverse-active #reverse-toggle-btn { background: var(--neon-pink) !important; color: #fff !important; border-color: var(--neon-pink) !important; }
+
+        /* [수정] Reverse 활성화 시 Left-handed 버튼과 동일한 Pastel Blue 적용 */
+        .reverse-active #reverse-toggle-btn { 
+            background: var(--pastel-blue) !important; 
+            color: #000 !important; 
+            border-color: var(--pastel-blue) !important; 
+        }
+
         #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
         .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
         #next-container { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333; }
@@ -89,7 +97,6 @@
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // 사운드 설정
     const bgmFiles = ['music 1.mp3', 'music 2.mp3', 'music 3.mp3', 'music 4.mp3'];
     let currentBgmIdx = 0;
     const bgm = new Audio();
@@ -129,7 +136,6 @@
         document.body.classList.toggle('reverse-active');
     });
 
-    // 순수 이동 함수
     function moveLeft() { if(!collision(-1, 0, current.matrix)) current.x--; draw(); }
     function moveRight() { if(!collision(1, 0, current.matrix)) current.x++; draw(); }
 
@@ -258,22 +264,15 @@
     function sA(id, f) { if(isGameOver || ivs[id]) return; f(); ivs[id] = setInterval(f, 90); }
     function pA(id) { clearInterval(ivs[id]); delete ivs[id]; }
 
-    // [최종 수정된 핵심 이벤트 리스너]
+    // [핵심 검증] 버튼 클릭 시 현재 isReversed 상태를 매번 체크하여 방향을 즉시 반전시킵니다.
     document.getElementById('left-btn').addEventListener('touchstart', (e) => { 
         e.preventDefault(); 
-        // 누를 때마다 현재 isReversed를 체크하여 반대로 움직이게 함
-        sA('l', () => {
-            if(isReversed) moveRight(); // 반전이면 오른쪽으로
-            else moveLeft();            // 정상이면 왼쪽으로
-        }); 
+        sA('l', () => { if(isReversed) moveRight(); else moveLeft(); }); 
     });
     
     document.getElementById('right-btn').addEventListener('touchstart', (e) => { 
         e.preventDefault(); 
-        sA('r', () => {
-            if(isReversed) moveLeft();  // 반전이면 왼쪽으로
-            else moveRight();           // 정상이면 오른쪽으로
-        }); 
+        sA('r', () => { if(isReversed) moveLeft(); else moveRight(); }); 
     });
     
     document.getElementById('down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); sA('d', moveDown); });
