@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>0h h1 Logic Puzzle</title>
+    <style>
+        :root {
+            /* 고급스러운 컬러 팔레트 */
+            --bg-color: #e0e5ec; /* 차분한 밝은 그레이 */
+            --text-color: #37474f;
+            --empty-color: #e0e5ec;
+            
+            /* 입체감을 위한 음영 색상 */
+            --shadow-dark: rgba(163, 177, 198, 0.7);
+            --shadow-light: rgba(255, 255, 255, 0.9);
+            
+            /* 타일 색상 (고급스러운 톤) */
+            --red-color: #d32f2f; /* Deep Red */
+            --blue-color: #1976d2; /* Royal Blue */
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            -webkit-user-select: none; /* 텍스트 선택 방지 */
+            user-select: none;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 상단: 제목 영역 (20%) */
+        .header {
+            height: 20%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            padding-top: 10px;
+        }
+
+        h1 { 
+            margin: 0; 
+            font-size: 2rem; 
+            font-weight: 800;
+            color: var(--text-color);
+            letter-spacing: -1px;
+        }
+        
+        #status { 
+            margin-top: 8px; 
+            font-size: 0.95rem; 
+            color: #78909c; 
+            height: 1.4rem;
+            font-weight: 500;
+        }
+
+        /* 중앙: 게임판 영역 (55%) */
+        .game-area {
+            height: 55%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px; /* 칸 사이 간격 넓힘 */
+            width: 85vw;
+            max-width: 320px;
+            aspect-ratio: 1 / 1;
+            padding: 20px;
+            background: var(--bg-color);
+            border-radius: 30px;
+            /* 판 전체 음영 */
+            box-shadow: 7px 7px 15px var(--shadow-dark), 
+                        -7px -7px 15px var(--shadow-light);
+        }
+
+        .cell {
+            background-color: var(--empty-color);
+            border-radius: 20px; /* 더 둥글게 */
+            /* 기본 빈 칸 입체감 (들어간 느낌) */
+            box-shadow: inset 3px 3px 7px var(--shadow-dark), 
+                        inset -3px -3px 7px var(--shadow-light);
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
+
+        /* 색상이 채워졌을 때 (튀어나온 느낌) */
+        .cell[data-state="1"] { 
+            background-color: var(--red-color); 
+            box-shadow: 5px 5px 10px rgba(211, 47, 47, 0.4), 
+                        -5px -5px 10px rgba(211, 47, 47, 0.1);
+        }
+        .cell[data-state="2"] { 
+            background-color: var(--blue-color); 
+            box-shadow: 5px 5px 10px rgba(25, 118, 210, 0.4), 
+                        -5px -5px 10px rgba(25, 118, 210, 0.1);
+        }
+        
+        /* 터치 시 피드백 (살짝 눌리는 느낌) */
+        .cell:active {
+            transform: scale(0.97);
+        }
+
+        /* 하단: 조작 영역 (25%) */
+        .footer {
+            height: 25%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px; /* 버튼 사이 간격 확실히 */
+            width: 85vw;
+            max-width: 320px;
+        }
+
+        button {
+            flex: 1; /* 부모 너비를 반씩 차지 */
+            padding: 18px 0;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 일반 버튼 (초기화) */
+        button:not(#check-btn) {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            /* 튀어나온 입체감 */
+            box-shadow: 5px 5px 10px var(--shadow-dark), 
+                        -5px -5px 10px var(--shadow-light);
+        }
+
+        /* 강조 버튼 (확인) */
+        button#check-btn {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 5px 5px 10px rgba(39, 174, 96, 0.4), 
+                        -5px -5px 10px rgba(39, 174, 96, 0.1);
+        }
+
+        /* 버튼 클릭 시 (들어가는 효과) */
+        button:active {
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), 
+                        inset -2px -2px 5px var(--shadow-light);
+        }
+        
+        button#check-btn:active {
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>0h h1</h1> <div id="status">빈칸을 터치해 보세요!</div>
+    </div>
+    
+    <div class="game-area">
+        <div id="grid"></div>
+    </div>
+
+    <div class="footer">
+        <div class="controls">
+            <button onclick="resetBoard()">초기화</button>
+            <button id="check-btn" onclick="checkWin()">확인</button>
+        </div>
+    </div>
+
+    <script>
+        const size = 4;
+        const gridElement = document.getElementById('grid');
+        const statusElement = document.getElementById('status');
+        let board = Array(size).fill().map(() => Array(size).fill(0));
+
+        function createBoard() {
+            gridElement.innerHTML = '';
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.state = 0;
+                    cell.onpointerdown = (e) => {
+                        e.preventDefault();
+                        toggleCell(r, c, cell);
+                    };
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleCell(r, c, element) {
+            board[r][c] = (board[r][c] + 1) % 3;
+            element.dataset.state = board[r][c];
+            statusElement.innerText = "분석 중...";
+            statusElement.style.color = "#78909c";
+        }
+
+        function resetBoard() {
+            board = board.map(row => row.fill(0));
+            document.querySelectorAll('.cell').forEach(c => c.dataset.state = 0);
+            statusElement.innerText = "새 게임!";
+            statusElement.style.color = "#78909c";
+        }
+
+        function checkWin() {
+            if (board.flat().includes(0)) {
+                statusElement.innerText = "빈칸을 모두 채워주세요!";
+                statusElement.style.color = var(--text-color);
+                return;
+            }
+
+            let rowStrings = [];
+            let colStrings = [];
+            let isValid = true;
+
+            for (let i = 0; i < size; i++) {
+                let row = board[i];
+                let col = board.map(r => r[i]);
+                if (!checkLine(row) || !checkLine(col)) { isValid = false; break; }
+                rowStrings.push(row.join(''));
+                colStrings.push(col.join(''));
+            }
+
+            if (isValid && (new Set(rowStrings).size !== size || new Set(colStrings).size !== size)) {
+                isValid = false;
+            }
+
+            if (isValid) {
+                statusElement.innerText = "🎉 미션 성공! 완벽합니다!";
+                statusElement.style.color = "#27ae60";
+            } else {
+                statusElement.innerText = "규칙에 맞지 않아요. 다시 시도!";
+                statusElement.style.color = var(--red-color);
+            }
+        }
+
+        function checkLine(line) {
+            const reds = line.filter(v => v === 1).length;
+            const blues = line.filter(v => v === 2).length;
+            if (reds !== size/2 || blues !== size/2) return false;
+
+            for (let i = 0; i < line.length - 2; i++) {
+                if (line[i] === line[i+1] && line[i] === line[i+2]) return false;
+            }
+            return true;
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
