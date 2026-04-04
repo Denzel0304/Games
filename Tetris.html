@@ -321,20 +321,21 @@
         document.getElementById('level').innerText = level;
     }
 
-    // [수정된 로직] 훨씬 더 천천히 내리게 설정
+    // [수정] 눈송이 생성 부분의 speed와 wind 값을 낮춤
 function drawSnow() {
-    if (snowFlakes.length < 80 && Math.random() < 0.2) {
+    if (snowFlakes.length < 80 && Math.random() * 0.2) {
         snowFlakes.push({
             x: Math.random() * canvas.width,
             y: -5,
-            size: Math.random() * 1.5 + 0.5, // 눈송이 크기도 살짝 줄이면 더 멀리서 내리는 느낌이 나요
-            // 0.02 ~ 0.12 사이의 속도 (기존보다 3배 더 느림)
-            speed: Math.random() * 0.1 + 0.02, 
-            wind: (Math.random() - 0.5) * 0.02
+            size: Math.random() * 2 + 1,
+            // speed를 0.2~0.5 사이로 낮춰서 천천히 내려오게 함 (기존 0.5~1.3)
+            speed: Math.random() * 0.3 + 0.2, 
+            // wind를 0.1 내외로 줄여서 좌우 흔들림을 차분하게 함
+            wind: (Math.random() - 0.5) * 0.1 
         });
     }
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)"; // 투명도를 살짝 낮추면 속도감이 덜 느껴집니다
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     for (let i = snowFlakes.length - 1; i >= 0; i--) {
         let f = snowFlakes[i];
         f.y += f.speed;
