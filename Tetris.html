@@ -321,33 +321,33 @@
         document.getElementById('level').innerText = level;
     }
 
-    // [수정] 눈송이 생성 부분의 speed와 wind 값을 낮춤
-function drawSnow() {
-    if (snowFlakes.length < 80 && Math.random() * 0.2) {
-        snowFlakes.push({
-            x: Math.random() * canvas.width,
-            y: -5,
-            size: Math.random() * 2 + 1,
-            // speed를 0.2~0.5 사이로 낮춰서 천천히 내려오게 함 (기존 0.5~1.3)
-            speed: Math.random() * 0.3 + 0.2, 
-            // wind를 0.1 내외로 줄여서 좌우 흔들림을 차분하게 함
-            wind: (Math.random() - 0.5) * 0.1 
-        });
+    // 눈 내리는 로직 (업데이트 및 그리기 통합)
+    function drawSnow() {
+        // 눈송이 생성
+        if (snowFlakes.length < 80 && Math.random() < 0.2) {
+            snowFlakes.push({
+                x: Math.random() * canvas.width,
+                y: -5,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 0.8 + 0.5,
+                wind: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        for (let i = snowFlakes.length - 1; i >= 0; i--) {
+            let f = snowFlakes[i];
+            f.y += f.speed;
+            f.x += f.wind;
+
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 바닥에 닿으면 제거
+            if (f.y > canvas.height) snowFlakes.splice(i, 1);
+        }
     }
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    for (let i = snowFlakes.length - 1; i >= 0; i--) {
-        let f = snowFlakes[i];
-        f.y += f.speed;
-        f.x += f.wind;
-
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (f.y > canvas.height) snowFlakes.splice(i, 1);
-    }
-}
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
