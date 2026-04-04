@@ -11,7 +11,7 @@
             --text-main: #2c3e50;
             --text-sub: #7f8c8d;
             --neon-purple: #9c27b0;
-            --ohh1-blue: #2196f3; /* Oh h1 포인트 컬러 */
+            --zero-blue: #2196f3; /* 0hh1 포인트 컬러 */
         }
 
         body {
@@ -110,10 +110,10 @@
         .tetris-game .icon-box { background-color: #f3e5f5; }
         .tetris-game .card-title { color: #4a148c; }
 
-        /* Oh h1 스타일 추가 */
-        .ohh1-game { border-top: 4px solid var(--ohh1-blue); }
-        .ohh1-game .icon-box { background-color: #e3f2fd; }
-        .ohh1-game .card-title { color: #1565c0; }
+        /* 0hh1 스타일 수정 */
+        .zero-h1-game { border-top: 4px solid var(--zero-blue); }
+        .zero-h1-game .icon-box { background-color: #e3f2fd; }
+        .zero-h1-game .card-title { color: #1565c0; }
 
         /* 준비 중 스타일 */
         .preparing { border-top: 4px solid #cfd8dc; opacity: 0.8; }
@@ -133,7 +133,7 @@
     <header>
         <h1>Healing Games</h1>
         <p>오늘도 마음을 비우고, 가볍게 즐기세요.</p>
-        <div class="date-badge" id="current-date">2026년 4월 4일 (토)</div>
+        <div class="date-badge" id="current-date"></div>
     </header>
 
     <div class="container">
@@ -148,10 +148,10 @@
             <div class="status-tag" style="color: var(--neon-purple); font-weight: 600;">NEW</div>
         </a>
 
-        <a href="0hh1.html" class="menu-card ohh1-game">
+        <a href="0hh1.html" class="menu-card zero-h1-game">
             <div class="icon-box">🔵</div>
-            <div class="card-title">Oh h1</div>
-            <div class="status-tag" style="color: var(--ohh1-blue); font-weight: 600;">PUZZLE</div>
+            <div class="card-title">0 hh 1</div>
+            <div class="status-tag" style="color: var(--zero-blue); font-weight: 600;">PUZZLE</div>
         </a>
 
         <div class="menu-card preparing">
