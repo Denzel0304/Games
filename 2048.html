@@ -81,12 +81,12 @@
             position: absolute; display: flex;
             justify-content: center; align-items: center;
             font-size: 1.8rem; font-weight: 800; border-radius: 10px;
-            transition: transform 0.15s ease-in-out, background-color 0.1s ease-in-out;
+            /* 이동 애니메이션 속도 미세 조정 */
+            transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
             box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
             width: calc((100% - 30px - 36px) / 4); 
             height: calc((100% - 30px - 36px) / 4);
-            /* 초기 생성 시 튐 방지 */
-            left: 0; top: 0;
+            /* 잔상 방지를 위해 left, top 제거 */
         }
 
         .tile-2 { background-color: var(--tile-2-bg); color: var(--tile-2-text); font-size: 2rem;}
@@ -101,8 +101,31 @@
         .tile-1024 { background-color: var(--tile-1024-bg); color: var(--tile-1024-text); font-size: 1.1rem; }
         .tile-2048 { background-color: var(--tile-2048-bg); color: var(--tile-2048-text); font-size: 1.1rem; box-shadow: 0 0 15px rgba(102, 187, 106, 0.5); }
 
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
-        .tile-new { animation: popIn 0.2s ease-in-out; }
+        /* 새로운 애니메이션: 음각으로 들어갔다가 튀어나오는 효과 */
+        @keyframes neumorphicPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translate(var(--pos-x), var(--pos-y));
+                box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1) translate(var(--pos-x), var(--pos-y));
+                box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translate(var(--pos-x), var(--pos-y));
+                box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+            }
+        }
+        
+        .tile-new {
+            /* 이동 애니메이션과 겹치지 않도록 생성 시에만 적용 */
+            animation: neumorphicPop 0.3s ease-out;
+            /* 애니메이션 중 위치 고정을 위해 필요 */
+            animation-fill-mode: both;
+        }
 
         .footer {
             height: 25%; width: 100%;
@@ -113,14 +136,13 @@
 
         #status { margin-bottom: 15px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
 
-        /* 버튼 중앙 정렬 수정 */
         .controls {
             display: flex; justify-content: center;
             width: 85vw; max-width: 340px;
         }
 
         .action-btn {
-            width: 70%; /* 중앙 배치를 위해 적절한 너비 설정 */
+            width: 70%;
             padding: 18px 0; border: none; border-radius: 15px;
             font-size: 1.1rem; font-weight: 700;
             background: var(--bg-color); color: var(--text-color);
@@ -198,7 +220,8 @@
             if (cells.length > 0) {
                 let {r, c} = cells[Math.floor(Math.random() * cells.length)];
                 board[r][c] = Math.random() < 0.9 ? 2 : 4;
-                drawTile(r, c, board[r][c], true);
+                // 약간의 지연 우 새로운 타일 생성 (이동 애니메이션 후)
+                setTimeout(() => drawTile(r, c, board[r][c], true), 100);
             }
         }
 
@@ -209,12 +232,21 @@
             
             const gap = 12;
             const padding = 15;
-            // 타일 생성 즉시 위치 계산하여 할당 (좌측 상단 잔상 방지)
-            const x = padding + (c * 100) + (c * gap);
-            const y = padding + (r * 100) + (r * gap);
-            tile.style.transform = `translate(calc(${padding}px + ${c * 100}% + ${c * gap}px), calc(${padding}px + ${r * 100}% + ${r * gap}px))`;
             
-            if (isNew) tile.classList.add('tile-new');
+            // 좌표 계산
+            const x = `calc(${padding}px + ${c * 100}% + ${c * gap}px)`;
+            const y = `calc(${padding}px + ${r * 100}% + ${r * gap}px)`;
+            
+            // 위치 즉시 할당 (잔상 제거 핵심)
+            tile.style.transform = `translate(${x}, ${y})`;
+            
+            if (isNew) {
+                // 애니메이션용 CSS 변수 설정
+                tile.style.setProperty('--pos-x', x);
+                tile.style.setProperty('--pos-y', y);
+                tile.classList.add('tile-new');
+            }
+            
             gridContainer.appendChild(tile);
         }
 
@@ -265,14 +297,20 @@
             }
 
             if (oldBoard !== JSON.stringify(board)) {
-                gridContainer.querySelectorAll('.tile').forEach(tile => tile.remove());
-                for (let r = 0; r < 4; r++) {
-                    for (let c = 0; c < 4; c++) {
-                        if (board[r][c] !== 0) drawTile(r, c, board[r][c]);
+                // 기존 타일 지우기 전 이동 애니메이션 시간 확보
+                setTimeout(() => {
+                    gridContainer.querySelectorAll('.tile:not(.tile-new)').forEach(tile => tile.remove());
+                    for (let r = 0; r < 4; r++) {
+                        for (let c = 0; c < 4; c++) {
+                            if (board[r][c] !== 0) drawTile(r, c, board[r][c]);
+                        }
                     }
-                }
-                setTimeout(addRandomTile, 100);
-                setTimeout(checkGameOver, 200);
+                    // 애니메이션 중복 방지를 위해 기존 '.tile-new' 제거
+                    gridContainer.querySelectorAll('.tile-new').forEach(tile => tile.classList.remove('tile-new'));
+                }, 100); 
+
+                addRandomTile();
+                setTimeout(checkGameOver, 300);
             }
         }
 
