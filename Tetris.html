@@ -1,4 +1,140 @@
-const canvas = document.getElementById('canvas');
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PRO TETRIS - Sound Edition</title>
+    <style>
+        :root {
+            --bg-color: #030305;
+            --panel-bg: rgba(25, 25, 40, 0.9);
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff007f;
+            --pastel-green: #77dd77;
+            --pastel-blue: #A2D2FF;
+        }
+
+        body {
+            margin: 0; padding: 0; background: var(--bg-color); color: white;
+            font-family: sans-serif; overflow: hidden; touch-action: none;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+
+        #game-container {
+            display: flex; width: 96vw; height: 90vh; gap: 10px; align-items: flex-start;
+        }
+        
+        #game-container.left-handed { flex-direction: row-reverse; }
+
+        #stage-area { flex: 2.2; display: flex; flex-direction: column; position: relative; height: 100%; overflow: hidden; }
+
+        #canvas {
+            border: none;
+            background: #000;
+            width: 100%; border-radius: 4px; flex-shrink: 0;
+        }
+
+        .bottom-btn-row {
+            display: flex; 
+            gap: 6px; 
+            margin-top: 25px; 
+            width: 100%; 
+            height: 45px; 
+            flex-shrink: 0;
+        }
+
+        .sub-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px; 
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer; 
+            flex: 1; 
+            transition: all 0.1s; 
+            text-align: center;
+            box-sizing: border-box;
+            line-height: 1.2;
+        }
+
+        #mode-toggle-btn { background: var(--pastel-blue); border: 2px solid var(--pastel-blue); color: #000; }
+        #reverse-toggle-btn { background: transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); }
+        #save-btn { 
+            background: rgba(119, 221, 119, 0.15); 
+            color: var(--pastel-green); 
+            border: 2px solid var(--pastel-green); 
+        }
+
+        .reverse-active #reverse-toggle-btn { background: var(--pastel-blue) !important; color: #000 !important; }
+
+        #sidebar { flex: 1; display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
+        .info-panel { background: var(--panel-bg); padding: 12px 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
+        #next-container { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #333; }
+        #next-canvas { display: block; margin: 5px auto; }
+        .info-item { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+        .info-label { font-size: 11px; color: #888; font-weight: bold; }
+        .info-value { font-size: 14px; font-weight: bold; color: var(--neon-blue); text-align: right; }
+
+        #controls { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; padding-bottom: 20px; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn {
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: white; flex: 1; cursor: pointer; height: 50px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
+        }
+        #rotate-btn { height: 95px; font-size: 30px; border-color: var(--neon-blue); }
+        #drop-btn { background: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border-color: var(--neon-pink); }
+        #start-btn { padding: 14px; background: var(--pastel-green); border: none; border-radius: 6px; font-weight: bold; color: #222; margin-bottom: 8px; width: 100%; cursor: pointer; font-size: 15px; }
+        
+        #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="stage-area">
+        <button id="start-btn">START / RESET</button>
+        <canvas id="canvas"></canvas>
+        
+        <div class="bottom-btn-row">
+            <div id="mode-toggle-btn" class="sub-btn">Left-handed</div>
+            <div id="reverse-toggle-btn" class="sub-btn">Reverse</div>
+            <div id="save-btn" class="sub-btn">SAVE BEST</div>
+        </div>
+
+        <div id="game-over">
+            <h2 style="color:var(--neon-pink)">GAME OVER</h2>
+            <button onclick="startGame()" style="padding:10px 20px; background:var(--neon-blue); border:none; border-radius:5px; font-weight:bold;">RETRY</button>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="info-panel">
+            <div id="next-container">
+                <div class="info-label">NEXT</div>
+                <canvas id="next-canvas" width="60" height="60"></canvas>
+            </div>
+            <div class="info-item"><div class="info-label">Level</div><div id="level" class="info-value">1</div></div>
+            <div class="info-item"><div class="info-label">Score</div><div id="score" class="info-value">0</div></div>
+            <div class="info-item"><div class="info-label">Best</div><div id="best" class="info-value">0</div></div>
+        </div>
+
+        <div id="controls">
+            <div class="btn-row">
+                <div class="btn" id="left-btn">◀</div>
+                <div class="btn" id="right-btn">▶</div>
+            </div>
+            <div class="btn" id="rotate-btn">↻</div>
+            <div class="btn" id="down-btn">▼</div>
+            <div class="btn" id="drop-btn">▼▼</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const nextCanvas = document.getElementById('next-canvas');
     const nextCtx = nextCanvas.getContext('2d');
@@ -7,36 +143,31 @@ const canvas = document.getElementById('canvas');
     let BLOCK_SIZE, grid, current, next, score = 0, bestScore = 0, level = 1, lines = 0;
     let isGameOver = true, animationId, lastTime, dropCounter, particles = [];
 
-    // --- [사운드 설정 영역: 공백 반영 및 오디오 잠금 해제] ---
+    // --- [사운드 설정 영역 - 보강됨] ---
     const bgmFiles = ['music 1.mp3', 'music 2.mp3', 'music 3.mp3', 'music 4.mp3'];
     let currentBgmIdx = 0;
     const bgm = new Audio();
     bgm.src = bgmFiles[currentBgmIdx];
 
-    const sfx1 = new Audio('effect 1.mp3'); 
-    const sfx2 = new Audio('effect 2.mp3'); 
+    const sfx1 = new Audio('effect 1.mp3');
+    const sfx2 = new Audio('effect 2.mp3');
 
-    // 배경음악 순차 재생 로직
+    // 브라우저 오디오 잠금 해제 함수
+    function unlockAudio() {
+        bgm.play().then(() => { bgm.pause(); }).catch(e => {});
+        sfx1.play().then(() => { sfx1.pause(); }).catch(e => {});
+        sfx2.play().then(() => { sfx2.pause(); }).catch(e => {});
+        window.removeEventListener('touchstart', unlockAudio);
+        window.removeEventListener('mousedown', unlockAudio);
+    }
+    window.addEventListener('touchstart', unlockAudio);
+    window.addEventListener('mousedown', unlockAudio);
+
     bgm.addEventListener('ended', () => {
         currentBgmIdx = (currentBgmIdx + 1) % bgmFiles.length;
         bgm.src = bgmFiles[currentBgmIdx];
-        bgm.play().catch(e => console.log("재생 실패:", e));
+        bgm.play();
     });
-
-    // 브라우저 오디오 잠금 해제 함수 (화면 터치 시 실행)
-    function initAudio() {
-        // 무음 재생으로 브라우저 허가를 받아냅니다.
-        bgm.play().then(() => {
-            bgm.pause();
-        }).catch(e => console.log("잠금 해제 대기 중..."));
-        
-        // 한 번만 실행되도록 제거
-        window.removeEventListener('touchstart', initAudio);
-        window.removeEventListener('click', initAudio);
-    }
-    window.addEventListener('touchstart', initAudio);
-    window.addEventListener('click', initAudio);
-    // ---------------------------------------------
 
     let isReversed = false; 
     const modeBtn = document.getElementById('mode-toggle-btn');
@@ -89,11 +220,10 @@ const canvas = document.getElementById('canvas');
         document.getElementById('game-over').style.display = 'none';
         if(animationId) cancelAnimationFrame(animationId);
         
-        // [음악 재생 시작]
         currentBgmIdx = 0;
         bgm.src = bgmFiles[currentBgmIdx];
         bgm.currentTime = 0;
-        bgm.play().catch(e => console.log("START 버튼 클릭 시점 재생 실패:", e));
+        bgm.play().catch(e => console.log("Sound interaction pending"));
 
         grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         score = 0; level = 1; lines = 0; isGameOver = false; dropCounter = 0; lastTime = performance.now();
@@ -137,7 +267,7 @@ const canvas = document.getElementById('canvas');
 
     function gameOver() {
         isGameOver = true;
-        bgm.pause(); 
+        bgm.pause();
         if(score > bestScore) { bestScore = score; localStorage.setItem('tetris_best', bestScore.toString()); }
         updateUI(); document.getElementById('game-over').style.display = 'flex';
     }
@@ -173,16 +303,8 @@ const canvas = document.getElementById('canvas');
             }
         }
         if (linesCleared > 0) {
-            // [효과음 분기 재생]
-            if(linesCleared === 1) { 
-                sfx1.currentTime = 0; 
-                sfx1.play().catch(e => console.log("SFX1 재생 실패:", e)); 
-            }
-            else { 
-                sfx2.currentTime = 0; 
-                sfx2.play().catch(e => console.log("SFX2 재생 실패:", e)); 
-            }
-
+            if(linesCleared === 1) { sfx1.currentTime = 0; sfx1.play(); }
+            else { sfx2.currentTime = 0; sfx2.play(); }
             score += linePoints[linesCleared] * level; level = Math.floor(lines / 10) + 1; updateUI(); 
         }
     }
@@ -229,3 +351,6 @@ const canvas = document.getElementById('canvas');
     ['touchend', 'touchcancel'].forEach(ev => window.addEventListener(ev, () => ['l', 'r', 'd'].forEach(pA)));
 
     window.onload = () => { loadBestScore(); updateUI(); resize(); };
+</script>
+</body>
+</html>
