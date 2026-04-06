@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Block Puzzle</title>
 <style>
-/* 화면 전체 스크롤 방지 및 기본 설정 */
 html, body {
     overflow: hidden;
     position: fixed;
@@ -26,7 +25,6 @@ h1{font-size:17px;font-weight:500;letter-spacing:2px;margin:0.8rem 0 0.5rem;colo
 #mode-bar{display:flex;gap:6px;margin-bottom:0.8rem;width:100%;}
 .mode-btn{flex:1;padding:7px 0;border-radius:7px;border:1px solid #2e2e4e;background:#12122a;cursor:pointer;font-size:12px;color:#6a6a9a;transition:all 0.15s;}
 .mode-btn.active{background:#378ADD;color:#fff;border-color:#378ADD;}
-
 #board-wrap{border:1px solid #2e2e4e;border-radius:10px;background:#0e0e1e;padding:6px;margin-bottom:1rem;}
 #board{display:grid;gap:2px;}
 .cell{width:26px;height:26px;border-radius:4px;background:#181830;border:1px solid #252545;transition:background 0.08s;}
@@ -55,7 +53,7 @@ h1{font-size:17px;font-weight:500;letter-spacing:2px;margin:0.8rem 0 0.5rem;colo
 #combo-pop{position:fixed;top:38%;left:50%;transform:translateX(-50%);font-size:26px;font-weight:700;color:#7ab8f5;text-shadow:0 0 20px rgba(55,138,221,0.8);opacity:0;pointer-events:none;z-index:60;transition:opacity 0.35s;white-space:nowrap;}
 </style>
 </head>
-<body>
+<body onclick="unlockAudio()" ontouchstart="unlockAudio()">
 <h1>Block Puzzle</h1>
 <div id="app">
   <div id="topbar">
@@ -121,9 +119,22 @@ const STAGE_DEFS=[
   {goal:2200,pre:(()=>{const a=[];for(let i=0;i<9;i++)for(let j=0;j<9;j++)if((i+j)%3===0)a.push([i,j,'#444']);return a;})()},
 ];
 
-let grid,score,best,pieces,mode,stage,stageScore,bgmOn,audioCtx,gainNode,bgmNodes;
+let grid,score,best,pieces,mode,stage,stageScore;
 let dragEl=null,dragPieceIdx=-1;
 const CS=26,PS=14;
+
+// Audio Object (미리 로드)
+const sfxPlace = new Audio('effect 19.mp3');
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  sfxPlace.play().then(() => {
+    sfxPlace.pause();
+    sfxPlace.currentTime = 0;
+    audioUnlocked = true;
+  }).catch(() => {});
+}
 
 function selectMode(m){
   mode=m;
@@ -149,18 +160,7 @@ function makeGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null));
 function showStageBanner(){
   const def=STAGE_DEFS[Math.min(stage,STAGE_DEFS.length-1)];
   document.getElementById('sb-title').textContent='스테이지 '+(stage+1);
-  const descs=[
-    '격자를 채워 줄을 지워보세요!',
-    '모서리 4곳에 블럭이 배치되어 있어요.',
-    '십자형 장애물이 등장합니다.',
-    '대각선 2×2 그룹 장애물을 피해보세요.',
-    'ㄱ자 코너 장애물 4개를 공략하세요.',
-    '십자 장애물이 행과 열 전체를 막습니다!',
-    '사방 테두리 일부가 봉쇄됐습니다.',
-    '테두리 전체가 막혔습니다. 안쪽만 써야 해요!',
-    '3×3 그룹 체커 장애물이 기다립니다.',
-    '체커보드 패턴으로 절반이 막혔어요. 마지막 도전!'
-  ];
+  const descs=['격자를 채워 줄을 지워보세요!','모서리 4곳에 블럭이 배치되어 있어요.','십자형 장애물이 등장합니다.','대각선 2×2 그룹 장애물을 피해보세요.','ㄱ자 코너 장애물 4개를 공략하세요.','십자 장애물이 행과 열 전체를 막습니다!','사방 테두리 일부가 봉쇄됐습니다.','테두리 전체가 막혔습니다. 안쪽만 써야 해요!','3×3 그룹 체커 장애물이 기다립니다.','체커보드 패턴으로 절반이 막혔어요. 마지막 도전!'];
   const desc=(descs[stage]||'더욱 어려운 도전이 기다립니다!')+'\n\n목표 점수: '+def.goal;
   document.getElementById('sb-desc').textContent=desc;
   document.getElementById('stage-banner').classList.add('show');
@@ -250,18 +250,13 @@ function findSnap(cx,cy){
   const sh=p.shape,ph=sh.length,pw=sh[0].length;
   const board=document.getElementById('board');
   const rect=board.getBoundingClientRect();
-  
-  // 기준점: 조각의 시각적 위치(손가락 위 55px)를 격자와 매칭
   const targetCy = cy - 55 - (ph * (CS + 2)) / 2;
   const targetCx = cx;
-
   if(targetCx<rect.left-CS*3||targetCx>rect.right+CS*3||targetCy<rect.top-CS*3||targetCy>rect.bottom+CS*3)return null;
-
   const x=targetCx-rect.left-(pw*(CS+2)-2)/2;
   const y=targetCy-rect.top-(ph*(CS+2)-2)/2;
   const baseC=Math.round(x/(CS+2));
   const baseR=Math.round(y/(CS+2));
-
   let best=null,bestDist=Infinity;
   for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
     const br=baseR+dr,bc=baseC+dc;
@@ -288,20 +283,16 @@ function positionDragEl(cx,cy,snap){
   const p=pieces[dragPieceIdx];if(!p)return;
   const pw=p.shape[0].length,ph=p.shape.length;
   const pieceW=pw*(CS+2)-2,pieceH=ph*(CS+2)-2;
-
   if(snap){
     const board = document.getElementById('board');
     const rect = board.getBoundingClientRect();
-    const bpad = 6;
-    // 스냅 시에도 손가락 위 55px 위치를 기준으로 격자 칸에 정렬
-    const sx = rect.left + snap.baseC * (CS + 2) + bpad;
-    const sy = rect.top + snap.baseR * (CS + 2) + bpad;
+    const sx = rect.left + snap.baseC * (CS + 2) + 6;
+    const sy = rect.top + snap.baseR * (CS + 2) + 6;
     dragEl.style.transition = 'left 0.08s ease-out, top 0.08s ease-out, transform 0.1s';
     dragEl.style.left = sx + 'px';
     dragEl.style.top = sy + 'px';
     dragEl.style.transform = 'scale(1.06)';
   } else {
-    // 자유 이동: 항상 손가락 위 55px 고정 오프셋
     dragEl.style.transition = 'transform 0.1s';
     dragEl.style.left = (cx - pieceW/2) + 'px';
     dragEl.style.top = (cy - pieceH - 55) + 'px';
@@ -311,6 +302,7 @@ function positionDragEl(cx,cy,snap){
 
 function startDrag(e,idx){
   e.preventDefault();if(!pieces[idx])return;
+  unlockAudio(); // 터치 시작 시 오디오 활성화 시도
   dragPieceIdx=idx;snapGhost=null;
   const p=pieces[idx];const pw=p.shape[0].length,ph=p.shape.length;
   const cx=e.touches?e.touches[0].clientX:e.clientX;
@@ -354,7 +346,11 @@ function placePiece(baseR,baseC,idx){
   const p=pieces[idx];
   p.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)grid[baseR+r][baseC+c]=p.color;}));
   pieces[idx]=null;
-  playSfx('place');
+  
+  // 효과음 재생 (effect 19.mp3)
+  sfxPlace.currentTime = 0;
+  sfxPlace.play().catch(e => console.log("Audio play failed", e));
+
   clearLines();
   if(pieces.every(p=>!p))pieces=[rp(),rp(),rp()];
   renderAll();
@@ -389,7 +385,6 @@ function clearLines(){
   score+=pts;stageScore+=pts;
   if(score>best){best=score;localStorage.setItem('bp3best',best);}
   updateScore();
-  playSfx(total===1?'clear1':'clearBig');
   showComboPop(total);
   const flash=document.getElementById('clear-flash');
   flash.style.opacity='1';setTimeout(()=>flash.style.opacity='0',200);
@@ -421,48 +416,6 @@ function showGameOver(){
   document.getElementById('go-desc').textContent='점수: '+score;
   document.getElementById('retry-btn').style.display=mode==='stage'?'':'none';
   document.getElementById('gameover-modal').classList.add('show');
-}
-
-// ─── Audio ───
-bgmOn=false;audioCtx=null;gainNode=null;bgmNodes=[];
-function initAudio(){
-  if(audioCtx)return;
-  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  gainNode=audioCtx.createGain();
-  gainNode.gain.value=0.7;
-  gainNode.connect(audioCtx.destination);
-}
-function playSfx(type){
-  if(!audioCtx) initAudio();
-  if(audioCtx.state==='suspended')audioCtx.resume();
-  const now=audioCtx.currentTime;
-  if(type==='place'){
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.type='sine';o.frequency.setValueAtTime(440,now);o.frequency.linearRampToValueAtTime(380,now+0.07);
-    g.gain.setValueAtTime(0.1,now);g.gain.linearRampToValueAtTime(0,now+0.08);
-    o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+0.09);
-  }else if(type==='clear1'){
-    [0,0.07,0.14].forEach((t,i)=>{
-      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-      o.type='triangle';o.frequency.value=[523,659,784][i];
-      g.gain.setValueAtTime(0.18,now+t);g.gain.linearRampToValueAtTime(0,now+t+0.1);
-      o.connect(g);g.connect(audioCtx.destination);o.start(now+t);o.stop(now+t+0.12);
-    });
-  }else if(type==='clearBig'){
-    const bufLen=Math.floor(audioCtx.sampleRate*0.18);
-    const buf=audioCtx.createBuffer(1,bufLen,audioCtx.sampleRate);
-    const d=buf.getChannelData(0);
-    for(let i=0;i<bufLen;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bufLen,2)*0.85;
-    const src=audioCtx.createBufferSource(),g2=audioCtx.createGain();
-    src.buffer=buf;g2.gain.value=0.5;
-    src.connect(g2);g2.connect(audioCtx.destination);src.start(now);
-    [0,0.06,0.12,0.18,0.24].forEach((t,i)=>{
-      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-      o.type='square';o.frequency.value=[523,659,784,988,1047][i];
-      g.gain.setValueAtTime(0.2,now+t);g.gain.linearRampToValueAtTime(0,now+t+0.14);
-      o.connect(g);g.connect(audioCtx.destination);o.start(now+t);o.stop(now+t+0.16);
-    });
-  }
 }
 
 mode='endless';
