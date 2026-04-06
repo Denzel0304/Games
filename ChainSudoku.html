@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chain Sudoku - Healing</title>
+    <title>Chain Sudoku - Logic Master</title>
     <style>
         :root {
-            --bg-color: #f0ede5; /* 편안한 베이지 톤 */
+            --bg-color: #f0ede5;
             --text-color: #5d5a52;
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
-            --accent-color: #8e9775; /* 부드러운 그린 */
+            --accent-color: #8e9775;
             --chain-color: #d1ccc0;
+            --selected-bg: #e8e4da;
         }
 
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Pretendard', sans-serif;
+            font-family: 'Pretendard', -apple-system, sans-serif;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
@@ -26,47 +27,64 @@
 
         body { display: flex; flex-direction: column; align-items: center; }
 
-        /* 상단 영역 */
         .header {
-            height: 15%;
+            height: 18%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding-top: 10px;
         }
 
-        h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -1px; }
-        #status { margin-top: 8px; font-size: 0.9rem; opacity: 0.8; }
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
 
-        /* 게임 영역 */
+        .size-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-weight: 800;
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .size-btn:active {
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+        }
+
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
+        #status { margin-top: 8px; font-size: 0.85rem; height: 1rem; color: #8e9775; font-weight: 600; }
+
         .game-area {
-            height: 60%;
+            height: 57%;
             width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
         }
 
         .grid-container {
             position: relative;
-            padding: 20px;
+            padding: 12px;
             background: var(--bg-color);
-            border-radius: 30px;
-            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+            border-radius: 20px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
         }
 
         #grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
+            gap: 6px;
             position: relative;
             z-index: 2;
         }
 
-        /* 체인 연결선 SVG */
         #chain-svg {
             position: absolute;
             top: 0; left: 0;
@@ -76,82 +94,80 @@
         }
 
         .cell {
-            width: 50px;
-            height: 50px;
+            width: 38px;
+            height: 38px;
             background: var(--bg-color);
-            border-radius: 50%; /* 체인 스도쿠는 주로 원형 */
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px var(--shadow-dark), -2px -2px 5px var(--shadow-light);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            color: var(--accent-color);
-            transition: all 0.2s;
+            transition: all 0.1s;
         }
 
         .cell.active {
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            background-color: var(--selected-bg);
             color: #4a4e3d;
         }
 
-        /* 하단 컨트롤 */
         .footer {
             height: 25%;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-        }
-
-        .num-pad {
-            display: flex;
             gap: 10px;
         }
 
+        #num-pad {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            width: 90%;
+        }
+
         .num-btn {
-            width: 45px;
-            height: 45px;
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-color);
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            font-weight: bold;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .num-btn:active {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .action-btns { display: flex; gap: 12px; margin-top: 5px; }
+        .btn {
+            padding: 10px 22px;
             border: none;
             border-radius: 12px;
             background: var(--bg-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .num-btn:active {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 20px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 20px;
-            background: var(--bg-color);
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             font-weight: 700;
-            color: var(--text-color);
+            font-size: 0.9rem;
         }
-
-        .btn-check {
-            background-color: var(--accent-color);
-            color: white;
-            box-shadow: 4px 4px 10px rgba(142, 151, 117, 0.4);
-        }
+        .btn-check { background-color: var(--accent-color); color: white; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Chain Sudoku</h1>
-        <div id="status">연결된 고리는 숫자가 겹치면 안 돼요</div>
+        <div class="title-row">
+            <button class="size-btn" onclick="changeLevel(5)">5x5</button>
+            <h1>Chain Sudoku</h1>
+            <button class="size-btn" onclick="changeLevel(7)">7x7</button>
+        </div>
+        <div id="status">체인 내 숫자는 모두 달라야 합니다!</div>
     </div>
 
     <div class="game-area">
@@ -162,107 +178,170 @@
     </div>
 
     <div class="footer">
-        <div class="num-pad">
-            <button class="num-btn" onclick="inputValue(1)">1</button>
-            <button class="num-btn" onclick="inputValue(2)">2</button>
-            <button class="num-btn" onclick="inputValue(3)">3</button>
-            <button class="num-btn" onclick="inputValue(4)">4</button>
-            <button class="num-btn" onclick="inputValue(5)">5</button>
-            <button class="num-btn" onclick="inputValue('')">C</button>
-        </div>
+        <div id="num-pad"></div>
         <div class="action-btns">
-            <button class="btn" onclick="resetGame()">초기화</button>
-            <button class="btn btn-check" onclick="checkResult()">정답 확인</button>
+            <button class="btn" onclick="initGame()">초기화</button>
+            <button class="btn btn-check" onclick="checkWin()">확인</button>
         </div>
     </div>
 
     <script>
-        const size = 5;
+        let currentSize = 5;
         let selectedCell = null;
-        // 체인 정의 (인덱스 기반 그룹)
-        const chains = [
-            [0, 1, 2], [3, 4, 9], [5, 6, 11], [7, 8, 13, 14], [10, 15, 16], [12, 17, 22], [18, 19, 24], [20, 21, 23]
-        ];
-        
-        function initGrid() {
+        let chains = [];
+
+        function changeLevel(size) {
+            currentSize = size;
+            document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
+            initGame();
+        }
+
+        function initGame() {
             const grid = document.getElementById('grid');
+            const numPad = document.getElementById('num-pad');
             grid.innerHTML = '';
-            for (let i = 0; i < size * size; i++) {
+            numPad.innerHTML = '';
+            selectedCell = null;
+
+            grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+            
+            for (let i = 0; i < currentSize * currentSize; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.id = `cell-${i}`;
-                cell.addEventListener('click', () => selectCell(i));
+                cell.onclick = () => {
+                    if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).classList.remove('active');
+                    selectedCell = i;
+                    cell.classList.add('active');
+                };
                 grid.appendChild(cell);
             }
-            drawChains();
+
+            for (let i = 1; i <= currentSize; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.innerText = i;
+                btn.onclick = () => { if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = i; };
+                numPad.appendChild(btn);
+            }
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'num-btn';
+            clearBtn.innerText = 'C';
+            clearBtn.onclick = () => { if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; };
+            numPad.appendChild(clearBtn);
+
+            generateChainsWithinLimit();
+            setTimeout(drawChains, 100);
+        }
+
+        // 규칙 적용: 체인 길이를 currentSize 이하로 제한
+        function generateChainsWithinLimit() {
+            chains = [];
+            let visited = new Set();
+            let allIndices = Array.from({length: currentSize * currentSize}, (_, i) => i);
+            // 섞기
+            allIndices.sort(() => Math.random() - 0.5);
+
+            for (let i of allIndices) {
+                if (visited.has(i)) continue;
+                
+                let chain = [i];
+                visited.add(i);
+                let curr = i;
+                
+                // 체인 길이를 2 ~ currentSize 사이로 설정
+                let maxLen = Math.floor(Math.random() * (currentSize - 1)) + 2; 
+
+                for (let j = 0; j < maxLen - 1; j++) {
+                    let neighbors = getNeighbors(curr).filter(n => !visited.has(n));
+                    if (neighbors.length === 0) break;
+                    let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    chain.push(next);
+                    visited.add(next);
+                    curr = next;
+                }
+                if (chain.length > 1) chains.push(chain);
+                else {
+                    // 혼자 남은 칸은 주변 체인에 병합 시도 (선택 사항)
+                }
+            }
+        }
+
+        function getNeighbors(idx) {
+            let res = [];
+            let r = Math.floor(idx / currentSize);
+            let c = idx % currentSize;
+            if (r > 0) res.push(idx - currentSize);
+            if (r < currentSize - 1) res.push(idx + currentSize);
+            if (c > 0) res.push(idx - 1);
+            if (c < currentSize - 1) res.push(idx + 1);
+            return res;
         }
 
         function drawChains() {
             const svg = document.getElementById('chain-svg');
             svg.innerHTML = '';
-            const container = document.querySelector('.grid-container');
-            const rect = container.getBoundingClientRect();
-
             chains.forEach(chain => {
                 for (let i = 0; i < chain.length - 1; i++) {
                     const c1 = document.getElementById(`cell-${chain[i]}`);
                     const c2 = document.getElementById(`cell-${chain[i+1]}`);
-                    
+                    if(!c1 || !c2) continue;
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", c1.offsetLeft + 25);
-                    line.setAttribute("y1", c1.offsetTop + 25);
-                    line.setAttribute("x2", c2.offsetLeft + 25);
-                    line.setAttribute("y2", c2.offsetTop + 25);
+                    line.setAttribute("x1", c1.offsetLeft + c1.offsetWidth/2);
+                    line.setAttribute("y1", c1.offsetTop + c1.offsetHeight/2);
+                    line.setAttribute("x2", c2.offsetLeft + c2.offsetWidth/2);
+                    line.setAttribute("y2", c2.offsetTop + c2.offsetHeight/2);
                     line.setAttribute("stroke", "var(--chain-color)");
-                    line.setAttribute("stroke-width", "8");
+                    line.setAttribute("stroke-width", "6");
                     line.setAttribute("stroke-linecap", "round");
                     svg.appendChild(line);
                 }
             });
         }
 
-        function selectCell(index) {
-            if (selectedCell !== null) {
-                document.getElementById(`cell-${selectedCell}`).classList.remove('active');
-            }
-            selectedCell = index;
-            document.getElementById(`cell-${index}`).classList.add('active');
-        }
-
-        function inputValue(val) {
-            if (selectedCell !== null) {
-                document.getElementById(`cell-${selectedCell}`).innerText = val;
-            }
-        }
-
-        function resetGame() {
-            initGrid();
-            document.getElementById('status').innerText = "보드가 초기화되었습니다.";
-            document.getElementById('status').style.color = "var(--text-color)";
-        }
-
-        function checkResult() {
-            let cells = [];
-            for(let i=0; i<25; i++) {
+        function checkWin() {
+            let board = [];
+            for(let i=0; i<currentSize*currentSize; i++) {
                 const val = document.getElementById(`cell-${i}`).innerText;
                 if(!val) {
                     alert("모든 칸을 채워주세요!");
                     return;
                 }
-                cells.push(parseInt(val));
+                board.push(parseInt(val));
             }
 
-            // 가로, 세로, 체인 중복 검사 로직 (생략 가능하나 기본 구조 구현)
-            const status = document.getElementById('status');
-            status.innerText = "잘 하셨습니다! (검증 로직 작동 중)";
-            status.style.color = "#8e9775";
+            // 검증 로직 호출 (가로, 세로, 체인 중복 검사)
+            if (validate(board)) {
+                document.getElementById('status').innerText = "🎉 축하합니다! 정답입니다.";
+                document.getElementById('status').style.color = "#27ae60";
+            } else {
+                document.getElementById('status').innerText = "다시 확인해 보세요 (중복 발견)";
+                document.getElementById('status').style.color = "#d32f2f";
+            }
         }
 
-        window.onload = () => {
-            initGrid();
-            // 반응형 대응 위해 지연 실행
-            setTimeout(drawChains, 100);
-        };
+        function validate(board) {
+            // 가로 검사
+            for (let r = 0; r < currentSize; r++) {
+                let row = board.slice(r * currentSize, (r + 1) * currentSize);
+                if (new Set(row).size !== currentSize) return false;
+            }
+            // 세로 검사
+            for (let c = 0; c < currentSize; c++) {
+                let col = [];
+                for (let r = 0; r < currentSize; r++) col.push(board[r * currentSize + c]);
+                if (new Set(col).size !== currentSize) return false;
+            }
+            // 체인 검사
+            for (let chain of chains) {
+                let vals = chain.map(idx => board[idx]);
+                if (new Set(vals).size !== vals.length) return false;
+            }
+            return true;
+        }
+
+        window.onload = () => { changeLevel(5); };
+        window.onresize = drawChains;
     </script>
 </body>
 </html>
