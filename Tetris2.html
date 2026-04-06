@@ -128,7 +128,7 @@ const STAGE_DEFS=[
 ];
 
 let grid,score,best,pieces,mode,stage,stageScore,bgmOn,audioCtx,gainNode,bgmNodes;
-let dragEl=null,dragPieceIdx=-1,dragOffX=0,dragOffY=0;
+let dragEl=null,dragPieceIdx=-1;
 const CS=26,PS=14;
 
 function selectMode(m){
@@ -249,70 +249,108 @@ function renderTray(){
   });
 }
 
-function getGhost(cx,cy){
-  const p=pieces[dragPieceIdx];if(!p)return{ghost:null,invSet:null};
+let snapGhost=null;
+
+function findSnap(cx,cy){
+  const p=pieces[dragPieceIdx];if(!p)return null;
   const sh=p.shape,ph=sh.length,pw=sh[0].length;
   const board=document.getElementById('board');
   const rect=board.getBoundingClientRect();
-  // 커서에서 조각 좌상단 위치 = 커서 - 오프셋(조각 중앙)
-  const x=cx-rect.left-dragOffX;
-  const y=cy-rect.top-dragOffY;
-  const baseC=Math.round(x/CS);
-  const baseR=Math.round(y/CS);
-  const cells=new Set();let valid=true;
-  for(let r=0;r<ph;r++)for(let c=0;c<pw;c++){
-    if(!sh[r][c])continue;
-    const gr=baseR+r,gc=baseC+c;
-    if(gr<0||gr>=ROWS||gc<0||gc>=COLS||grid[gr][gc])valid=false;
-    cells.add((baseR+r)+','+(baseC+c));
+  // 격자 영역에서 너무 벗어나면 스냅 안 함
+  if(cx<rect.left-CS*3||cx>rect.right+CS*3||cy<rect.top-CS*3||cy>rect.bottom+CS*3)return null;
+  // 커서 기준 조각 중앙 → 좌상단 격자 인덱스
+  const x=cx-rect.left-(pw*(CS+2)-2)/2;
+  const y=cy-rect.top-(ph*(CS+2)-2)/2;
+  const baseC=Math.round(x/(CS+2));
+  const baseR=Math.round(y/(CS+2));
+  // 주변 ±2 탐색해서 가장 가까운 유효 위치
+  let best=null,bestDist=Infinity;
+  for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+    const br=baseR+dr,bc=baseC+dc;
+    if(br<0||bc<0||br+ph>ROWS||bc+pw>COLS)continue;
+    let valid=true;
+    const cells=new Set();
+    for(let r=0;r<ph&&valid;r++)for(let c=0;c<pw&&valid;c++){
+      if(!sh[r][c])continue;
+      if(grid[br+r][bc+c])valid=false;
+      else cells.add((br+r)+','+(bc+c));
+    }
+    if(valid){
+      const snapCx=rect.left+bc*(CS+2)+(pw*(CS+2)-2)/2;
+      const snapCy=rect.top+br*(CS+2)+(ph*(CS+2)-2)/2;
+      const dist=Math.hypot(cx-snapCx,cy-snapCy);
+      if(dist<bestDist){bestDist=dist;best={cells,baseR:br,baseC:bc,color:p.color};}
+    }
   }
-  if(!valid)return{ghost:null,invSet:cells};
-  return{ghost:{cells,color:p.color,baseR,baseC},invSet:null};
+  return best;
+}
+
+function positionDragEl(cx,cy,snap){
+  if(!dragEl)return;
+  const p=pieces[dragPieceIdx];if(!p)return;
+  const pw=p.shape[0].length,ph=p.shape.length;
+  if(snap){
+    // 스냅: dragEl을 격자 정확한 위치로 슥~ 이동
+    const board=document.getElementById('board');
+    const rect=board.getBoundingClientRect();
+    const bpad=6;
+    const sx=rect.left+snap.baseC*(CS+2)+bpad;
+    const sy=rect.top+snap.baseR*(CS+2)+bpad;
+    dragEl.style.transition='left 0.1s cubic-bezier(.2,.9,.3,1),top 0.1s cubic-bezier(.2,.9,.3,1),transform 0.1s';
+    dragEl.style.left=sx+'px';
+    dragEl.style.top=sy+'px';
+    dragEl.style.transform='scale(1.06)';
+    dragEl.style.opacity='0.9';
+  }else{
+    // 자유: 손가락 위 55px에 표시 (손에 안 가려짐)
+    const pieceW=pw*(CS+2)-2,pieceH=ph*(CS+2)-2;
+    dragEl.style.transition='transform 0.1s';
+    dragEl.style.left=(cx-pieceW/2)+'px';
+    dragEl.style.top=(cy-pieceH-55)+'px';
+    dragEl.style.transform='scale(1.12)';
+    dragEl.style.opacity='1';
+  }
 }
 
 function startDrag(e,idx){
   e.preventDefault();if(!pieces[idx])return;
-  dragPieceIdx=idx;
+  dragPieceIdx=idx;snapGhost=null;
   const p=pieces[idx];const pw=p.shape[0].length,ph=p.shape.length;
-  // 조각 전체 픽셀 크기 (CS px 셀 + 2px gap)
-  const pieceW=pw*CS+(pw-1)*2;
-  const pieceH=ph*CS+(ph-1)*2;
-  // 커서가 조각 중앙에 오도록 오프셋 설정
-  dragOffX=pieceW/2;
-  dragOffY=pieceH/2;
   const cx=e.touches?e.touches[0].clientX:e.clientX;
   const cy=e.touches?e.touches[0].clientY:e.clientY;
   dragEl=document.createElement('div');
-  dragEl.style.cssText='position:fixed;pointer-events:none;z-index:999;display:grid;gap:2px;grid-template-columns:repeat('+pw+','+CS+'px);grid-template-rows:repeat('+ph+','+CS+'px);';
+  dragEl.style.cssText='position:fixed;pointer-events:none;z-index:999;display:grid;gap:2px;'+
+    'grid-template-columns:repeat('+pw+','+CS+'px);grid-template-rows:repeat('+ph+','+CS+'px);'+
+    'border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,0.6);transform-origin:center center;will-change:left,top;';
   p.shape.forEach(row=>row.forEach(v=>{
     const c=document.createElement('div');
     c.style.cssText='border-radius:4px;background:'+(v?p.color:'transparent')+';';
     dragEl.appendChild(c);
   }));
   document.body.appendChild(dragEl);
-  moveDrag(cx,cy);
+  positionDragEl(cx,cy,null);
   document.addEventListener('mousemove',onMove);
   document.addEventListener('mouseup',onUp);
   document.addEventListener('touchmove',onMove,{passive:false});
   document.addEventListener('touchend',onUp);
 }
-function moveDrag(cx,cy){if(!dragEl)return;dragEl.style.left=(cx-dragOffX)+'px';dragEl.style.top=(cy-dragOffY)+'px';}
+
 function onMove(e){
   e.preventDefault();
   const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;
-  moveDrag(cx,cy);
-  const{ghost,invSet}=getGhost(cx,cy);
-  renderBoard(ghost,invSet);
+  const snap=findSnap(cx,cy);
+  snapGhost=snap;
+  positionDragEl(cx,cy,snap);
+  renderBoard(snap,null);
 }
+
 function onUp(e){
-  const cx=e.changedTouches?e.changedTouches[0].clientX:e.clientX,cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
   document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);
   document.removeEventListener('touchmove',onMove);document.removeEventListener('touchend',onUp);
   if(dragEl){dragEl.remove();dragEl=null;}
-  const{ghost}=getGhost(cx,cy);
-  if(ghost)placePiece(ghost.baseR,ghost.baseC,dragPieceIdx);
-  else renderBoard();
-  dragPieceIdx=-1;
+  if(snapGhost){placePiece(snapGhost.baseR,snapGhost.baseC,dragPieceIdx);}
+  else{renderBoard();}
+  snapGhost=null;dragPieceIdx=-1;
 }
 
 function placePiece(baseR,baseC,idx){
