@@ -28,7 +28,7 @@
         body { display: flex; flex-direction: column; align-items: center; }
 
         .header {
-            height: 15%;
+            height: 20%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -36,45 +36,66 @@
             width: 100%;
         }
 
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; }
-        #status { margin-top: 8px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .size-btn {
+            width: 55px;
+            height: 55px;
+            border: none;
+            border-radius: 15px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-weight: 800;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            cursor: pointer;
+        }
+
+        .size-btn:active {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+        }
+
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
+        #status { margin-top: 10px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
 
         /* 게임 영역 */
         .game-area {
-            height: 65%;
+            height: 50%;
             width: 100%;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            overflow-y: auto;
-            padding-bottom: 20px;
+            align-items: center;
         }
 
-        /* 스크롤바 숨기기 */
-        .game-area::-webkit-scrollbar { display: none; }
-
         .grid-container {
-            width: 90vw;
+            width: 85vw;
+            height: 85vw;
             max-width: 360px;
+            max-height: 360px;
             background: var(--bg-color);
-            border-radius: 25px;
+            border-radius: 30px;
             box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
             padding: 15px;
             box-sizing: border-box;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            gap: 8px;
+            overflow-y: auto;
         }
+
+        /* 스크롤바 숨기기 */
+        .grid-container::-webkit-scrollbar { display: none; }
 
         .cell {
             aspect-ratio: 1 / 1;
             background: var(--bg-color);
-            border-radius: 12px;
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            border-radius: 10px;
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
             font-weight: 800;
             transition: all 0.2s;
             cursor: pointer;
@@ -84,29 +105,29 @@
             box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
             background-color: var(--selected-bg);
             color: var(--accent-color);
-            transform: scale(0.95);
         }
 
         .cell.cleared {
             box-shadow: none;
             color: var(--cleared-color);
             background: transparent;
-            opacity: 0.3;
+            opacity: 0.2;
             pointer-events: none;
         }
 
         /* 하단 영역 */
         .footer {
-            height: 20%;
+            height: 30%;
             width: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .btn {
-            padding: 15px 30px;
+            padding: 15px 35px;
             border: none;
             border-radius: 20px;
             background: var(--bg-color);
@@ -114,7 +135,6 @@
             font-weight: 700;
             color: var(--text-color);
             font-size: 1rem;
-            cursor: pointer;
         }
 
         .btn:active {
@@ -129,8 +149,12 @@
     <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
 
     <div class="header">
-        <h1>Ten Pair</h1>
-        <div id="status">합이 10이거나 같은 숫자 찾기</div>
+        <div class="title-row">
+            <button class="size-btn" onclick="changeLevel(6)">6x6</button>
+            <h1>Ten Pair</h1>
+            <button class="size-btn" onclick="changeLevel(8)">8x8</button>
+        </div>
+        <div id="status">5x5 모드로 시작합니다!</div>
     </div>
 
     <div class="game-area">
@@ -143,6 +167,7 @@
     </div>
 
     <script>
+        let currentSize = 5;
         let numbers = [];
         let selectedIdx = null;
         let audioUnlocked = false;
@@ -160,22 +185,34 @@
             }
         }
 
-        function resetGame() {
+        function changeLevel(size) {
             playClickSound();
-            numbers = Array.from({length: 25}, () => Math.floor(Math.random() * 9) + 1);
+            currentSize = size;
+            document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
+            resetGame();
+        }
+
+        function resetGame() {
+            if (event) playClickSound();
+            const initialCount = currentSize * currentSize;
+            numbers = Array.from({length: initialCount}, () => Math.floor(Math.random() * 9) + 1);
             selectedIdx = null;
             render();
-            document.getElementById('status').innerText = "새 게임 시작!";
-            document.getElementById('status').style.color = "var(--accent-color)";
         }
 
         function render() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
+            
+            // 난이도에 따른 폰트 크기 및 그리드 설정
+            grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+            const fontSize = currentSize === 8 ? '0.9rem' : (currentSize === 6 ? '1.1rem' : '1.2rem');
+
             numbers.forEach((num, idx) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell' + (num === 0 ? ' cleared' : '');
                 if (idx === selectedIdx) cell.classList.add('selected');
+                cell.style.fontSize = fontSize;
                 cell.innerText = num === 0 ? '' : num;
                 cell.onclick = () => handleSelect(idx);
                 grid.appendChild(cell);
@@ -208,23 +245,22 @@
             const n2 = numbers[j];
             if (!(n1 + n2 === 10 || n1 === n2)) return false;
 
-            // 연결성 체크 (가로/세로 인접하거나 사이에 지워진 칸만 있는 경우)
             const min = Math.min(i, j);
             const max = Math.max(i, j);
             
-            // 같은 줄인지 확인
-            if (Math.floor(i / 5) === Math.floor(j / 5)) {
+            // 가로 줄 확인 (currentSize 변수 활용)
+            if (Math.floor(i / currentSize) === Math.floor(j / currentSize)) {
                 for (let k = min + 1; k < max; k++) if (numbers[k] !== 0) return false;
                 return true;
             }
             
-            // 같은 열인지 확인
-            if (i % 5 === j % 5) {
-                for (let k = min + 5; k < max; k += 5) if (numbers[k] !== 0) return false;
+            // 세로 열 확인 (currentSize 변수 활용)
+            if (i % currentSize === j % currentSize) {
+                for (let k = min + currentSize; k < max; k += currentSize) if (numbers[k] !== 0) return false;
                 return true;
             }
 
-            // 연속된 흐름 (줄바꿈 포함)
+            // 전체 흐름 (줄바꿈 포함)
             let isContinuous = true;
             for (let k = min + 1; k < max; k++) {
                 if (numbers[k] !== 0) { isContinuous = false; break; }
@@ -240,24 +276,23 @@
             if (currentNums.length === 0) return;
             numbers = [...numbers, ...currentNums];
             render();
-            // 스크롤을 아래로 이동
+            
+            // 추가 시 하단으로 자동 스크롤
             setTimeout(() => {
-                const area = document.querySelector('.game-area');
-                area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+                const grid = document.getElementById('grid');
+                grid.scrollTo({ top: grid.scrollHeight, behavior: 'smooth' });
             }, 100);
         }
 
         function checkWin() {
             if (numbers.every(n => n === 0)) {
-                document.getElementById('status').innerText = "🎉 All Cleared!";
+                document.getElementById('status').innerText = "🎉 미션 클리어!";
                 document.getElementById('status').style.color = "#27ae60";
             }
         }
 
-        // 초기 실행
         window.onload = () => {
-            numbers = Array.from({length: 25}, () => Math.floor(Math.random() * 9) + 1);
-            render();
+            resetGame();
         };
     </script>
 </body>
