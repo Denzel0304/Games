@@ -10,11 +10,13 @@
             --card-bg: #ffffff;
             --text-main: #2c3e50;
             --text-sub: #7f8c8d;
+            --block-blue: #378ADD; /* 블록 퍼즐 포인트 컬러 */
             --neon-purple: #9c27b0;
             --zero-blue: #2196f3;
             --2048-gold: #edc22e;
             --chain-green: #8e9775;
-            --tenten-orange: #ff7043; /* 텐텐 포인트 컬러 추가 */
+            --tenten-orange: #ff7043;
+            --star-yellow: #ffeb3b;
         }
 
         body {
@@ -105,8 +107,8 @@
         }
 
         /* 게임별 포인트 컬러 설정 */
-        .star-game { border-top: 3px solid #ffeb3b; }
-        .star-game .icon-box { background-color: #fff9c4; }
+        .block-game { border-top: 3px solid var(--block-blue); }
+        .block-game .icon-box { background-color: #e3f2fd; }
 
         .tetris-game { border-top: 3px solid var(--neon-purple); }
         .tetris-game .icon-box { background-color: #f3e5f5; }
@@ -120,9 +122,11 @@
         .chain-sudoku { border-top: 3px solid var(--chain-green); }
         .chain-sudoku .icon-box { background-color: #f1f3eb; }
 
-        /* 텐텐 스타일 추가 */
         .tenten-game { border-top: 3px solid var(--tenten-orange); }
         .tenten-game .icon-box { background-color: #fff3e0; }
+
+        .star-game { border-top: 3px solid var(--star-yellow); }
+        .star-game .icon-box { background-color: #fff9c4; }
 
     </style>
 </head>
@@ -135,14 +139,14 @@
     </header>
 
     <div class="container">
-        <a href="Stars.html" class="menu-card star-game">
-            <div class="icon-box">✨</div>
-            <div class="card-title">별 가르기</div>
+        <a href="Tetris2.html" class="menu-card block-game">
+            <div class="icon-box">🧩</div>
+            <div class="card-title">블록 퍼즐</div>
         </a>
 
         <a href="Tetris.html" class="menu-card tetris-game">
             <div class="icon-box">🧱</div>
-            <div class="card-title">테트리스</div>
+            <div class="card-title">고전 테트리스</div>
         </a>
 
         <a href="0hh1.html" class="menu-card zero-h1-game">
@@ -163,6 +167,11 @@
         <a href="tenten.html" class="menu-card tenten-game">
             <div class="icon-box">🔟</div>
             <div class="card-title">텐텐</div>
+        </a>
+
+        <a href="Stars.html" class="menu-card star-game">
+            <div class="icon-box">✨</div>
+            <div class="card-title">별 가르기</div>
         </a>
     </div>
 
