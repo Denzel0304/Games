@@ -61,7 +61,6 @@
         h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
         #status { margin-top: 10px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
 
-        /* 게임 영역 */
         .game-area {
             height: 50%;
             width: 100%;
@@ -85,7 +84,6 @@
             overflow-y: auto;
         }
 
-        /* 스크롤바 숨기기 */
         .grid-container::-webkit-scrollbar { display: none; }
 
         .cell {
@@ -115,7 +113,6 @@
             pointer-events: none;
         }
 
-        /* 하단 영역 */
         .footer {
             height: 30%;
             width: 100%;
@@ -135,6 +132,7 @@
             font-weight: 700;
             color: var(--text-color);
             font-size: 1rem;
+            cursor: pointer;
         }
 
         .btn:active {
@@ -193,9 +191,19 @@
         }
 
         function resetGame() {
-            if (event) playClickSound();
+            // 새 게임 버튼 클릭 시에만 소리 재생 (초기 로드 시 중복 방지)
+            if (typeof event !== 'undefined' && event) playClickSound();
+
             const initialCount = currentSize * currentSize;
-            numbers = Array.from({length: initialCount}, () => Math.floor(Math.random() * 9) + 1);
+            const maxNum = 7; // 숫자를 7로 제한하여 난이도 조절
+            
+            numbers = Array.from({length: initialCount}, () => {
+                const rand = Math.random();
+                // 15% 확률로 5 생성 (합이 10이 될 확률 보정)
+                if (rand < 0.15) return 5;
+                return Math.floor(Math.random() * maxNum) + 1;
+            });
+            
             selectedIdx = null;
             render();
         }
@@ -204,7 +212,6 @@
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             
-            // 난이도에 따른 폰트 크기 및 그리드 설정
             grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
             const fontSize = currentSize === 8 ? '0.9rem' : (currentSize === 6 ? '1.1rem' : '1.2rem');
 
@@ -248,19 +255,19 @@
             const min = Math.min(i, j);
             const max = Math.max(i, j);
             
-            // 가로 줄 확인 (currentSize 변수 활용)
+            // 가로 확인
             if (Math.floor(i / currentSize) === Math.floor(j / currentSize)) {
                 for (let k = min + 1; k < max; k++) if (numbers[k] !== 0) return false;
                 return true;
             }
             
-            // 세로 열 확인 (currentSize 변수 활용)
+            // 세로 확인
             if (i % currentSize === j % currentSize) {
                 for (let k = min + currentSize; k < max; k += currentSize) if (numbers[k] !== 0) return false;
                 return true;
             }
 
-            // 전체 흐름 (줄바꿈 포함)
+            // 연속 흐름 (줄바꿈 포함 빈칸 건너뛰기)
             let isContinuous = true;
             for (let k = min + 1; k < max; k++) {
                 if (numbers[k] !== 0) { isContinuous = false; break; }
@@ -277,7 +284,6 @@
             numbers = [...numbers, ...currentNums];
             render();
             
-            // 추가 시 하단으로 자동 스크롤
             setTimeout(() => {
                 const grid = document.getElementById('grid');
                 grid.scrollTo({ top: grid.scrollHeight, behavior: 'smooth' });
@@ -291,9 +297,7 @@
             }
         }
 
-        window.onload = () => {
-            resetGame();
-        };
+        window.onload = resetGame;
     </script>
 </body>
 </html>
