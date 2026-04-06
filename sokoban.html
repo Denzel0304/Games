@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sokoban Master</title>
+    <title>Sokoban Master Pro</title>
     <style>
         :root {
             --bg: #1a1a2e;
@@ -16,7 +16,6 @@
             --text: #e0e0e0;
         }
 
-        /* 모바일 스크롤 방지 및 전체화면 설정 */
         html, body {
             overflow: hidden;
             position: fixed;
@@ -32,189 +31,166 @@
             align-items: center;
         }
 
-        header {
-            padding: 20px 0 10px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 20px;
-            color: #7ab8f5;
-            margin: 0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+        header { padding: 15px 0 5px; text-align: center; }
+        h1 { font-size: 18px; color: #7ab8f5; margin: 0; letter-spacing: 2px; text-transform: uppercase; }
 
         #info-bar {
-            display: flex;
-            gap: 20px;
-            margin: 10px 0;
-            color: var(--text);
-            font-size: 14px;
+            display: flex; gap: 20px; margin: 8px 0;
+            color: var(--text); font-size: 14px; font-weight: 500;
         }
 
-        /* 게임 보드 영역 */
+        /* 게임 보드 영역 확대 */
         #game-container {
             position: relative;
             background: var(--floor);
-            border: 4px solid var(--wall);
+            border: 3px solid var(--wall);
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             display: grid;
-            margin: auto;
+            margin: 10px auto;
         }
 
         .tile {
-            width: 40px;
-            height: 40px;
+            width: 45px; /* 크기 확대 */
+            height: 45px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
         }
 
-        /* 그래픽 요소들 */
         .wall { background: var(--wall); border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
-        .floor { background: var(--floor); }
         .target::after { 
-            content: ''; width: 12px; height: 12px; 
-            background: var(--target); border-radius: 50%; opacity: 0.6;
+            content: ''; width: 14px; height: 14px; 
+            background: var(--target); border-radius: 50%; opacity: 0.7;
         }
 
-        /* 오브젝트 (플레이어, 상자) */
         .obj {
             position: absolute;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
             z-index: 10;
-            transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.12s cubic-bezier(0.2, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 22px;
         }
 
         .player { background: var(--player); box-shadow: 0 0 15px rgba(55,138,221,0.5); z-index: 20; }
         .box { background: var(--box); box-shadow: 0 4px 0 #b8960b; }
         .box.done { background: var(--box-done); box-shadow: 0 4px 0 #689f38; }
-        .box.done::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
+        .box.done::after { content: '✓'; color: white; font-size: 16px; font-weight: bold; position: absolute;}
 
         /* 컨트롤 패드 */
         #controls {
-            margin-bottom: 30px;
+            margin-top: auto;
+            margin-bottom: 20px;
             display: grid;
             grid-template-areas: ". up ." "left down right";
-            gap: 10px;
+            gap: 12px;
         }
 
         .ctrl-btn {
-            width: 60px;
-            height: 60px;
-            background: #2e2e4e;
-            border: 1px solid #444;
-            border-radius: 12px;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            width: 65px; height: 65px;
+            background: #2e2e4e; border: 1px solid #444;
+            border-radius: 15px; color: white; font-size: 26px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ctrl-btn:active { background: #378ADD; transform: scale(0.92); }
+
+        /* 버튼 커스텀 */
+        .action-btns {
+            position: absolute;
+            top: 15px; right: 15px;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
-        .ctrl-btn:active { background: #378ADD; transform: scale(0.95); }
-        #btn-up { grid-area: up; }
-        #btn-down { grid-area: down; }
-        #btn-left { grid-area: left; }
-        #btn-right { grid-area: right; }
-
-        .menu-btns {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .reset-btn {
+            width: 55px; height: 55px; /* 크기 확대 */
+            background: #e74c3c; color: white;
+            border-radius: 50%; border: none; font-size: 22px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .side-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
+        .save-btn {
+            width: 45px; height: 45px;
+            background: #27ae60; color: white;
+            border-radius: 50%; border: none; font-size: 18px;
         }
+
+        /* 클리어 배너 */
+        #clear-banner {
+            position: fixed; top: 40%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: rgba(55,138,221,0.95);
+            color: white; padding: 20px 50px;
+            border-radius: 50px; font-weight: 800; font-size: 24px;
+            z-index: 100; opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #clear-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()">
 
 <header>
     <h1>Sokoban Master</h1>
     <div id="info-bar">
-        <span>Stage: <strong id="stage-num">1</strong></span>
+        <span>Stage: <strong id="stage-num">1</strong> / 10</span>
         <span>Moves: <strong id="move-count">0</strong></span>
     </div>
 </header>
 
 <div id="game-container"></div>
 
-<div id="controls">
-    <div class="ctrl-btn" id="btn-up" onclick="move(0, -1)">▲</div>
-    <div class="ctrl-btn" id="btn-left" onclick="move(-1, 0)">◀</div>
-    <div class="ctrl-btn" id="btn-down" onclick="move(0, 1)">▼</div>
-    <div class="ctrl-btn" id="btn-right" onclick="move(1, 0)">▶</div>
+<div id="clear-banner">STAGE CLEAR! ✨</div>
+
+<div class="action-btns">
+    <button class="reset-btn" onclick="resetLevel()">↺</button>
+    <button class="save-btn" onclick="saveGame()">💾</button>
 </div>
 
-<div class="menu-btns">
-    <button class="side-btn" onclick="resetLevel()">↺</button>
-    <button class="side-btn" onclick="location.href='index.html'">🏠</button>
+<div id="controls">
+    <div class="ctrl-btn" style="grid-area: up" onclick="move(0, -1)">▲</div>
+    <div class="ctrl-btn" style="grid-area: left" onclick="move(-1, 0)">◀</div>
+    <div class="ctrl-btn" style="grid-area: down" onclick="move(0, 1)">▼</div>
+    <div class="ctrl-btn" style="grid-area: right" onclick="move(1, 0)">▶</div>
 </div>
 
 <script>
-    // 0: 바닥, 1: 벽, 2: 목표지점, 3: 상자, 4: 플레이어, 5: 목표지점 위 상자
     const LEVELS = [
-        [
-            [1,1,1,1,1,1],
-            [1,0,0,0,1,1],
-            [1,0,3,2,0,1],
-            [1,0,4,0,0,1],
-            [1,1,1,1,1,1]
-        ],
-        [
-            [1,1,1,1,1,1,1],
-            [1,0,0,1,0,0,1],
-            [1,0,3,2,3,0,1],
-            [1,0,2,4,2,0,1],
-            [1,1,1,1,1,1,1]
-        ],
-        [
-            [0,1,1,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,0,2,1,2,0,1],
-            [1,0,3,4,3,0,1],
-            [1,0,0,0,0,0,1],
-            [1,1,1,1,1,1,1]
-        ]
+        [[1,1,1,1,1],[1,4,0,0,1],[1,0,3,2,1],[1,1,1,1,1]], // Lv1
+        [[1,1,1,1,1,1],[1,0,0,0,1,1],[1,0,3,2,0,1],[1,0,4,0,0,1],[1,1,1,1,1,1]], // Lv2
+        [[1,1,1,1,1,1,1],[1,0,0,1,0,0,1],[1,0,3,2,3,0,1],[1,0,2,4,2,0,1],[1,1,1,1,1,1,1]], // Lv3
+        [[0,1,1,1,1,1,0],[1,1,0,0,0,1,1],[1,0,2,1,2,0,1],[1,0,3,4,3,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]], // Lv4
+        [[1,1,1,1,1,1],[1,2,2,0,0,1],[1,3,3,4,0,1],[1,0,0,0,0,1],[1,1,1,1,1,1]], // Lv5
+        [[1,1,1,1,1,1],[1,4,3,0,0,1],[1,0,3,2,0,1],[1,0,2,0,0,1],[1,1,1,1,1,1]], // Lv6
+        [[1,1,1,1,1,1],[1,0,2,2,0,1],[1,0,3,3,0,1],[1,0,0,4,0,1],[1,1,1,1,1,1]], // Lv7
+        [[1,1,1,1,1,1],[1,4,0,0,0,1],[1,0,3,3,0,1],[1,2,2,0,0,1],[1,1,1,1,1,1]], // Lv8
+        [[1,1,1,1,1,1],[1,0,2,0,0,1],[1,3,4,3,0,1],[1,0,2,0,0,1],[1,1,1,1,1,1]], // Lv9
+        [[1,1,1,1,1,1,1],[1,2,2,2,2,2,1],[1,3,3,3,3,3,1],[1,0,0,4,0,0,1],[1,1,1,1,1,1,1]] // Lv10
     ];
 
-    let currentLevel = 0;
+    let currentLevel = parseInt(localStorage.getItem('sokoban_stage')) || 0;
     let moves = 0;
     let map = [];
     let playerPos = {x: 0, y: 0};
-    const TILE_SIZE = 40;
+    const TILE_SIZE = 45;
+    const sfxMove = new Audio('effect 19.mp3');
+    let audioUnlocked = false;
+
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            sfxMove.play().then(() => { sfxMove.pause(); audioUnlocked = true; });
+        }
+    }
 
     function initGame() {
         moves = 0;
         document.getElementById('move-count').innerText = moves;
         document.getElementById('stage-num').innerText = currentLevel + 1;
-        
-        // 레벨 데이터 깊은 복사
         map = JSON.parse(JSON.stringify(LEVELS[currentLevel]));
         renderMap();
     }
@@ -228,17 +204,14 @@
             for (let x = 0; x < map[y].length; x++) {
                 const tile = document.createElement('div');
                 tile.className = 'tile';
-                
                 const type = map[y][x];
                 if (type === 1) tile.classList.add('wall');
                 if (type === 2 || type === 5) tile.classList.add('target');
-                
                 if (type === 3 || type === 5) {
                     const box = createObj('box' + (type === 5 ? ' done' : ''), x, y);
                     box.innerText = '📦';
                     container.appendChild(box);
                 }
-                
                 if (type === 4) {
                     playerPos = {x, y};
                     const player = createObj('player', x, y);
@@ -246,7 +219,6 @@
                     player.id = 'player-obj';
                     container.appendChild(player);
                 }
-                
                 container.appendChild(tile);
             }
         }
@@ -255,8 +227,8 @@
     function createObj(className, x, y) {
         const div = document.createElement('div');
         div.className = 'obj ' + className;
-        div.style.left = (x * TILE_SIZE + 4) + 'px';
-        div.style.top = (y * TILE_SIZE + 4) + 'px';
+        div.style.left = (x * TILE_SIZE + 3.5) + 'px';
+        div.style.top = (y * TILE_SIZE + 3.5) + 'px';
         return div;
     }
 
@@ -265,64 +237,57 @@
         const ny = playerPos.y + dy;
         const targetTile = map[ny][nx];
 
-        // 벽이면 이동 불가
         if (targetTile === 1) return;
 
-        // 상자가 있는 경우
         if (targetTile === 3 || targetTile === 5) {
             const bx = nx + dx;
             const by = ny + dy;
-            const behindBox = map[by][bx];
-
-            // 상자 뒤가 바닥이나 목표지점일 때만 밀기 가능
-            if (behindBox === 0 || behindBox === 2) {
-                // 데이터 업데이트
+            if (map[by][bx] === 0 || map[by][bx] === 2) {
                 map[ny][nx] = (targetTile === 5) ? 2 : 0;
-                map[by][bx] = (behindBox === 2) ? 5 : 3;
-                
-                moves++;
-                updatePlayer(nx, ny);
-                renderMap(); // 상자 이동을 위해 재렌더링 (애니메이션 최적화 가능)
+                map[by][bx] = (map[by][bx] === 2) ? 5 : 3;
+                processMove(nx, ny);
+                renderMap();
                 checkWin();
             }
         } else {
-            // 빈 공간이나 목표지점으로 이동
-            moves++;
-            updatePlayer(nx, ny);
+            processMove(nx, ny);
         }
     }
 
-    function updatePlayer(nx, ny) {
-        // 기존 위치 데이터 정리
-        map[playerPos.y][playerPos.x] = (map[playerPos.y][playerPos.x] === 4 && LEVELS[currentLevel][playerPos.y][playerPos.x] === 2) ? 2 : 0;
-        if (LEVELS[currentLevel][playerPos.y][playerPos.x] === 2) map[playerPos.y][playerPos.x] = 2;
+    function processMove(nx, ny) {
+        moves++;
+        sfxMove.currentTime = 0;
+        sfxMove.play().catch(()=>{});
         
+        map[playerPos.y][playerPos.x] = (LEVELS[currentLevel][playerPos.y][playerPos.x] === 2) ? 2 : 0;
         playerPos = {x: nx, y: ny};
-        // 현재 맵 데이터에 플레이어 위치 기록은 렌더링용으로만 사용
-        // 실제 로직에선 위 nx, ny를 활용
-        document.getElementById('move-count').innerText = moves;
+        map[ny][nx] = 4;
         
+        document.getElementById('move-count').innerText = moves;
         const pObj = document.getElementById('player-obj');
-        pObj.style.left = (nx * TILE_SIZE + 4) + 'px';
-        pObj.style.top = (ny * TILE_SIZE + 4) + 'px';
+        pObj.style.left = (nx * TILE_SIZE + 3.5) + 'px';
+        pObj.style.top = (ny * TILE_SIZE + 3.5) + 'px';
     }
 
     function checkWin() {
-        const isWin = !map.some(row => row.includes(3));
-        if (isWin) {
+        if (!map.some(row => row.includes(3))) {
+            const banner = document.getElementById('clear-banner');
+            banner.classList.add('show');
             setTimeout(() => {
-                alert('Stage Clear!');
+                banner.classList.remove('show');
                 currentLevel = (currentLevel + 1) % LEVELS.length;
                 initGame();
-            }, 300);
+            }, 1200);
         }
     }
 
-    function resetLevel() {
-        initGame();
+    function saveGame() {
+        localStorage.setItem('sokoban_stage', currentLevel);
+        alert('진행 상황이 저장되었습니다!');
     }
 
-    // 키보드 지원
+    function resetLevel() { initGame(); }
+
     window.addEventListener('keydown', e => {
         if (e.key === 'ArrowUp') move(0, -1);
         if (e.key === 'ArrowDown') move(0, 1);
