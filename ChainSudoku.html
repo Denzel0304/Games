@@ -11,7 +11,7 @@
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
             --accent-color: #8e9775;
-            --chain-color: #4a473f; /* 훨씬 짙은 색으로 변경 */
+            --chain-color: #4a473f; /* 짙은 색 체인 */
             --selected-bg: #e8e4da;
         }
 
@@ -198,11 +198,9 @@
         let chains = [];
         let audioUnlocked = false;
 
-        // 효과음 재생 함수 (첫 클릭부터 소리 나게 처리)
         function playClickSound() {
             const sound = document.getElementById('click-sound');
             if (!audioUnlocked) {
-                // 브라우저 오디오 제한 해제를 위해 재생 후 즉시 정지
                 sound.play().then(() => {
                     audioUnlocked = true;
                     sound.currentTime = 0;
@@ -221,6 +219,7 @@
         }
 
         function initGame() {
+            playClickSound(); // 초기화 시 효과음 재생 추가
             const grid = document.getElementById('grid');
             const numPad = document.getElementById('num-pad');
             grid.innerHTML = '';
@@ -325,9 +324,9 @@
                     line.setAttribute("y2", (r2.top + r2.height / 2) - containerRect.top);
                     
                     line.setAttribute("stroke", "var(--chain-color)");
-                    line.setAttribute("stroke-width", "10"); // 더 굵게 변경
+                    line.setAttribute("stroke-width", "10");
                     line.setAttribute("stroke-linecap", "round");
-                    line.setAttribute("opacity", "0.8"); // 가독성을 위해 살짝 불투명도 조절
+                    line.setAttribute("opacity", "0.8");
                     svg.appendChild(line);
                 }
             });
