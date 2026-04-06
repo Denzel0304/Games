@@ -10,7 +10,8 @@
             --card-bg: #ffffff;
             --text-main: #2c3e50;
             --text-sub: #7f8c8d;
-            --block-blue: #378ADD; /* 블록 퍼즐 포인트 컬러 */
+            /* 색상 중복 방지: 블록 퍼즐을 위한 전용 민트색 */
+            --block-mint: #26a69a; 
             --neon-purple: #9c27b0;
             --zero-blue: #2196f3;
             --2048-gold: #edc22e;
@@ -106,9 +107,9 @@
             color: var(--text-main);
         }
 
-        /* 게임별 포인트 컬러 설정 */
-        .block-game { border-top: 3px solid var(--block-blue); }
-        .block-game .icon-box { background-color: #e3f2fd; }
+        /* 게임별 포인트 컬러 및 아이콘 배경 설정 */
+        .block-game { border-top: 3px solid var(--block-mint); }
+        .block-game .icon-box { background-color: #e0f2f1; }
 
         .tetris-game { border-top: 3px solid var(--neon-purple); }
         .tetris-game .icon-box { background-color: #f3e5f5; }
