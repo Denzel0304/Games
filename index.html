@@ -14,6 +14,7 @@
             --zero-blue: #2196f3;
             --2048-gold: #edc22e;
             --chain-green: #8e9775;
+            --tenten-orange: #ff7043; /* 텐텐 포인트 컬러 추가 */
         }
 
         body {
@@ -66,11 +67,10 @@
             box-sizing: border-box;
         }
 
-        /* 3번 요청: 세로 길이를 줄여 직사각형으로 변경 */
         .menu-card {
             background: var(--card-bg);
             border-radius: 20px;
-            height: 100px; /* 고정 높이로 직사각형 형태 유지 */
+            height: 100px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -104,7 +104,7 @@
             color: var(--text-main);
         }
 
-        /* 게임별 포인트 컬러 (영문 태그 삭제 반영) */
+        /* 게임별 포인트 컬러 설정 */
         .star-game { border-top: 3px solid #ffeb3b; }
         .star-game .icon-box { background-color: #fff9c4; }
 
@@ -117,9 +117,12 @@
         .game-2048 { border-top: 3px solid var(--2048-gold); }
         .game-2048 .icon-box { background-color: #fef5d9; }
 
-        /* 1번&4번 요청: 체인 스도쿠 추가 */
         .chain-sudoku { border-top: 3px solid var(--chain-green); }
         .chain-sudoku .icon-box { background-color: #f1f3eb; }
+
+        /* 텐텐 스타일 추가 */
+        .tenten-game { border-top: 3px solid var(--tenten-orange); }
+        .tenten-game .icon-box { background-color: #fff3e0; }
 
     </style>
 </head>
@@ -155,6 +158,11 @@
         <a href="ChainSudoku.html" class="menu-card chain-sudoku">
             <div class="icon-box">🔗</div>
             <div class="card-title">체인 스도쿠</div>
+        </a>
+
+        <a href="tenten.html" class="menu-card tenten-game">
+            <div class="icon-box">🔟</div>
+            <div class="card-title">텐텐</div>
         </a>
     </div>
 
