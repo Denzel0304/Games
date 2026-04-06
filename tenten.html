@@ -161,7 +161,7 @@
 
     <div class="footer">
         <button class="btn" onclick="addNumbers()">숫자 추가</button>
-        <button class="btn btn-accent" onclick="resetGame()">새 게임</button>
+        <button class="btn btn-accent" onclick="handleManualReset()">새 게임</button>
     </div>
 
     <script>
@@ -187,14 +187,18 @@
             playClickSound();
             currentSize = size;
             document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
+            resetGame(false); // 레벨 변경은 사용자가 누른 것이나 내부 reset에선 소리 안나게 handle
+        }
+
+        function handleManualReset() {
+            playClickSound();
             resetGame();
         }
 
-        function resetGame() {
-            if (typeof event !== 'undefined' && event) playClickSound();
-            const initialCount = currentSize * currentSize;
+        function resetGame(shouldPlaySound = false) {
+            if (shouldPlaySound) playClickSound();
             
-            // 초기 생성 시에도 5의 비중을 높여 첫 흐름을 부드럽게 함
+            const initialCount = currentSize * currentSize;
             numbers = Array.from({length: initialCount}, () => {
                 if (Math.random() < 0.15) return 5;
                 return Math.floor(Math.random() * 9) + 1;
@@ -223,7 +227,7 @@
 
         function handleSelect(idx) {
             if (numbers[idx] === 0) return;
-            playClickSound();
+            playClickSound(); // 사용자가 숫자를 누를 때만 소리 재생
 
             if (selectedIdx === null) {
                 selectedIdx = idx;
@@ -266,17 +270,14 @@
             return false;
         }
 
-        // 핵심 수정 부분: 숫자를 추가할 때 새로운 가능성을 주입
         function addNumbers() {
             playClickSound();
             const currentNums = numbers.filter(n => n !== 0);
             if (currentNums.length === 0) return;
 
-            // 기존 숫자를 복사하되, 15%의 확률로 '조커 숫자(랜덤)'를 섞어 넣음
+            // 기존 숫자를 복사하되 15% 확률로 무작위 변조하여 새로운 길을 열어줌
             const luckyNums = currentNums.map(n => {
-                if (Math.random() < 0.15) { // 15% 확률로 변조
-                    return Math.floor(Math.random() * 9) + 1;
-                }
+                if (Math.random() < 0.15) return Math.floor(Math.random() * 9) + 1;
                 return n;
             });
 
@@ -296,7 +297,8 @@
             }
         }
 
-        window.onload = resetGame;
+        // 페이지 로드 시에는 소리 없이 판만 깔아줌
+        window.onload = () => resetGame(false);
     </script>
 </body>
 </html>
