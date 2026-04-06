@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chain Sudoku - Logic Master</title>
+    <title>Chain Sudoku - Fixed Board</title>
     <style>
         :root {
             --bg-color: #f0ede5;
@@ -19,7 +19,7 @@
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Pretendard', -apple-system, sans-serif;
+            font-family: 'Pretendard', sans-serif;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
@@ -27,8 +27,9 @@
 
         body { display: flex; flex-direction: column; align-items: center; }
 
+        /* 상단 영역 */
         .header {
-            height: 18%;
+            height: 20%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -43,27 +44,27 @@
         }
 
         .size-btn {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             background: var(--bg-color);
             color: var(--text-color);
             font-weight: 800;
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             cursor: pointer;
-            font-size: 0.8rem;
         }
 
         .size-btn:active {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
         }
 
-        h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
-        #status { margin-top: 8px; font-size: 0.85rem; height: 1rem; color: #8e9775; font-weight: 600; }
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
+        #status { margin-top: 10px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
 
+        /* 게임 영역: 판의 크기를 고정 */
         .game-area {
-            height: 57%;
+            height: 50%;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -72,15 +73,22 @@
 
         .grid-container {
             position: relative;
-            padding: 12px;
+            width: 85vw;
+            height: 85vw;
+            max-width: 360px;
+            max-height: 360px;
             background: var(--bg-color);
-            border-radius: 20px;
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            border-radius: 30px;
+            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+            padding: 15px;
+            box-sizing: border-box;
         }
 
         #grid {
             display: grid;
-            gap: 6px;
+            width: 100%;
+            height: 100%;
+            gap: 8px;
             position: relative;
             z-index: 2;
         }
@@ -94,67 +102,67 @@
         }
 
         .cell {
-            width: 38px;
-            height: 38px;
+            width: 100%;
+            height: 100%;
             background: var(--bg-color);
             border-radius: 50%;
-            box-shadow: 2px 2px 5px var(--shadow-dark), -2px -2px 5px var(--shadow-light);
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.1rem;
             font-weight: 800;
             transition: all 0.1s;
+            box-sizing: border-box;
         }
 
         .cell.active {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
             background-color: var(--selected-bg);
-            color: #4a4e3d;
         }
 
+        /* 하단 영역 */
         .footer {
-            height: 25%;
+            height: 30%;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 15px;
         }
 
         #num-pad {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             width: 90%;
         }
 
         .num-btn {
-            width: 42px;
-            height: 42px;
+            width: 45px;
+            height: 45px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             background: var(--bg-color);
-            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
             font-weight: bold;
+            font-size: 1.1rem;
             color: var(--text-color);
-            font-size: 1rem;
         }
 
         .num-btn:active {
             box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
         }
 
-        .action-btns { display: flex; gap: 12px; margin-top: 5px; }
+        .action-btns { display: flex; gap: 15px; }
         .btn {
-            padding: 10px 22px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 12px;
+            border-radius: 18px;
             background: var(--bg-color);
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             font-weight: 700;
-            font-size: 0.9rem;
         }
         .btn-check { background-color: var(--accent-color); color: white; }
     </style>
@@ -163,15 +171,15 @@
 
     <div class="header">
         <div class="title-row">
-            <button class="size-btn" onclick="changeLevel(5)">5x5</button>
+            <button class="size-btn" onclick="changeLevel(6)">6x6</button>
             <h1>Chain Sudoku</h1>
-            <button class="size-btn" onclick="changeLevel(7)">7x7</button>
+            <button class="size-btn" onclick="changeLevel(8)">8x8</button>
         </div>
-        <div id="status">체인 내 숫자는 모두 달라야 합니다!</div>
+        <div id="status">판 크기는 고정, 난이도는 UP!</div>
     </div>
 
     <div class="game-area">
-        <div class="grid-container">
+        <div class="grid-container" id="container">
             <svg id="chain-svg"></svg>
             <div id="grid"></div>
         </div>
@@ -186,7 +194,7 @@
     </div>
 
     <script>
-        let currentSize = 5;
+        let currentSize = 5; // 기본값 5x5
         let selectedCell = null;
         let chains = [];
 
@@ -203,12 +211,16 @@
             numPad.innerHTML = '';
             selectedCell = null;
 
+            // 판 크기에 따라 폰트 크기 자동 조절
+            const fontSize = currentSize > 7 ? '0.9rem' : '1.2rem';
             grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${currentSize}, 1fr)`;
             
             for (let i = 0; i < currentSize * currentSize; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.id = `cell-${i}`;
+                cell.style.fontSize = fontSize;
                 cell.onclick = () => {
                     if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).classList.remove('active');
                     selectedCell = i;
@@ -217,6 +229,7 @@
                 grid.appendChild(cell);
             }
 
+            // 숫자 패드
             for (let i = 1; i <= currentSize; i++) {
                 const btn = document.createElement('button');
                 btn.className = 'num-btn';
@@ -230,26 +243,21 @@
             clearBtn.onclick = () => { if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; };
             numPad.appendChild(clearBtn);
 
-            generateChainsWithinLimit();
-            setTimeout(drawChains, 100);
+            generateChains();
+            // 브라우저 렌더링 후 선을 그리기 위해 시간차를 둠
+            setTimeout(drawChains, 150);
         }
 
-        // 규칙 적용: 체인 길이를 currentSize 이하로 제한
-        function generateChainsWithinLimit() {
+        function generateChains() {
             chains = [];
             let visited = new Set();
-            let allIndices = Array.from({length: currentSize * currentSize}, (_, i) => i);
-            // 섞기
-            allIndices.sort(() => Math.random() - 0.5);
+            let allIndices = Array.from({length: currentSize * currentSize}, (_, i) => i).sort(() => Math.random() - 0.5);
 
             for (let i of allIndices) {
                 if (visited.has(i)) continue;
-                
                 let chain = [i];
                 visited.add(i);
                 let curr = i;
-                
-                // 체인 길이를 2 ~ currentSize 사이로 설정
                 let maxLen = Math.floor(Math.random() * (currentSize - 1)) + 2; 
 
                 for (let j = 0; j < maxLen - 1; j++) {
@@ -261,9 +269,6 @@
                     curr = next;
                 }
                 if (chain.length > 1) chains.push(chain);
-                else {
-                    // 혼자 남은 칸은 주변 체인에 병합 시도 (선택 사항)
-                }
             }
         }
 
@@ -280,19 +285,28 @@
 
         function drawChains() {
             const svg = document.getElementById('chain-svg');
+            const container = document.getElementById('container');
+            const containerRect = container.getBoundingClientRect();
             svg.innerHTML = '';
+
             chains.forEach(chain => {
                 for (let i = 0; i < chain.length - 1; i++) {
                     const c1 = document.getElementById(`cell-${chain[i]}`);
                     const c2 = document.getElementById(`cell-${chain[i+1]}`);
-                    if(!c1 || !c2) continue;
+                    
+                    const r1 = c1.getBoundingClientRect();
+                    const r2 = c2.getBoundingClientRect();
+
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", c1.offsetLeft + c1.offsetWidth/2);
-                    line.setAttribute("y1", c1.offsetTop + c1.offsetHeight/2);
-                    line.setAttribute("x2", c2.offsetLeft + c2.offsetWidth/2);
-                    line.setAttribute("y2", c2.offsetTop + c2.offsetHeight/2);
+                    
+                    // 컨테이너 기준 정중앙 좌표 계산
+                    line.setAttribute("x1", (r1.left + r1.width / 2) - containerRect.left);
+                    line.setAttribute("y1", (r1.top + r1.height / 2) - containerRect.top);
+                    line.setAttribute("x2", (r2.left + r2.width / 2) - containerRect.left);
+                    line.setAttribute("y2", (r2.top + r2.height / 2) - containerRect.top);
+                    
                     line.setAttribute("stroke", "var(--chain-color)");
-                    line.setAttribute("stroke-width", "6");
+                    line.setAttribute("stroke-width", currentSize > 7 ? "4" : "6");
                     line.setAttribute("stroke-linecap", "round");
                     svg.appendChild(line);
                 }
@@ -303,36 +317,29 @@
             let board = [];
             for(let i=0; i<currentSize*currentSize; i++) {
                 const val = document.getElementById(`cell-${i}`).innerText;
-                if(!val) {
-                    alert("모든 칸을 채워주세요!");
-                    return;
-                }
+                if(!val) { alert("모든 칸을 채워주세요!"); return; }
                 board.push(parseInt(val));
             }
 
-            // 검증 로직 호출 (가로, 세로, 체인 중복 검사)
             if (validate(board)) {
-                document.getElementById('status').innerText = "🎉 축하합니다! 정답입니다.";
+                document.getElementById('status').innerText = "🎉 미션 클리어!";
                 document.getElementById('status').style.color = "#27ae60";
             } else {
-                document.getElementById('status').innerText = "다시 확인해 보세요 (중복 발견)";
+                document.getElementById('status').innerText = "규칙 오류가 있습니다!";
                 document.getElementById('status').style.color = "#d32f2f";
             }
         }
 
         function validate(board) {
-            // 가로 검사
             for (let r = 0; r < currentSize; r++) {
                 let row = board.slice(r * currentSize, (r + 1) * currentSize);
                 if (new Set(row).size !== currentSize) return false;
             }
-            // 세로 검사
             for (let c = 0; c < currentSize; c++) {
                 let col = [];
                 for (let r = 0; r < currentSize; r++) col.push(board[r * currentSize + c]);
                 if (new Set(col).size !== currentSize) return false;
             }
-            // 체인 검사
             for (let chain of chains) {
                 let vals = chain.map(idx => board[idx]);
                 if (new Set(vals).size !== vals.length) return false;
@@ -340,7 +347,7 @@
             return true;
         }
 
-        window.onload = () => { changeLevel(5); };
+        window.onload = initGame;
         window.onresize = drawChains;
     </script>
 </body>
