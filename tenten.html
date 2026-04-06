@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ten Pair - Healing Games</title>
+    <style>
+        :root {
+            --bg-color: #f0ede5;
+            --text-color: #5d5a52;
+            --shadow-dark: rgba(188, 185, 178, 0.8);
+            --shadow-light: rgba(255, 255, 255, 0.9);
+            --accent-color: #8e9775;
+            --selected-bg: #e8e4da;
+            --cleared-color: #d1ccc0;
+        }
+
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Pretendard', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body { display: flex; flex-direction: column; align-items: center; }
+
+        .header {
+            height: 15%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; }
+        #status { margin-top: 8px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
+
+        /* 게임 영역 */
+        .game-area {
+            height: 65%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        /* 스크롤바 숨기기 */
+        .game-area::-webkit-scrollbar { display: none; }
+
+        .grid-container {
+            width: 90vw;
+            max-width: 360px;
+            background: var(--bg-color);
+            border-radius: 25px;
+            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+            padding: 15px;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .cell.selected {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            background-color: var(--selected-bg);
+            color: var(--accent-color);
+            transform: scale(0.95);
+        }
+
+        .cell.cleared {
+            box-shadow: none;
+            color: var(--cleared-color);
+            background: transparent;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* 하단 영역 */
+        .footer {
+            height: 20%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            font-weight: 700;
+            color: var(--text-color);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn:active {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+        }
+
+        .btn-accent { color: var(--accent-color); }
+    </style>
+</head>
+<body>
+
+    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+
+    <div class="header">
+        <h1>Ten Pair</h1>
+        <div id="status">합이 10이거나 같은 숫자 찾기</div>
+    </div>
+
+    <div class="game-area">
+        <div id="grid" class="grid-container"></div>
+    </div>
+
+    <div class="footer">
+        <button class="btn" onclick="addNumbers()">숫자 추가</button>
+        <button class="btn btn-accent" onclick="resetGame()">새 게임</button>
+    </div>
+
+    <script>
+        let numbers = [];
+        let selectedIdx = null;
+        let audioUnlocked = false;
+
+        function playClickSound() {
+            const sound = document.getElementById('click-sound');
+            if (!audioUnlocked) {
+                sound.play().then(() => {
+                    audioUnlocked = true;
+                    sound.currentTime = 0;
+                }).catch(e => console.log("Audio waiting..."));
+            } else {
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
+
+        function resetGame() {
+            playClickSound();
+            numbers = Array.from({length: 25}, () => Math.floor(Math.random() * 9) + 1);
+            selectedIdx = null;
+            render();
+            document.getElementById('status').innerText = "새 게임 시작!";
+            document.getElementById('status').style.color = "var(--accent-color)";
+        }
+
+        function render() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            numbers.forEach((num, idx) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell' + (num === 0 ? ' cleared' : '');
+                if (idx === selectedIdx) cell.classList.add('selected');
+                cell.innerText = num === 0 ? '' : num;
+                cell.onclick = () => handleSelect(idx);
+                grid.appendChild(cell);
+            });
+        }
+
+        function handleSelect(idx) {
+            if (numbers[idx] === 0) return;
+            playClickSound();
+
+            if (selectedIdx === null) {
+                selectedIdx = idx;
+            } else if (selectedIdx === idx) {
+                selectedIdx = null;
+            } else {
+                if (canMatch(selectedIdx, idx)) {
+                    numbers[selectedIdx] = 0;
+                    numbers[idx] = 0;
+                    selectedIdx = null;
+                    checkWin();
+                } else {
+                    selectedIdx = idx;
+                }
+            }
+            render();
+        }
+
+        function canMatch(i, j) {
+            const n1 = numbers[i];
+            const n2 = numbers[j];
+            if (!(n1 + n2 === 10 || n1 === n2)) return false;
+
+            // 연결성 체크 (가로/세로 인접하거나 사이에 지워진 칸만 있는 경우)
+            const min = Math.min(i, j);
+            const max = Math.max(i, j);
+            
+            // 같은 줄인지 확인
+            if (Math.floor(i / 5) === Math.floor(j / 5)) {
+                for (let k = min + 1; k < max; k++) if (numbers[k] !== 0) return false;
+                return true;
+            }
+            
+            // 같은 열인지 확인
+            if (i % 5 === j % 5) {
+                for (let k = min + 5; k < max; k += 5) if (numbers[k] !== 0) return false;
+                return true;
+            }
+
+            // 연속된 흐름 (줄바꿈 포함)
+            let isContinuous = true;
+            for (let k = min + 1; k < max; k++) {
+                if (numbers[k] !== 0) { isContinuous = false; break; }
+            }
+            if (isContinuous) return true;
+
+            return false;
+        }
+
+        function addNumbers() {
+            playClickSound();
+            const currentNums = numbers.filter(n => n !== 0);
+            if (currentNums.length === 0) return;
+            numbers = [...numbers, ...currentNums];
+            render();
+            // 스크롤을 아래로 이동
+            setTimeout(() => {
+                const area = document.querySelector('.game-area');
+                area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        }
+
+        function checkWin() {
+            if (numbers.every(n => n === 0)) {
+                document.getElementById('status').innerText = "🎉 All Cleared!";
+                document.getElementById('status').style.color = "#27ae60";
+            }
+        }
+
+        // 초기 실행
+        window.onload = () => {
+            numbers = Array.from({length: 25}, () => Math.floor(Math.random() * 9) + 1);
+            render();
+        };
+    </script>
+</body>
+</html>
