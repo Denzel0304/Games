@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chain Sudoku - Fixed Board</title>
+    <title>Chain Sudoku - Master</title>
     <style>
         :root {
             --bg-color: #f0ede5;
@@ -11,7 +11,7 @@
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
             --accent-color: #8e9775;
-            --chain-color: #d1ccc0;
+            --chain-color: #4a473f; /* 훨씬 짙은 색으로 변경 */
             --selected-bg: #e8e4da;
         }
 
@@ -27,7 +27,6 @@
 
         body { display: flex; flex-direction: column; align-items: center; }
 
-        /* 상단 영역 */
         .header {
             height: 20%;
             display: flex;
@@ -56,13 +55,12 @@
         }
 
         .size-btn:active {
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
         }
 
         h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
         #status { margin-top: 10px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
 
-        /* 게임 영역: 판의 크기를 고정 */
         .game-area {
             height: 50%;
             width: 100%;
@@ -120,7 +118,6 @@
             background-color: var(--selected-bg);
         }
 
-        /* 하단 영역 */
         .footer {
             height: 30%;
             width: 100%;
@@ -169,13 +166,15 @@
 </head>
 <body>
 
+    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+
     <div class="header">
         <div class="title-row">
             <button class="size-btn" onclick="changeLevel(6)">6x6</button>
             <h1>Chain Sudoku</h1>
             <button class="size-btn" onclick="changeLevel(8)">8x8</button>
         </div>
-        <div id="status">판 크기는 고정, 난이도는 UP!</div>
+        <div id="status">5x5 모드 시작!</div>
     </div>
 
     <div class="game-area">
@@ -194,11 +193,28 @@
     </div>
 
     <script>
-        let currentSize = 5; // 기본값 5x5
+        let currentSize = 5;
         let selectedCell = null;
         let chains = [];
+        let audioUnlocked = false;
+
+        // 효과음 재생 함수 (첫 클릭부터 소리 나게 처리)
+        function playClickSound() {
+            const sound = document.getElementById('click-sound');
+            if (!audioUnlocked) {
+                // 브라우저 오디오 제한 해제를 위해 재생 후 즉시 정지
+                sound.play().then(() => {
+                    audioUnlocked = true;
+                    sound.currentTime = 0;
+                }).catch(e => console.log("Audio unlock waiting..."));
+            } else {
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
 
         function changeLevel(size) {
+            playClickSound();
             currentSize = size;
             document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
             initGame();
@@ -211,7 +227,6 @@
             numPad.innerHTML = '';
             selectedCell = null;
 
-            // 판 크기에 따라 폰트 크기 자동 조절
             const fontSize = currentSize > 7 ? '0.9rem' : '1.2rem';
             grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
             grid.style.gridTemplateRows = `repeat(${currentSize}, 1fr)`;
@@ -222,6 +237,7 @@
                 cell.id = `cell-${i}`;
                 cell.style.fontSize = fontSize;
                 cell.onclick = () => {
+                    playClickSound();
                     if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).classList.remove('active');
                     selectedCell = i;
                     cell.classList.add('active');
@@ -229,22 +245,26 @@
                 grid.appendChild(cell);
             }
 
-            // 숫자 패드
             for (let i = 1; i <= currentSize; i++) {
                 const btn = document.createElement('button');
                 btn.className = 'num-btn';
                 btn.innerText = i;
-                btn.onclick = () => { if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = i; };
+                btn.onclick = () => { 
+                    playClickSound();
+                    if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = i; 
+                };
                 numPad.appendChild(btn);
             }
             const clearBtn = document.createElement('button');
             clearBtn.className = 'num-btn';
             clearBtn.innerText = 'C';
-            clearBtn.onclick = () => { if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; };
+            clearBtn.onclick = () => { 
+                playClickSound();
+                if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; 
+            };
             numPad.appendChild(clearBtn);
 
             generateChains();
-            // 브라우저 렌더링 후 선을 그리기 위해 시간차를 둠
             setTimeout(drawChains, 150);
         }
 
@@ -299,21 +319,22 @@
 
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                     
-                    // 컨테이너 기준 정중앙 좌표 계산
                     line.setAttribute("x1", (r1.left + r1.width / 2) - containerRect.left);
                     line.setAttribute("y1", (r1.top + r1.height / 2) - containerRect.top);
                     line.setAttribute("x2", (r2.left + r2.width / 2) - containerRect.left);
                     line.setAttribute("y2", (r2.top + r2.height / 2) - containerRect.top);
                     
                     line.setAttribute("stroke", "var(--chain-color)");
-                    line.setAttribute("stroke-width", currentSize > 7 ? "4" : "6");
+                    line.setAttribute("stroke-width", "10"); // 더 굵게 변경
                     line.setAttribute("stroke-linecap", "round");
+                    line.setAttribute("opacity", "0.8"); // 가독성을 위해 살짝 불투명도 조절
                     svg.appendChild(line);
                 }
             });
         }
 
         function checkWin() {
+            playClickSound();
             let board = [];
             for(let i=0; i<currentSize*currentSize; i++) {
                 const val = document.getElementById(`cell-${i}`).innerText;
