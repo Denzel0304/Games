@@ -160,6 +160,7 @@
             background: var(--bg-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             font-weight: 700;
+            color: var(--text-color);
         }
         .btn-check { background-color: var(--accent-color); color: white; }
     </style>
@@ -174,7 +175,7 @@
             <h1>Chain Sudoku</h1>
             <button class="size-btn" onclick="changeLevel(8)">8x8</button>
         </div>
-        <div id="status">5x5 모드 시작!</div>
+        <div id="status">판을 완성해보세요!</div>
     </div>
 
     <div class="game-area">
@@ -187,7 +188,7 @@
     <div class="footer">
         <div id="num-pad"></div>
         <div class="action-btns">
-            <button class="btn" onclick="initGame()">초기화</button>
+            <button class="btn" onclick="handleManualReset()">초기화</button>
             <button class="btn btn-check" onclick="checkWin()">확인</button>
         </div>
     </div>
@@ -212,14 +213,20 @@
         }
 
         function changeLevel(size) {
-            playClickSound();
+            playClickSound(); // 사용자가 버튼을 눌렀으므로 소리 재생
             currentSize = size;
             document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
-            initGame();
+            initGame(false); // 내부 생성 시에는 소리 안 나게 false 전달
         }
 
-        function initGame() {
-            playClickSound(); // 초기화 시 효과음 재생 추가
+        function handleManualReset() {
+            playClickSound(); // "초기화" 버튼 클릭 시 소리 재생
+            initGame(false); // 이미 여기서 소리를 냈으므로 initGame 내부 중복 방지 위해 false
+        }
+
+        function initGame(shouldPlaySound = false) {
+            if (shouldPlaySound) playClickSound();
+            
             const grid = document.getElementById('grid');
             const numPad = document.getElementById('num-pad');
             grid.innerHTML = '';
@@ -236,7 +243,7 @@
                 cell.id = `cell-${i}`;
                 cell.style.fontSize = fontSize;
                 cell.onclick = () => {
-                    playClickSound();
+                    playClickSound(); // 세포 클릭 시 소리 재생
                     if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).classList.remove('active');
                     selectedCell = i;
                     cell.classList.add('active');
@@ -249,7 +256,7 @@
                 btn.className = 'num-btn';
                 btn.innerText = i;
                 btn.onclick = () => { 
-                    playClickSound();
+                    playClickSound(); // 숫자 버튼 클릭 시 소리 재생
                     if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = i; 
                 };
                 numPad.appendChild(btn);
@@ -258,7 +265,7 @@
             clearBtn.className = 'num-btn';
             clearBtn.innerText = 'C';
             clearBtn.onclick = () => { 
-                playClickSound();
+                playClickSound(); // C 버튼 클릭 시 소리 재생
                 if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; 
             };
             numPad.appendChild(clearBtn);
@@ -367,7 +374,8 @@
             return true;
         }
 
-        window.onload = initGame;
+        // 페이지 로드 시에는 소리 없이 초기화만 진행
+        window.onload = () => initGame(false);
         window.onresize = drawChains;
     </script>
 </body>
