@@ -7,30 +7,30 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
 body{background:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0;}
-h1{font-size:22px;font-weight:500;letter-spacing:2px;margin:1rem 0 0.5rem;color:#7ab8f5;text-transform:uppercase;}
-#app{display:flex;flex-direction:column;align-items:center;padding:0 0.5rem 3rem;width:100%;max-width:420px;}
-#topbar{display:flex;gap:0;align-items:stretch;margin-bottom:0.65rem;border:1px solid #2e2e4e;border-radius:12px;overflow:hidden;background:#12122a;width:100%;}
-.top-seg{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;border-right:1px solid #2e2e4e;}
+h1{font-size:17px;font-weight:500;letter-spacing:2px;margin:0.5rem 0 0.35rem;color:#7ab8f5;text-transform:uppercase;}
+#app{display:flex;flex-direction:column;align-items:center;padding:0 0.5rem 1.5rem;width:100%;max-width:320px;}
+#topbar{display:flex;gap:0;align-items:stretch;margin-bottom:0.4rem;border:1px solid #2e2e4e;border-radius:10px;overflow:hidden;background:#12122a;width:100%;}
+.top-seg{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 4px;border-right:1px solid #2e2e4e;}
 .top-seg:last-child{border-right:none;}
-.top-lbl{font-size:10px;color:#6a6a9a;margin-bottom:2px;letter-spacing:1px;text-transform:uppercase;}
-.top-val{font-size:20px;font-weight:600;color:#e0e0e0;}
-.top-val.sm{font-size:13px;}
-#mode-bar{display:flex;gap:8px;margin-bottom:0.6rem;width:100%;}
-.mode-btn{flex:1;padding:7px 0;border-radius:8px;border:1px solid #2e2e4e;background:#12122a;cursor:pointer;font-size:13px;color:#6a6a9a;transition:all 0.15s;}
+.top-lbl{font-size:9px;color:#6a6a9a;margin-bottom:1px;letter-spacing:1px;text-transform:uppercase;}
+.top-val{font-size:16px;font-weight:600;color:#e0e0e0;}
+.top-val.sm{font-size:11px;}
+#mode-bar{display:flex;gap:6px;margin-bottom:0.4rem;width:100%;}
+.mode-btn{flex:1;padding:5px 0;border-radius:7px;border:1px solid #2e2e4e;background:#12122a;cursor:pointer;font-size:12px;color:#6a6a9a;transition:all 0.15s;}
 .mode-btn.active{background:#378ADD;color:#fff;border-color:#378ADD;}
-#sound-bar{display:flex;gap:8px;margin-bottom:0.6rem;width:100%;align-items:center;}
-#sound-btn{padding:5px 14px;border-radius:8px;border:1px solid #2e2e4e;background:#12122a;cursor:pointer;font-size:12px;color:#7ab8f5;white-space:nowrap;}
-#vol-wrap{display:flex;align-items:center;gap:6px;flex:1;}
-#vol-lbl{font-size:11px;color:#6a6a9a;white-space:nowrap;}
+#sound-bar{display:flex;gap:6px;margin-bottom:0.4rem;width:100%;align-items:center;}
+#sound-btn{padding:4px 10px;border-radius:7px;border:1px solid #2e2e4e;background:#12122a;cursor:pointer;font-size:11px;color:#7ab8f5;white-space:nowrap;}
+#vol-wrap{display:flex;align-items:center;gap:5px;flex:1;}
+#vol-lbl{font-size:10px;color:#6a6a9a;white-space:nowrap;}
 #vol-slider{flex:1;accent-color:#378ADD;}
-#board-wrap{border:1px solid #2e2e4e;border-radius:12px;background:#0e0e1e;padding:8px;margin-bottom:0.75rem;}
+#board-wrap{border:1px solid #2e2e4e;border-radius:10px;background:#0e0e1e;padding:6px;margin-bottom:0.5rem;}
 #board{display:grid;gap:2px;}
-.cell{width:36px;height:36px;border-radius:5px;background:#181830;border:1px solid #252545;transition:background 0.08s;}
+.cell{width:26px;height:26px;border-radius:4px;background:#181830;border:1px solid #252545;transition:background 0.08s;}
 .cell.filled{border:none;}
 .cell.ghost{opacity:0.42;border:none;}
 .cell.invalid{background:#3a1a1a!important;border:1px solid #7a2a2a!important;}
-#tray{display:flex;gap:10px;align-items:flex-end;justify-content:center;min-height:130px;flex-wrap:wrap;width:100%;}
-.piece-wrap{display:flex;flex-direction:column;align-items:center;cursor:grab;padding:8px;border-radius:12px;border:1px solid #2e2e4e;background:#12122a;transition:transform 0.12s,opacity 0.15s;touch-action:none;}
+#tray{display:flex;gap:8px;align-items:flex-end;justify-content:center;min-height:100px;flex-wrap:wrap;width:100%;}
+.piece-wrap{display:flex;flex-direction:column;align-items:center;cursor:grab;padding:6px;border-radius:10px;border:1px solid #2e2e4e;background:#12122a;transition:transform 0.12s,opacity 0.15s;touch-action:none;}
 .piece-wrap:active{cursor:grabbing;}
 .piece-wrap.used{opacity:0;pointer-events:none;}
 .piece-grid{display:grid;gap:2px;}
@@ -71,7 +71,7 @@ h1{font-size:22px;font-weight:500;letter-spacing:2px;margin:1rem 0 0.5rem;color:
     <button id="sound-btn" onclick="toggleSound()">♪ BGM 켜기</button>
     <div id="vol-wrap">
       <span id="vol-lbl">볼륨</span>
-      <input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVolume(this.value)">
+      <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
     </div>
   </div>
   <div id="board-wrap"><div id="board"></div></div>
@@ -129,7 +129,7 @@ const STAGE_DEFS=[
 
 let grid,score,best,pieces,mode,stage,stageScore,bgmOn,audioCtx,gainNode,bgmNodes;
 let dragEl=null,dragPieceIdx=-1,dragOffX=0,dragOffY=0;
-const CS=36;
+const CS=26,PS=14;
 
 function selectMode(m){
   mode=m;
@@ -235,10 +235,11 @@ function renderTray(){
     const wrap=document.createElement('div');wrap.className='piece-wrap';
     const cols=p.shape[0].length,rows=p.shape.length;
     const pg=document.createElement('div');pg.className='piece-grid';
-    pg.style.gridTemplateColumns='repeat('+cols+',18px)';
-    pg.style.gridTemplateRows='repeat('+rows+',18px)';
+    pg.style.gridTemplateColumns='repeat('+cols+','+PS+'px)';
+    pg.style.gridTemplateRows='repeat('+rows+','+PS+'px)';
     p.shape.forEach(row=>row.forEach(v=>{
       const pc=document.createElement('div');pc.className='pc '+(v?'on':'off');
+      pc.style.width=PS+'px';pc.style.height=PS+'px';
       if(v)pc.style.background=p.color;pg.appendChild(pc);
     }));
     wrap.appendChild(pg);
@@ -253,8 +254,11 @@ function getGhost(cx,cy){
   const sh=p.shape,ph=sh.length,pw=sh[0].length;
   const board=document.getElementById('board');
   const rect=board.getBoundingClientRect();
-  const x=cx-rect.left-dragOffX,y=cy-rect.top-dragOffY;
-  const baseC=Math.round(x/CS),baseR=Math.round(y/CS);
+  // 커서에서 조각 좌상단 위치 = 커서 - 오프셋(조각 중앙)
+  const x=cx-rect.left-dragOffX;
+  const y=cy-rect.top-dragOffY;
+  const baseC=Math.round(x/CS);
+  const baseR=Math.round(y/CS);
   const cells=new Set();let valid=true;
   for(let r=0;r<ph;r++)for(let c=0;c<pw;c++){
     if(!sh[r][c])continue;
@@ -270,14 +274,19 @@ function startDrag(e,idx){
   e.preventDefault();if(!pieces[idx])return;
   dragPieceIdx=idx;
   const p=pieces[idx];const pw=p.shape[0].length,ph=p.shape.length;
-  dragOffX=pw*9;dragOffY=ph*9;
+  // 조각 전체 픽셀 크기 (CS px 셀 + 2px gap)
+  const pieceW=pw*CS+(pw-1)*2;
+  const pieceH=ph*CS+(ph-1)*2;
+  // 커서가 조각 중앙에 오도록 오프셋 설정
+  dragOffX=pieceW/2;
+  dragOffY=pieceH/2;
   const cx=e.touches?e.touches[0].clientX:e.clientX;
   const cy=e.touches?e.touches[0].clientY:e.clientY;
   dragEl=document.createElement('div');
   dragEl.style.cssText='position:fixed;pointer-events:none;z-index:999;display:grid;gap:2px;grid-template-columns:repeat('+pw+','+CS+'px);grid-template-rows:repeat('+ph+','+CS+'px);';
   p.shape.forEach(row=>row.forEach(v=>{
     const c=document.createElement('div');
-    c.style.cssText='border-radius:5px;background:'+(v?p.color:'transparent')+';';
+    c.style.cssText='border-radius:4px;background:'+(v?p.color:'transparent')+';';
     dragEl.appendChild(c);
   }));
   document.body.appendChild(dragEl);
@@ -287,7 +296,7 @@ function startDrag(e,idx){
   document.addEventListener('touchmove',onMove,{passive:false});
   document.addEventListener('touchend',onUp);
 }
-function moveDrag(cx,cy){if(!dragEl)return;dragEl.style.left=(cx-dragOffX*1.8)+'px';dragEl.style.top=(cy-dragOffY*1.8-18)+'px';}
+function moveDrag(cx,cy){if(!dragEl)return;dragEl.style.left=(cx-dragOffX)+'px';dragEl.style.top=(cy-dragOffY)+'px';}
 function onMove(e){
   e.preventDefault();
   const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;
@@ -386,7 +395,7 @@ function initAudio(){
   if(audioCtx)return;
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   gainNode=audioCtx.createGain();
-  gainNode.gain.value=0.4;
+  gainNode.gain.value=0.85;
   gainNode.connect(audioCtx.destination);
 }
 
@@ -417,8 +426,8 @@ function startBGM(){
         osc.type='sine';
         osc.frequency.value=freq;
         g.gain.setValueAtTime(0,startT+ci*2);
-        g.gain.linearRampToValueAtTime(0.045,startT+ci*2+0.3);
-        g.gain.linearRampToValueAtTime(0.035,startT+ci*2+1.6);
+        g.gain.linearRampToValueAtTime(0.18,startT+ci*2+0.3);
+        g.gain.linearRampToValueAtTime(0.14,startT+ci*2+1.6);
         g.gain.linearRampToValueAtTime(0,startT+ci*2+2.0);
         osc.connect(g);g.connect(gainNode);
         osc.start(startT+ci*2);osc.stop(startT+ci*2+2.05);
@@ -430,7 +439,7 @@ function startBGM(){
         for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.2));
         const src=audioCtx.createBufferSource();
         const hg=audioCtx.createGain();
-        src.buffer=buf;hg.gain.value=0.025;
+        src.buffer=buf;hg.gain.value=0.08;
         src.connect(hg);hg.connect(gainNode);
         src.start(startT+ci*2+beat);
         bgmNodes.push(src);
