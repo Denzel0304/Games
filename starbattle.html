@@ -11,7 +11,8 @@
             --shadow-dark: #c1d5d4;
             --accent-color: #4db6ac;
             --text-color: #445a58;
-            --border-line: #88a4a2;
+            /* 구역 경계선 색상을 조금 더 선명하게 변경 */
+            --border-line: #7c9896; 
         }
 
         * { 
@@ -25,7 +26,7 @@
         body {
             margin: 0; padding: 0; 
             display: flex; flex-direction: column; align-items: center;
-            /* 헤더가 잘리지 않도록 상단 여백 확보 및 중앙 정렬 보정 */
+            /* 요소를 화면 중앙에 안정적으로 정렬 */
             justify-content: center; 
             min-height: 100vh;
             background-color: var(--bg-color); 
@@ -34,12 +35,11 @@
             overflow: hidden;
         }
 
-        /* 헤더: 상단 여백을 주고 요소 간격 최적화 */
         .header { 
             display: flex; align-items: center; justify-content: space-between; 
             width: 85%; max-width: 360px; 
-            margin-bottom: 10px;
-            margin-top: -20px; /* 전체적으로 너무 내려가지 않게 미세 조정 */
+            margin-bottom: 15px; /* 간격 축소 */
+            margin-top: 15px; /* 헤더 잘림 방지 */
         }
 
         .nav-btn {
@@ -53,30 +53,34 @@
         .title { font-size: 24px; font-weight: bold; }
         .status-msg { font-size: 14px; margin-bottom: 20px; height: 20px; color: var(--accent-color); font-weight: 600; }
 
-        /* 게임 보드: 화면 크기에 따라 유동적으로 변하되 잘리지 않게 설정 */
         .board-container {
-            width: 88vw; max-width: 380px; aspect-ratio: 1 / 1; padding: 10px;
+            width: 88vw; max-width: 380px; aspect-ratio: 1 / 1; padding: 12px;
             border-radius: 20px; background: var(--bg-color);
             box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
             margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
         }
 
+        /* [수정] 깔끔한 격자를 위한 CSS 설정 */
         #game-board { 
-            display: grid; width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.02);
-            border: 2px solid var(--border-line); 
+            display: grid; 
+            width: 100%; height: 100%; 
+            /* 기본 격자 무늬 제거, 구역 경계선만 JS에서 표현 */
+            background-color: rgba(0,0,0,0.01);
+            border: 0.5px solid rgba(0,0,0,0.05); /* 아주 연한 전체 테두리 */
         }
 
         .cell {
-            width: 100%; height: 100%; background: var(--bg-color);
-            border: 0.5px solid rgba(0,0,0,0.05);
+            width: 100%; height: 100%; 
+            background: var(--bg-color);
+            /* 기본 칸 경계선은 아주 연하게 설정 */
+            border: 0.5px solid rgba(0,0,0,0.03);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; position: relative; font-weight: bold;
         }
 
-        /* 구역 경계선 디자인 */
-        .b-top { border-top: 3.5px solid var(--border-line) !important; }
-        .b-left { border-left: 3.5px solid var(--border-line) !important; }
+        /* [수정] 구역 경계선 스타일 최적화 (굵기를 살짝 줄여 깔끔하게) */
+        .b-top { border-top: 2.5px solid var(--border-line) !important; }
+        .b-left { border-left: 2.5px solid var(--border-line) !important; }
 
         .controls { display: flex; flex-direction: column; gap: 12px; width: 140px; }
         .action-btn {
@@ -106,8 +110,8 @@
         <button class="action-btn" onclick="resetGame()">새 게임</button>
     </div>
 
-    <audio id="sfx-click" src="effect 1.mp3"></audio>
-    <audio id="sfx-clear" src="effect 2.mp3"></audio>
+    <audio id="sfx-click" src="effect 1.mp3" preload="auto"></audio>
+    <audio id="sfx-clear" src="effect 2.mp3" preload="auto"></audio>
 
     <script>
         const modes = [6, 8, 10];
@@ -116,15 +120,12 @@
         let regionMap = [];
         let isCleared = false;
 
-        // 임시 구역 생성 로직 (실제 퍼즐 데이터를 넣으면 더 완벽해집니다)
         function generateRegions(size) {
             const map = new Array(size * size);
             if (size === 6) {
-                // 6x6 전용 샘플 데이터
                 const data = [0,0,0,1,1,1,0,0,0,1,1,1,2,2,2,3,3,3,2,2,2,3,3,3,4,4,4,5,5,5,4,4,4,5,5,5];
                 for(let i=0; i<36; i++) map[i] = data[i];
             } else {
-                // 8x8, 10x10은 가로줄 단위로 구역 임시 설정
                 for(let i=0; i<size*size; i++) map[i] = Math.floor(i/size);
             }
             return map;
@@ -147,12 +148,13 @@
             for (let i = 0; i < size * size; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                
                 const r = i % size, c = Math.floor(i / size);
+                
+                // [수정] 경계선 적용 로직 개선 (더 깔끔하게)
                 if (r > 0 && regionMap[i] !== regionMap[i-1]) cell.classList.add('b-left');
                 if (c > 0 && regionMap[i] !== regionMap[i-size]) cell.classList.add('b-top');
 
-                cell.addEventListener('mousedown', () => handleCellClick(i));
+                cell.addEventListener('mousedown', (e) => { if(e.button === 0) handleCellClick(i); });
                 cell.addEventListener('touchstart', (e) => { e.preventDefault(); handleCellClick(i); });
                 board.appendChild(cell);
             }
@@ -160,9 +162,9 @@
 
         function handleCellClick(index) {
             if(isCleared) return;
-            const sfx = document.getElementById('sfx-click');
-            sfx.currentTime = 0;
-            sfx.play().catch(()=>{});
+            const clickSound = document.getElementById('sfx-click');
+            clickSound.currentTime = 0;
+            clickSound.play().catch(()=>{});
 
             boardState[index] = (boardState[index] + 1) % 3;
             updateUI();
@@ -175,7 +177,8 @@
             cells.forEach((cell, i) => {
                 cell.innerText = boardState[i] === 1 ? '★' : (boardState[i] === 2 ? '✕' : '');
                 cell.style.color = boardState[i] === 1 ? '#fbc02d' : '#9eaead';
-                cell.style.fontSize = `${Math.min(30, 240/size)}px`;
+                // 글자 크기도 미세 조정
+                cell.style.fontSize = `${Math.min(30, 260/size)}px`;
             });
         }
 
@@ -186,7 +189,7 @@
 
             if (stars.length !== size * n) return;
 
-            // 1. 인접 체크 (8방향)
+            // 규칙 검증
             for (let i = 0; i < stars.length; i++) {
                 for (let j = i + 1; j < stars.length; j++) {
                     const x1 = stars[i] % size, y1 = Math.floor(stars[i] / size);
@@ -195,7 +198,6 @@
                 }
             }
 
-            // 2. 행/열/구역 카운트
             const rowC = new Array(size).fill(0), colC = new Array(size).fill(0), regC = {};
             stars.forEach(idx => {
                 rowC[Math.floor(idx/size)]++;
@@ -203,16 +205,18 @@
                 regC[regionMap[idx]] = (regC[regionMap[idx]] || 0) + 1;
             });
 
-            const allRowsOk = rowC.every(c => c === n);
-            const allColsOk = colC.every(c => c === n);
-            let allRegsOk = true;
-            for(let i=0; i<size; i++) if((regC[i] || 0) !== n) allRegsOk = false;
+            if (rowC.every(c => c === n) && colC.every(c => c === n)) {
+                let allRegsOk = true;
+                for(let i=0; i<size; i++) if((regC[i] || 0) !== n) allRegsOk = false;
 
-            if (allRowsOk && allColsOk && allRegsOk) {
-                isCleared = true;
-                document.getElementById('status-text').innerText = "★ 클리어! 축하합니다! ★";
-                document.getElementById('status-text').style.color = "#d32f2f";
-                document.getElementById('sfx-clear').play().catch(()=>{});
+                if (allRegsOk) {
+                    isCleared = true;
+                    document.getElementById('status-text').innerText = "★ 클리어! 축하합니다! ★";
+                    document.getElementById('status-text').style.color = "#d32f2f";
+                    const clearSound = document.getElementById('sfx-clear');
+                    clearSound.currentTime = 0;
+                    clearSound.play().catch(()=>{});
+                }
             }
         }
 
