@@ -11,7 +11,8 @@
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
             --accent-color: #8e9775;
-            --bulb-glow: #fff59d; /* 불빛 색상을 조금 더 선명하게 수정 */
+            --error-color: #e57373; /* 규칙 위반 시 피드백용 (필요시) */
+            --bulb-glow: #fff59d;
             --wall-color: #4a473e;
         }
 
@@ -74,7 +75,6 @@
             cursor: pointer; position: relative;
         }
 
-        /* 불이 들어온 상태 */
         .cell.lit { 
             background-color: var(--bulb-glow) !important;
             box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05);
@@ -127,8 +127,8 @@
 
     <script>
         let currentSize = 5;
-        let boardState = []; // 0: 빈칸, 5: 전구, -1이하: 벽
-        let isLit = [];      // 불이 들어왔는지 여부만 따로 관리
+        let boardState = []; 
+        let isLit = [];      
         let audioUnlocked = false;
 
         function unlockAudio() {
@@ -156,6 +156,8 @@
 
         function regenerate(shouldPlaySound = true) {
             if (shouldPlaySound) playClickSound();
+            document.getElementById('status').innerText = `${currentSize}x${currentSize} 진행 중...`;
+            document.getElementById('status').style.color = "var(--text-color)";
             createSolvableBoard();
             render();
         }
@@ -165,12 +167,9 @@
             let tempSolution = Array.from({length: currentSize * currentSize}, () => 0);
             let remaining = tempSolution.map((_, i) => i);
 
-            // 1. 역설계용 전구 배치
             while(remaining.length > 0) {
                 let rIdx = remaining[Math.floor(Math.random() * remaining.length)];
                 tempSolution[rIdx] = 5;
-                
-                // 빛 전파 (임시)
                 let r = Math.floor(rIdx / currentSize); let c = rIdx % currentSize;
                 const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
                 remaining = remaining.filter(i => i !== rIdx);
@@ -183,9 +182,8 @@
                 }
             }
 
-            // 2. 벽 및 숫자 생성
             for(let i = 0; i < boardState.length; i++) {
-                if (tempSolution[i] === 0 && Math.random() < 0.25) {
+                if (tempSolution[i] === 0 && Math.random() < 0.28) {
                     let r = Math.floor(i / currentSize); let c = i % currentSize;
                     let count = 0;
                     const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -193,10 +191,9 @@
                         let nr = r + dr; let nc = c + dc;
                         if (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && tempSolution[nr * currentSize + nc] === 5) count++;
                     }
-                    if (Math.random() < 0.8) boardState[i] = -(count + 1);
-                    else boardState[i] = -1;
+                    boardState[i] = -(count + 1);
                 } else {
-                    boardState[i] = 0; // 플레이어가 채울 빈칸
+                    boardState[i] = 0;
                 }
             }
         }
@@ -251,13 +248,48 @@
             render();
         }
 
+        // 정밀 승리 판정 함수
         function checkWin() {
-            const hasEmpty = boardState.some((val, idx) => val === 0 && !isLit[idx]);
-            if (!hasEmpty && boardState.some(v => v !== -1)) {
-                // 전구끼리 마주보는지 체크 등 추가 로직 가능하지만 일단 기초 승리 조건
-                document.getElementById('status').innerText = "🎉 모든 곳이 밝아졌습니다!";
-                document.getElementById('status').style.color = "var(--accent-color)";
+            // 1. 모든 빈칸이 밝혀졌는지 확인
+            const allLit = boardState.every((val, idx) => val < 0 || isLit[idx]);
+            if (!allLit) return;
+
+            // 2. 전구끼리 마주보는지 확인
+            for (let i = 0; i < boardState.length; i++) {
+                if (boardState[i] === 5) {
+                    let r = Math.floor(i / currentSize); let c = i % currentSize;
+                    const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (let [dr, dc] of ds) {
+                        let nr = r + dr; let nc = c + dc;
+                        while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize) {
+                            if (boardState[nr * currentSize + nc] < 0) break; // 벽은 빛 차단
+                            if (boardState[nr * currentSize + nc] === 5) return; // 전구 마주봄! 실패
+                            nr += dr; nc += dc;
+                        }
+                    }
+                }
             }
+
+            // 3. 벽 숫자 조건 확인
+            for (let i = 0; i < boardState.length; i++) {
+                if (boardState[i] < -1) { // 숫자가 있는 벽만
+                    let targetCount = -(boardState[i] + 1);
+                    let currentCount = 0;
+                    let r = Math.floor(i / currentSize); let c = i % currentSize;
+                    const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (let [dr, dc] of ds) {
+                        let nr = r + dr; let nc = c + dc;
+                        if (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && boardState[nr * currentSize + nc] === 5) {
+                            currentCount++;
+                        }
+                    }
+                    if (targetCount !== currentCount) return; // 숫자 안 맞음! 실패
+                }
+            }
+
+            // 모든 관문을 통과하면 승리!
+            document.getElementById('status').innerText = "🎉 미션 클리어!";
+            document.getElementById('status').style.color = "var(--accent-color)";
         }
 
         window.onload = () => {
