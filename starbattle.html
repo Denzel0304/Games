@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Star Battle - Fixed Border</title>
+    <title>Star Battle - Strong Border</title>
     <style>
         :root {
             --bg-color: #f0f7f2;
             --surface-color: #f0f7f2;
-            --accent-color: #88b09b; /* 짙은 파스텔 그린 */
+            --accent-color: #88b09b; /* 짙은 파스텔 그린 (테두리용) */
             --shadow-light: #ffffff;
             --shadow-dark: #d1d9d3;
             --text-color: #5a6e63;
-            
-            --border-width: 2px;
-            /* [핵심 수정 2] 내부 구역 선: 점선(dotted) 딱 한 줄 정의 */
-            --region-border: var(--border-width) dotted var(--accent-color);
+            /* [수정] 구역 구분선을 바깥 테두리(2px)와 동일한 굵기의 실선으로 변경 */
+            --border-thick: 2px solid var(--accent-color); 
         }
 
         html, body {
@@ -46,26 +44,22 @@
             background: var(--surface-color);
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             display: grid;
-            
-            /* [핵심 수정 1] 바깥 테두리: 실선(solid)으로 확실하게 유지 */
-            border: var(--border-width) solid var(--accent-color); 
+            border: 2px solid var(--accent-color); 
         }
 
         .cell {
             background: var(--surface-color);
             display: flex; justify-content: center; align-items: center;
             font-size: 20px; cursor: pointer; user-select: none;
-            box-sizing: border-box; 
-            /* 기본 칸 경계선은 아주 연하게 */
-            border: 0.5px solid rgba(0,0,0,0.03);
+            box-sizing: border-box; border: 0.5px solid rgba(0,0,0,0.05);
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 구역 경계선을 점선 한 줄로 적용 */
-        .b-t { border-top: var(--region-border) !important; }
-        .b-b { border-bottom: var(--region-border) !important; }
-        .b-l { border-left: var(--region-border) !important; }
-        .b-r { border-right: var(--region-border) !important; }
+        /* 구역 경계선 스타일 */
+        .b-t { border-top: var(--border-thick) !important; }
+        .b-b { border-bottom: var(--border-thick) !important; }
+        .b-l { border-left: var(--border-thick) !important; }
+        .b-r { border-right: var(--border-thick) !important; }
 
         .footer { margin-top: auto; margin-bottom: 50px; }
         .main-btn {
@@ -170,13 +164,10 @@
                     cell.style.width = cell.style.height = `${cellSize}px`;
                     
                     let id = regions[r][c];
-                    
-                    /* [핵심 수정] 내부 경계선 판별 로직 수정 */
-                    // 바깥 테두리(0행, 마지막행, 0열, 마지막열)는 점선 경계선을 그리지 않음 (실선 테두리와 겹치지 않게)
-                    if(r > 0 && regions[r-1][c] !== id) cell.classList.add('b-t');
-                    if(r < currentSize-1 && regions[r+1][c] !== id) cell.classList.add('b-b');
-                    if(c > 0 && regions[r][c-1] !== id) cell.classList.add('b-l');
-                    if(c < currentSize-1 && regions[r][c+1] !== id) cell.classList.add('b-r');
+                    if(r === 0 || regions[r-1][c] !== id) cell.classList.add('b-t');
+                    if(r === currentSize-1 || regions[r+1][c] !== id) cell.classList.add('b-b');
+                    if(c === 0 || regions[r][c-1] !== id) cell.classList.add('b-l');
+                    if(c === currentSize-1 || regions[r][c+1] !== id) cell.classList.add('b-r');
 
                     cell.onclick = function() {
                         playSound(effectClick);
