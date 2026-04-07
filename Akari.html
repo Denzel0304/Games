@@ -11,7 +11,6 @@
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
             --accent-color: #8e9775;
-            --error-color: #e57373; /* 규칙 위반 시 피드백용 (필요시) */
             --bulb-glow: #fff59d;
             --wall-color: #4a473e;
         }
@@ -109,6 +108,7 @@
 <body onclick="unlockAudio()">
 
     <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+    <audio id="clear-sound" src="effect 1.mp3" preload="auto"></audio>
 
     <div class="header">
         <div class="title-row">
@@ -130,19 +130,31 @@
         let boardState = []; 
         let isLit = [];      
         let audioUnlocked = false;
+        let isGameOver = false; // 게임 종료 상태 추가
 
         function unlockAudio() {
             if (audioUnlocked) return;
-            const sound = document.getElementById('click-sound');
-            sound.play().then(() => {
+            const clickSound = document.getElementById('click-sound');
+            const clearSound = document.getElementById('clear-sound');
+            
+            // 두 소리 모두 해금
+            Promise.all([clickSound.play(), clearSound.play()]).then(() => {
                 audioUnlocked = true;
-                sound.pause(); sound.currentTime = 0;
+                clickSound.pause(); clickSound.currentTime = 0;
+                clearSound.pause(); clearSound.currentTime = 0;
             }).catch(e => {});
         }
 
         function playClickSound() {
             if (!audioUnlocked) return;
             const sound = document.getElementById('click-sound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        function playClearSound() {
+            if (!audioUnlocked) return;
+            const sound = document.getElementById('clear-sound');
             sound.currentTime = 0;
             sound.play();
         }
@@ -156,6 +168,7 @@
 
         function regenerate(shouldPlaySound = true) {
             if (shouldPlaySound) playClickSound();
+            isGameOver = false;
             document.getElementById('status').innerText = `${currentSize}x${currentSize} 진행 중...`;
             document.getElementById('status').style.color = "var(--text-color)";
             createSolvableBoard();
@@ -239,22 +252,20 @@
                 }
                 grid.appendChild(cell);
             });
-            checkWin();
+            if (!isGameOver) checkWin();
         }
 
         function handleSelect(idx) {
+            if (isGameOver) return;
             playClickSound();
             boardState[idx] = (boardState[idx] === 5) ? 0 : 5;
             render();
         }
 
-        // 정밀 승리 판정 함수
         function checkWin() {
-            // 1. 모든 빈칸이 밝혀졌는지 확인
             const allLit = boardState.every((val, idx) => val < 0 || isLit[idx]);
             if (!allLit) return;
 
-            // 2. 전구끼리 마주보는지 확인
             for (let i = 0; i < boardState.length; i++) {
                 if (boardState[i] === 5) {
                     let r = Math.floor(i / currentSize); let c = i % currentSize;
@@ -262,17 +273,16 @@
                     for (let [dr, dc] of ds) {
                         let nr = r + dr; let nc = c + dc;
                         while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize) {
-                            if (boardState[nr * currentSize + nc] < 0) break; // 벽은 빛 차단
-                            if (boardState[nr * currentSize + nc] === 5) return; // 전구 마주봄! 실패
+                            if (boardState[nr * currentSize + nc] < 0) break;
+                            if (boardState[nr * currentSize + nc] === 5) return;
                             nr += dr; nc += dc;
                         }
                     }
                 }
             }
 
-            // 3. 벽 숫자 조건 확인
             for (let i = 0; i < boardState.length; i++) {
-                if (boardState[i] < -1) { // 숫자가 있는 벽만
+                if (boardState[i] < -1) {
                     let targetCount = -(boardState[i] + 1);
                     let currentCount = 0;
                     let r = Math.floor(i / currentSize); let c = i % currentSize;
@@ -283,11 +293,13 @@
                             currentCount++;
                         }
                     }
-                    if (targetCount !== currentCount) return; // 숫자 안 맞음! 실패
+                    if (targetCount !== currentCount) return;
                 }
             }
 
-            // 모든 관문을 통과하면 승리!
+            // 승리 시 처리
+            isGameOver = true;
+            playClearSound(); // effect 1.mp3 재생
             document.getElementById('status').innerText = "🎉 미션 클리어!";
             document.getElementById('status').style.color = "var(--accent-color)";
         }
