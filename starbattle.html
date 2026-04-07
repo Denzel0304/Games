@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Star Battle - Real Game</title>
+    <title>Star Battle - Responsive</title>
     <style>
         :root {
             --bg-color: #f0f7f2;
@@ -12,58 +12,64 @@
             --shadow-light: #ffffff;
             --shadow-dark: #d1d9d3;
             --text-color: #5a6e63;
-            --border-thick: 3px solid #5a6e63;
-            --border-thin: 1px solid #d1d9d3;
+            --border-thick: 4px solid #5a6e63; /* 구역 선을 더 확실하게 */
         }
 
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; position: fixed;
             background-color: var(--bg-color);
-            font-family: sans-serif; color: var(--text-color);
+            font-family: 'Apple SD Gothic Neo', sans-serif; 
+            color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
         }
 
         .header { margin-top: 40px; text-align: center; width: 100%; }
         .title-container { display: flex; justify-content: center; align-items: center; gap: 20px; }
+        
         .nav-btn {
             width: 44px; height: 44px; border-radius: 12px; border: none;
             background: var(--surface-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            cursor: pointer; font-size: 18px;
+            cursor: pointer; color: var(--text-color); font-weight: bold;
         }
         .nav-btn:active { box-shadow: inset 2px 2px 5px var(--shadow-dark); }
-        .status-msg { font-size: 16px; font-weight: bold; margin-top: 10px; height: 20px; color: var(--accent-color); }
+
+        .status-msg { font-size: 16px; font-weight: bold; margin-top: 15px; height: 24px; color: var(--accent-color); }
 
         .board-container {
-            margin-top: 20px; padding: 10px; border-radius: 20px;
+            margin-top: 20px; padding: 12px; border-radius: 25px;
             background: var(--surface-color);
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
             display: grid; border: 1px solid var(--shadow-dark);
         }
 
         .cell {
             background: var(--surface-color);
             display: flex; justify-content: center; align-items: center;
-            font-size: 24px; cursor: pointer; user-select: none;
-            box-sizing: border-box; border: 0.5px solid #e0e0e0;
+            font-size: 26px; cursor: pointer; user-select: none;
+            box-sizing: border-box; border: 0.5px solid rgba(0,0,0,0.05);
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 구역 구분을 위한 굵은 선 스타일 */
-        .border-top { border-top: var(--border-thick) !important; }
-        .border-bottom { border-bottom: var(--border-thick) !important; }
-        .border-left { border-left: var(--border-thick) !important; }
-        .border-right { border-right: var(--border-thick) !important; }
+        /* 구역 굵은 선 스타일 */
+        .b-t { border-top: var(--border-thick) !important; }
+        .b-b { border-bottom: var(--border-thick) !important; }
+        .b-l { border-left: var(--border-thick) !important; }
+        .b-r { border-right: var(--border-thick) !important; }
 
-        .footer { margin-top: auto; margin-bottom: 50px; }
+        .footer { margin-top: auto; margin-bottom: 60px; }
         .main-btn {
-            padding: 15px 40px; border-radius: 20px; border: none;
+            padding: 18px 50px; border-radius: 25px; border: none;
             background: var(--surface-color);
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-            font-weight: bold; color: var(--text-color);
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+            font-weight: 800; font-size: 18px; color: var(--text-color);
+            cursor: pointer;
         }
-        .star { color: #f1c40f; line-height: 1; }
-        .cross { color: #e74c3c; font-size: 16px; opacity: 0.6; }
+        .main-btn:active { box-shadow: inset 4px 4px 8px var(--shadow-dark); }
+
+        .star { color: #f1c40f; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .cross { color: #e74c3c; font-size: 18px; opacity: 0.5; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -71,7 +77,7 @@
     <div class="header">
         <div class="title-container">
             <button class="nav-btn" onclick="changeSize(-2)">◀</button>
-            <h1 style="margin:0">Star Battle</h1>
+            <h1 style="margin:0; font-size: 32px;">Star Battle</h1>
             <button class="nav-btn" onclick="changeSize(2)">▶</button>
         </div>
         <div id="status" class="status-msg"></div>
@@ -85,58 +91,80 @@
 
     <script>
         let currentSize = 6;
-        let regions = []; 
+        let regions = [];
+        
+        // 오디오 경로 (파일이 없을 경우 대비해 에러 핸들링 포함)
         const effectClick = new Audio('effect 19.mp3');
         const effectClear = new Audio('effect 1.mp3');
 
-        function changeSize(delta) {
-            let next = currentSize + delta;
-            if (next >= 6 && next <= 10) { currentSize = next; initGame(); }
+        function playSound(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(() => {}); // 파일 없어도 멈추지 않게
         }
 
-        // 아주 간단한 구역 생성 알고리즘 (랜덤하게 칸들을 묶음)
+        function changeSize(delta) {
+            let next = currentSize + delta;
+            if (next >= 6 && next <= 10) {
+                currentSize = next;
+                playSound(effectClick);
+                initGame();
+            }
+        }
+
+        // 랜덤 구역 생성기 (더 골고루 섞이도록 개선)
         function generateRegions(size) {
             let grid = Array.from({length: size}, () => Array(size).fill(-1));
             let regionId = 0;
-            for(let r=0; r<size; r++) {
-                for(let c=0; c<size; c++) {
-                    if(grid[r][c] === -1) {
-                        fillRegion(r, c, regionId++, grid, size);
+            let cells = [];
+            for(let r=0; r<size; r++) for(let c=0; c<size; c++) cells.push([r,c]);
+            
+            // 랜덤하게 시작점 선택
+            cells.sort(() => Math.random() - 0.5);
+
+            for(let [r, c] of cells) {
+                if(grid[r][c] === -1) {
+                    let queue = [[r, c]];
+                    let count = 0;
+                    let targetSize = size; 
+                    
+                    while(queue.length > 0 && count < targetSize) {
+                        let idx = Math.floor(Math.random() * queue.length);
+                        let [currR, currC] = queue.splice(idx, 1)[0];
+                        if(grid[currR][currC] !== -1) continue;
+                        
+                        grid[currR][currC] = regionId;
+                        count++;
+                        
+                        [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dr, dc]) => {
+                            let nr = currR+dr, nc = currC+dc;
+                            if(nr>=0 && nr<size && nc>=0 && nc<size && grid[nr][nc] === -1) {
+                                queue.push([nr, nc]);
+                            }
+                        });
                     }
+                    regionId++;
                 }
             }
             return grid;
         }
 
-        function fillRegion(r, c, id, grid, size) {
-            let count = 0;
-            let max = size; // 한 구역당 평균 size개 칸 할당
-            let queue = [[r, c]];
-            while(queue.length > 0 && count < max) {
-                let [currR, currC] = queue.shift();
-                if(grid[currR][currC] !== -1) continue;
-                grid[currR][currC] = id;
-                count++;
-                [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dr, dc]) => {
-                    let nr = currR+dr, nc = currC+dc;
-                    if(nr>=0 && nr<size && nc>=0 && nc<size && grid[nr][nc] === -1) {
-                        queue.push([nr, nc]);
-                    }
-                });
-            }
-        }
-
         function initGame() {
             const boardEl = document.getElementById('board');
             const statusEl = document.getElementById('status');
+            
+            // 상태 초기화
             statusEl.innerText = `${currentSize}X${currentSize} 진행 중...`;
             statusEl.style.color = 'var(--accent-color)';
-
-            const cellSize = Math.min((window.innerWidth - 60) / currentSize, 55);
+            
+            const gap = 0; 
+            const padding = 24;
+            const availableWidth = window.innerWidth - 60;
+            const cellSize = Math.min(availableWidth / currentSize, 60);
+            
             boardEl.style.gridTemplateColumns = `repeat(${currentSize}, ${cellSize}px)`;
+            boardEl.innerHTML = '';
             
             regions = generateRegions(currentSize);
-            boardEl.innerHTML = '';
 
             for(let r=0; r<currentSize; r++) {
                 for(let c=0; c<currentSize; c++) {
@@ -144,18 +172,22 @@
                     cell.className = 'cell';
                     cell.style.width = cell.style.height = `${cellSize}px`;
                     
-                    // 구역 경계선 그리기 (굵은 선 힌트)
+                    // 구역 경계선 판별 로직
                     let id = regions[r][c];
-                    if(r === 0 || regions[r-1][c] !== id) cell.classList.add('border-top');
-                    if(r === currentSize-1 || regions[r+1][c] !== id) cell.classList.add('border-bottom');
-                    if(c === 0 || regions[r][c-1] !== id) cell.classList.add('border-left');
-                    if(c === currentSize-1 || regions[r][nc=c+1] !== id) cell.classList.add('border-right');
+                    if(r === 0 || regions[r-1][c] !== id) cell.classList.add('b-t');
+                    if(r === currentSize-1 || regions[r+1][c] !== id) cell.classList.add('b-b');
+                    if(c === 0 || regions[r][c-1] !== id) cell.classList.add('b-l');
+                    if(c === currentSize-1 || regions[r][c+1] !== id) cell.classList.add('b-r');
 
                     cell.onclick = function() {
-                        effectClick.play();
-                        if (!this.innerHTML) this.innerHTML = '<span class="star">★</span>';
-                        else if (this.querySelector('.star')) this.innerHTML = '<span class="cross">✕</span>';
-                        else this.innerHTML = '';
+                        playSound(effectClick);
+                        if (!this.innerHTML) {
+                            this.innerHTML = '<span class="star">★</span>';
+                        } else if (this.querySelector('.star')) {
+                            this.innerHTML = '<span class="cross">✕</span>';
+                        } else {
+                            this.innerHTML = '';
+                        }
                         checkWin();
                     };
                     boardEl.appendChild(cell);
@@ -168,29 +200,38 @@
             let stars = [];
             cells.forEach((cell, idx) => {
                 if(cell.querySelector('.star')) {
-                    stars.push({r: Math.floor(idx/currentSize), c: idx%currentSize, rid: regions[Math.floor(idx/currentSize)][idx%currentSize]});
+                    let r = Math.floor(idx/currentSize);
+                    let c = idx%currentSize;
+                    stars.push({r, c, rid: regions[r][c]});
                 }
             });
 
+            // 별 개수 확인
             if(stars.length !== currentSize) return;
 
-            // 규칙 검증 (행, 열, 구역, 인접)
-            let rows = new Set(), cols = new Set(), rids = new Set();
+            // 규칙 검증 (행, 열, 구역 중복 및 인접 체크)
+            let rowSet = new Set(), colSet = new Set(), ridSet = new Set();
             for(let s of stars) {
-                if(rows.has(s.r) || cols.has(s.c) || rids.has(s.rid)) return;
-                rows.add(s.r); cols.add(s.c); rids.add(s.rid);
+                if(rowSet.has(s.r) || colSet.has(s.c) || ridSet.has(s.rid)) return;
+                rowSet.add(s.r); colSet.add(s.c); ridSet.add(s.rid);
+                
+                // 주변 8칸 인접 체크
                 for(let other of stars) {
                     if(s === other) continue;
                     if(Math.abs(s.r - other.r) <= 1 && Math.abs(s.c - other.c) <= 1) return;
                 }
             }
 
+            // 모든 조건 만족 시
             document.getElementById('status').innerText = 'Clear!';
-            document.getElementById('status').style.color = '#2ecc71';
-            effectClear.play();
+            document.getElementById('status').style.color = '#27ae60';
+            playSound(effectClear);
         }
 
+        // 시작
         initGame();
+
+        // 모바일 스크롤/바운스 방지
         document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     </script>
 </body>
