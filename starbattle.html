@@ -170,20 +170,22 @@
   }
   .cell.marked .mark { opacity: 1; transform: scale(1); }
   .cell.starred { background: linear-gradient(135deg, #fffbe8, #fff3c0); }
-  .cell.starred::after {
-    content: '★';
+  .cell .star {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
     font-size: calc(var(--cell-size) * 0.52);
+    line-height: 1;
     color: var(--star);
     text-shadow: 1px 1px 3px var(--star-shadow);
-    animation: pop 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  .cell.starred .star {
+    transform: translate(-50%, -50%) scale(1);
   }
   .cell.conflict { background: #fde8e8 !important; }
-  .cell.conflict::after { color: var(--danger) !important; }
-
-  @keyframes pop {
-    0% { transform: scale(0) rotate(-20deg); }
-    100% { transform: scale(1) rotate(0deg); }
-  }
+  .cell.conflict .star { color: var(--danger) !important; }
 
   /* BOTTOM CONTROLS */
   .controls {
@@ -363,34 +365,17 @@
 
 <script>
 // ─── Audio ───────────────────────────────────────────────
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playBeep(freq, dur, type='sine', vol=0.3) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-  osc.start(); osc.stop(audioCtx.currentTime + dur);
-}
+const sfxClick = new Audio('effect 19.mp3');
+const sfxClear = new Audio('effect 1.mp3');
 
 function playClick() {
-  // effect 19: soft click
-  playBeep(660, 0.08, 'sine', 0.2);
-  setTimeout(() => playBeep(880, 0.06, 'sine', 0.12), 40);
+  sfxClick.currentTime = 0;
+  sfxClick.play();
 }
 
 function playClear() {
-  // effect 1: triumphant arpeggio
-  const notes = [523, 659, 784, 1047];
-  notes.forEach((f, i) => setTimeout(() => playBeep(f, 0.3, 'sine', 0.25), i * 120));
-  setTimeout(() => {
-    playBeep(1047, 0.15, 'sine', 0.2);
-    playBeep(1319, 0.15, 'sine', 0.15);
-    playBeep(1568, 0.4, 'sine', 0.2);
-  }, notes.length * 120 + 60);
+  sfxClear.currentTime = 0;
+  sfxClear.play();
 }
 
 // ─── Game State ───────────────────────────────────────────
@@ -503,6 +488,11 @@ function buildBoard() {
       const mark = document.createElement('div');
       mark.className = 'mark';
       cell.appendChild(mark);
+
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.textContent = '★';
+      cell.appendChild(star);
 
       cell.addEventListener('click', () => onCellClick(r, c));
       boardEl.appendChild(cell);
@@ -673,9 +663,7 @@ function updateNavButtons() {
 
 // ─── Prevent pull-to-refresh / scroll ────────────────────
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-document.addEventListener('touchstart', () => {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}, { once: false });
+
 
 // ─── Init ─────────────────────────────────────────────────
 buildBoard();
