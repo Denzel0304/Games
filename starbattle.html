@@ -3,223 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Star Battle</title>
+    <title>Star Battle - Pastel Green</title>
     <style>
         :root {
-            --bg-color: #e0f2f1; 
-            --shadow-light: #f5ffff;
-            --shadow-dark: #c1d5d4;
-            --accent-color: #4db6ac;
-            --text-color: #445a58;
-            --border-line: #88a4a2; /* 구역 선 색상 */
+            --bg-color: #f0f7f2;
+            --surface-color: #f0f7f2;
+            --accent-color: #88b09b;
+            --shadow-light: #ffffff;
+            --shadow-dark: #d1d9d3;
+            --text-color: #5a6e63;
         }
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-touch-callout: none; 
-            -webkit-user-select: none; 
-            user-select: none; 
-            touch-action: none; 
-        }
-
-        body {
-            margin: 0; padding: 0; 
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; 
-            min-height: 100vh;
-            background-color: var(--bg-color); 
-            font-family: 'Apple SD Gothic Neo', sans-serif; 
-            color: var(--text-color); 
+        /* 화면 드래그 및 스크롤 방지 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
+            position: fixed;
+            background-color: var(--bg-color);
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* 헤더 디자인 */
-        .header { 
-            display: flex; align-items: center; justify-content: space-between; 
-            width: 85%; max-width: 360px; 
+        /* 헤더 영역 */
+        .header {
+            margin-top: 40px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             margin-bottom: 10px;
         }
 
         .nav-btn {
-            width: 44px; height: 44px; border-radius: 12px; background: var(--bg-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--surface-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            border: none; font-size: 18px; color: var(--text-color); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            color: var(--text-color);
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
         }
-        .nav-btn:active { box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); }
 
-        .title { font-size: 24px; font-weight: bold; letter-spacing: -0.5px; }
-        .status-msg { font-size: 14px; margin-bottom: 20px; height: 20px; color: var(--accent-color); font-weight: 600; }
+        .nav-btn:active {
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+        }
 
-        /* 게임 보드: 뉴모피즘 스타일 복구 */
+        .game-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .status-msg {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-color);
+            height: 20px;
+        }
+
+        /* 게임 보드 */
         .board-container {
-            width: 90vw; max-width: 380px; aspect-ratio: 1 / 1; padding: 12px;
-            border-radius: 24px; background: var(--bg-color);
-            box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
-            margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
-        }
-
-        #game-board { 
-            display: grid; width: 100%; height: 100%; 
-            border: 1.5px solid var(--border-line); /* 바깥 테두리 */
-            background-color: transparent;
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 25px;
+            background: var(--surface-color);
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            display: grid;
+            gap: 2px; /* 경계선 표현 */
+            background-color: var(--shadow-dark); /* 보드 그리드 선 */
         }
 
         .cell {
-            width: 100%; height: 100%; 
-            background: var(--bg-color);
-            border: 0.2px solid rgba(0,0,0,0.05); /* 기본 얇은 선 */
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; font-weight: bold;
-            transition: background 0.1s;
-        }
-
-        /* 구역 경계선 굵게 표시 (이 부분이 이뻐야 함) */
-        .b-top { border-top: 3px solid var(--border-line) !important; }
-        .b-left { border-left: 3px solid var(--border-line) !important; }
-
-        .controls { display: flex; flex-direction: column; gap: 15px; width: 150px; }
-        .action-btn {
-            padding: 12px; border-radius: 20px; background: var(--bg-color);
-            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
-            border: none; color: var(--text-color); font-weight: bold; font-size: 15px;
+            background: var(--surface-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
             cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .action-btn:active { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
+
+        /* 하단 버튼 */
+        .footer {
+            margin-top: auto;
+            margin-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .main-btn {
+            padding: 15px 40px;
+            border-radius: 20px;
+            border: none;
+            background: var(--surface-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .main-btn:active {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+        }
+
+        /* 별(Star) 아이콘 스타일 */
+        .star { color: #f1c40f; }
+        .cross { color: #e74c3c; font-size: 14px; opacity: 0.5; }
+
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="nav-btn" onclick="changeMode(-1)">〈</button>
-        <div class="title">Star Battle</div>
-        <button class="nav-btn" onclick="changeMode(1)">〉</button>
+        <div class="title-container">
+            <button class="nav-btn" onclick="changeSize(-2)">◀</button>
+            <h1 class="game-title">Star Battle</h1>
+            <button class="nav-btn" onclick="changeSize(2)">▶</button>
+        </div>
+        <div id="status" class="status-msg">6X6 진행 중...</div>
     </div>
 
-    <div class="status-msg" id="status-text">6x6 진행 중...</div>
+    <div id="board" class="board-container">
+        </div>
 
-    <div class="board-container">
-        <div id="game-board"></div>
+    <div class="footer">
+        <button class="main-btn" onclick="initGame()">새 게임</button>
     </div>
-
-    <div class="controls">
-        <button class="action-btn" onclick="resetGame()">새 게임</button>
-    </div>
-
-    <audio id="sound-tap" src="effect 1.mp3" preload="auto"></audio>
-    <audio id="sound-win" src="effect 2.mp3" preload="auto"></audio>
 
     <script>
-        const modes = [6, 8, 10];
-        let currentModeIdx = 0;
-        let boardState = [];
-        let regionMap = [];
-        let isCleared = false;
+        let currentSize = 6;
+        const statusEl = document.getElementById('status');
+        const boardEl = document.getElementById('board');
 
-        function getRegionMap(size) {
-            // 6x6 샘플 맵 (구역 데이터를 명확히 정의해야 격자가 이쁘게 나옴)
-            if(size === 6) return [0,0,1,1,1,1,0,0,1,1,1,1,2,2,2,3,3,3,2,2,2,3,3,3,4,4,4,4,5,5,4,4,4,4,5,5];
-            // 8x8, 10x10은 테스트용 가로줄 구역
-            return new Array(size * size).fill(0).map((_, i) => Math.floor(i/size));
+        // 오디오 객체 설정
+        const effectClick = new Audio('effect 19.mp3');
+        const effectClear = new Audio('effect 1.mp3');
+
+        function playSound(audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("Audio play failed"));
+        }
+
+        function changeSize(delta) {
+            playSound(effectClick);
+            const newSize = currentSize + delta;
+            if (newSize >= 6 && newSize <= 10) {
+                currentSize = newSize;
+                initGame();
+            }
         }
 
         function initGame() {
-            isCleared = false;
-            const size = modes[currentModeIdx];
-            document.getElementById('status-text').innerText = `${size}x${size} 진행 중...`;
-            document.getElementById('status-text').style.color = 'var(--accent-color)';
+            statusEl.innerText = `${currentSize}X${currentSize} 진행 중...`;
+            statusEl.style.color = 'var(--accent-color)';
             
-            const board = document.getElementById('game-board');
-            board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-            board.innerHTML = '';
+            // 보드 크기 설정
+            const cellSize = Math.min((window.innerWidth - 80) / currentSize, 50);
+            boardEl.style.gridTemplateColumns = `repeat(${currentSize}, ${cellSize}px)`;
+            boardEl.style.gridTemplateRows = `repeat(${currentSize}, ${cellSize}px)`;
             
-            boardState = Array(size * size).fill(0);
-            regionMap = getRegionMap(size);
-
-            for (let i = 0; i < size * size; i++) {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < currentSize * currentSize; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
+                cell.style.width = `${cellSize}px`;
+                cell.style.height = `${cellSize}px`;
                 
-                const r = i % size, c = Math.floor(i / size);
-                // 구역이 바뀔 때만 두꺼운 선 추가
-                if (r > 0 && regionMap[i] !== regionMap[i-1]) cell.classList.add('b-left');
-                if (c > 0 && regionMap[i] !== regionMap[i-size]) cell.classList.add('b-top');
-
-                cell.addEventListener('mousedown', (e) => { if(e.button === 0) handleTap(i); });
-                cell.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(i); });
-                board.appendChild(cell);
+                // 클릭 이벤트 (임시 로직: 빈칸 -> 별 -> X 순환)
+                cell.onclick = function() {
+                    playSound(effectClick);
+                    if (this.innerHTML === '') {
+                        this.innerHTML = '<span class="star">★</span>';
+                    } else if (this.querySelector('.star')) {
+                        this.innerHTML = '<span class="cross">✕</span>';
+                    } else {
+                        this.innerHTML = '';
+                    }
+                    checkClear(); // 클릭할 때마다 클리어 체크
+                };
+                boardEl.appendChild(cell);
             }
         }
 
-        function handleTap(index) {
-            if(isCleared) return;
-
-            // 클릭 효과음 (effect 1) 강제 재생
-            const tapSfx = document.getElementById('sound-tap');
-            tapSfx.currentTime = 0;
-            tapSfx.play().catch(()=>{});
-
-            boardState[index] = (boardState[index] + 1) % 3;
-            render();
-            checkWin();
-        }
-
-        function render() {
-            const cells = document.querySelectorAll('.cell');
-            const size = modes[currentModeIdx];
-            cells.forEach((cell, i) => {
-                cell.innerText = boardState[i] === 1 ? '★' : (boardState[i] === 2 ? '✕' : '');
-                cell.style.color = boardState[i] === 1 ? '#fbc02d' : '#9eaead';
-                cell.style.fontSize = `${Math.min(28, 250/size)}px`;
-            });
-        }
-
-        function checkWin() {
-            const size = modes[currentModeIdx];
-            const n = size === 10 ? 2 : 1; 
-            const stars = boardState.reduce((acc, s, i) => s === 1 ? [...acc, i] : acc, []);
-
-            if (stars.length !== size * n) return;
-
-            // 1. 인접성 검사
-            for (let i = 0; i < stars.length; i++) {
-                for (let j = i + 1; j < stars.length; j++) {
-                    const x1 = stars[i] % size, y1 = Math.floor(stars[i] / size);
-                    const x2 = stars[j] % size, y2 = Math.floor(stars[j] / size);
-                    if (Math.abs(x1 - x2) <= 1 && Math.abs(y1 - y2) <= 1) return;
-                }
-            }
-
-            // 2. 행, 열, 구역 카운트
-            const rowC = new Array(size).fill(0), colC = new Array(size).fill(0), regC = {};
-            stars.forEach(idx => {
-                rowC[Math.floor(idx/size)]++;
-                colC[idx%size]++;
-                regC[regionMap[idx]] = (regC[regionMap[idx]] || 0) + 1;
-            });
-
-            if (rowC.every(c => c === n) && colC.every(c => c === n)) {
-                let regsOk = true;
-                for(let i=0; i<size; i++) if((regC[i] || 0) !== n) regsOk = false;
-
-                if (regsOk) {
-                    isCleared = true;
-                    document.getElementById('status-text').innerText = "★ CLEAR! ★";
-                    document.getElementById('status-text').style.color = "#d32f2f";
-                    
-                    // 클리어 효과음 (effect 2) 재생
-                    const winSfx = document.getElementById('sound-win');
-                    winSfx.currentTime = 0;
-                    winSfx.play().catch(()=>{});
-                }
+        // 클리어 테스트용 (실제 로직은 Star Battle 규칙 검증 필요)
+        function checkClear() {
+            // 예시로 모든 칸이 채워지면 클리어라고 가정 (실제 구현시 규칙 엔진 추가)
+            const stars = document.querySelectorAll('.star').length;
+            if (stars === currentSize) { // 간단한 예시 규칙
+                statusEl.innerText = 'Clear!';
+                statusEl.style.color = '#2ecc71';
+                playSound(effectClear);
             }
         }
 
-        function changeMode(dir) { currentModeIdx = (currentModeIdx + dir + modes.length) % modes.length; initGame(); }
-        function resetGame() { initGame(); }
-        
+        // 초기 실행
         initGame();
-        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+        // 모바일 터치 이동 방지
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
     </script>
 </body>
 </html>
