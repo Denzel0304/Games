@@ -17,8 +17,8 @@
             --chain-green: #8e9775;
             --tenten-orange: #ff7043;
             --star-yellow: #ffeb3b;
-            /* 신규 추가: 기존에 없던 딥 핑크 컬러 */
-            --battle-pink: #FF1493; 
+            --battle-pink: #FF1493;
+            --tent-teal: #00BCD4;
         }
 
         body {
@@ -32,23 +32,11 @@
             min-height: 100vh;
         }
 
-        header {
-            margin-top: 40px;
-            text-align: center;
-        }
+        header { margin-top: 40px; text-align: center; }
 
-        h1 {
-            font-size: 28px;
-            color: #1a3a5a;
-            margin: 0;
-            letter-spacing: -1px;
-        }
+        h1 { font-size: 28px; color: #1a3a5a; margin: 0; letter-spacing: -1px; }
 
-        p {
-            font-size: 13px;
-            color: var(--text-sub);
-            margin-top: 6px;
-        }
+        p { font-size: 13px; color: var(--text-sub); margin-top: 6px; }
 
         .date-badge {
             margin-top: 15px;
@@ -86,29 +74,16 @@
             position: relative;
         }
 
-        .menu-card:active {
-            transform: scale(0.97);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
+        .menu-card:active { transform: scale(0.97); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
         .icon-box {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 6px;
+            width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-bottom: 6px;
         }
 
-        .card-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--text-main); }
 
-        /* 게임별 포인트 컬러 */
         .block-game { border-top: 3px solid var(--block-mint); }
         .block-game .icon-box { background-color: #e0f2f1; }
 
@@ -127,13 +102,14 @@
         .tenten-game { border-top: 3px solid var(--tenten-orange); }
         .tenten-game .icon-box { background-color: #fff3e0; }
 
-        .star-game { border-top: 3px solid var(--star-yellow); }
-        .star-game .icon-box { background-color: #fff9c4; }
+        .tent-game { border-top: 3px solid var(--tent-teal); }
+        .tent-game .icon-box { background-color: #e0f7fa; }
 
-        /* 스타 배틀 추가 */
         .star-battle-game { border-top: 3px solid var(--battle-pink); }
         .star-battle-game .icon-box { background-color: #ffebee; }
 
+        .star-game { border-top: 3px solid var(--star-yellow); }
+        .star-game .icon-box { background-color: #fff9c4; }
     </style>
 </head>
 <body>
@@ -149,40 +125,37 @@
             <div class="icon-box">🧩</div>
             <div class="card-title">블록 퍼즐</div>
         </a>
-
         <a href="Tetris.html" class="menu-card tetris-game">
             <div class="icon-box">🧱</div>
             <div class="card-title">고전 테트리스</div>
         </a>
-
         <a href="0hh1.html" class="menu-card zero-h1-game">
             <div class="icon-box">🔵</div>
             <div class="card-title">0h h1</div>
         </a>
-
         <a href="2048.html" class="menu-card game-2048">
             <div class="icon-box">🔢</div>
             <div class="card-title">2048 퍼즐</div>
         </a>
-
         <a href="ChainSudoku.html" class="menu-card chain-sudoku">
             <div class="icon-box">🔗</div>
             <div class="card-title">체인 스도쿠</div>
         </a>
-
         <a href="Akari.html" class="menu-card tenten-game">
             <div class="icon-box">💡</div>
             <div class="card-title">아카리</div>
         </a>
-
-        <a href="Stars.html" class="menu-card star-game">
-            <div class="icon-box">✨</div>
-            <div class="card-title">별 가르기</div>
+        <a href="tents.html" class="menu-card tent-game">
+            <div class="icon-box">⛺</div>
+            <div class="card-title">텐트 & 나무</div>
         </a>
-
         <a href="starbattle.html" class="menu-card star-battle-game">
             <div class="icon-box">⭐</div>
             <div class="card-title">스타 배틀</div>
+        </a>
+        <a href="Stars.html" class="menu-card star-game">
+            <div class="icon-box">✨</div>
+            <div class="card-title">별 가르기</div>
         </a>
     </div>
 
