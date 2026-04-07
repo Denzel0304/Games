@@ -11,7 +11,7 @@
             --shadow-dark: rgba(188, 185, 178, 0.8);
             --shadow-light: rgba(255, 255, 255, 0.9);
             --accent-color: #8e9775;
-            --bulb-glow: rgba(255, 235, 59, 0.4);
+            --bulb-glow: #fff59d; /* 불빛 색상을 조금 더 선명하게 수정 */
             --wall-color: #4a473e;
         }
 
@@ -30,12 +30,12 @@
 
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: start;
-            padding-top: 5vh; /* 1. 전체적으로 조금 위로 올림 */
+            padding-top: 5vh;
         }
 
         .header {
             display: flex; flex-direction: column; align-items: center;
-            gap: 8px; margin-bottom: 25px; /* 간격 미세 조정 */
+            gap: 8px; margin-bottom: 25px;
         }
 
         .title-row { display: flex; align-items: center; gap: 15px; }
@@ -70,17 +70,24 @@
             box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
             display: flex; justify-content: center; align-items: center;
             font-weight: 800; font-size: 1.1rem;
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
             cursor: pointer; position: relative;
         }
 
-        .cell.lit { background-color: var(--bulb-glow); }
+        /* 불이 들어온 상태 */
+        .cell.lit { 
+            background-color: var(--bulb-glow) !important;
+            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05);
+        }
+
         .cell.wall {
             background-color: var(--wall-color); color: white;
             box-shadow: inset 3px 3px 6px rgba(0,0,0,0.5);
             pointer-events: none;
+            z-index: 2;
         }
-        .cell.bulb { color: #fbc02d; font-size: 1.4rem; }
+
+        .cell.bulb { color: #fbc02d; font-size: 1.4rem; z-index: 3; }
 
         .footer {
             margin-top: 40px; display: flex; flex-direction: column; gap: 15px;
@@ -119,8 +126,9 @@
     </div>
 
     <script>
-        let currentSize = 5; // 2. 기본 크기 5로 설정
-        let numbers = []; 
+        let currentSize = 5;
+        let boardState = []; // 0: 빈칸, 5: 전구, -1이하: 벽
+        let isLit = [];      // 불이 들어왔는지 여부만 따로 관리
         let audioUnlocked = false;
 
         function unlockAudio() {
@@ -129,7 +137,7 @@
             sound.play().then(() => {
                 audioUnlocked = true;
                 sound.pause(); sound.currentTime = 0;
-            }).catch(e => console.log("Audio waiting..."));
+            }).catch(e => {});
         }
 
         function playClickSound() {
@@ -148,126 +156,113 @@
 
         function regenerate(shouldPlaySound = true) {
             if (shouldPlaySound) playClickSound();
-            numbers = Array.from({length: currentSize * currentSize}, () => 0);
             createSolvableBoard();
             render();
         }
 
         function createSolvableBoard() {
+            boardState = Array.from({length: currentSize * currentSize}, () => 0);
             let tempSolution = Array.from({length: currentSize * currentSize}, () => 0);
-            let remainingCells = tempSolution.map((_, i) => i);
+            let remaining = tempSolution.map((_, i) => i);
 
-            function getLitPaths(idx, s) {
-                let paths = []; let r = Math.floor(idx / currentSize); let c = idx % currentSize;
-                const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-                for (let [dr, dc] of directions) {
+            // 1. 역설계용 전구 배치
+            while(remaining.length > 0) {
+                let rIdx = remaining[Math.floor(Math.random() * remaining.length)];
+                tempSolution[rIdx] = 5;
+                
+                // 빛 전파 (임시)
+                let r = Math.floor(rIdx / currentSize); let c = rIdx % currentSize;
+                const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                remaining = remaining.filter(i => i !== rIdx);
+                for (let [dr, dc] of ds) {
                     let nr = r + dr; let nc = c + dc;
-                    while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && s[nr * currentSize + nc] >= 0) {
-                        paths.push(nr * currentSize + nc); nr += dr; nc += dc;
+                    while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize) {
+                        remaining = remaining.filter(i => i !== (nr * currentSize + nc));
+                        nr += dr; nc += dc;
                     }
                 }
-                return paths;
             }
 
-            // 모든 칸 비추는 전구 배치
-            while(remainingCells.length > 0) {
-                let randomIdx = remainingCells[Math.floor(Math.random() * remainingCells.length)];
-                tempSolution[randomIdx] = 5;
-                let paths = getLitPaths(randomIdx, tempSolution);
-                paths.forEach(p => remainingCells = remainingCells.filter(c => c !== p));
-                remainingCells = remainingCells.filter(c => c !== randomIdx);
-            }
-
-            // 무작위 벽 생성
-            for(let i = 0; i < tempSolution.length; i++) {
-                if (tempSolution[i] === 0 && Math.random() < 0.2) tempSolution[i] = -1;
-            }
-
-            // 벽 숫자 생성
-            const problem = tempSolution.slice();
-            for(let i = 0; i < problem.length; i++) {
-                if (problem[i] === -1) {
+            // 2. 벽 및 숫자 생성
+            for(let i = 0; i < boardState.length; i++) {
+                if (tempSolution[i] === 0 && Math.random() < 0.25) {
                     let r = Math.floor(i / currentSize); let c = i % currentSize;
-                    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
                     let count = 0;
-                    for (let [dr, dc] of dirs) {
+                    const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (let [dr, dc] of ds) {
                         let nr = r + dr; let nc = c + dc;
                         if (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && tempSolution[nr * currentSize + nc] === 5) count++;
                     }
-                    if (Math.random() < 0.85) problem[i] = -(count + 1);
-                    else problem[i] = -1;
-                } else if (problem[i] === 5) {
-                    problem[i] = 0;
+                    if (Math.random() < 0.8) boardState[i] = -(count + 1);
+                    else boardState[i] = -1;
+                } else {
+                    boardState[i] = 0; // 플레이어가 채울 빈칸
                 }
             }
-            numbers = problem;
         }
 
         function updateLighting() {
-            for(let i=0; i<numbers.length; i++) if(numbers[i] > 0 && numbers[i] !== 5) numbers[i] = 0;
-            const bulbs = [];
-            numbers.forEach((num, idx) => { if (num === 5) bulbs.push(idx); });
-            bulbs.forEach(idx => {
-                let r = Math.floor(idx / currentSize); let c = idx % currentSize;
-                const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-                for (let [dr, dc] of directions) {
-                    let nr = r + dr; let nc = c + dc;
-                    while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize) {
-                        let currentIdx = nr * currentSize + nc;
-                        if (numbers[currentIdx] < 0) break;
-                        if (numbers[currentIdx] === 0) numbers[currentIdx] = 1;
-                        nr += dr; nc += dc;
+            isLit = Array.from({length: boardState.length}, () => false);
+            boardState.forEach((val, idx) => {
+                if (val === 5) {
+                    isLit[idx] = true;
+                    let r = Math.floor(idx / currentSize); let c = idx % currentSize;
+                    const ds = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (let [dr, dc] of ds) {
+                        let nr = r + dr; let nc = c + dc;
+                        while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && boardState[nr * currentSize + nc] >= 0) {
+                            isLit[nr * currentSize + nc] = true;
+                            nr += dr; nc += dc;
+                        }
                     }
                 }
             });
         }
 
         function render() {
+            updateLighting();
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
             
-            numbers.forEach((num, idx) => {
+            boardState.forEach((val, idx) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                if (num < 0) {
+                if (val < 0) {
                     cell.classList.add('wall');
-                    let wallNum = -(num + 1);
-                    cell.innerText = wallNum >= 0 ? wallNum : '';
+                    let n = -(val + 1);
+                    cell.innerText = n >= 0 ? n : '';
                 } else {
+                    if (isLit[idx]) cell.classList.add('lit');
+                    if (val === 5) {
+                        cell.innerText = '💡';
+                        cell.classList.add('bulb');
+                    }
                     cell.onclick = () => handleSelect(idx);
-                    if (num === 5) { cell.innerText = '💡'; cell.classList.add('bulb'); }
-                    else if (num === 1) cell.classList.add('lit');
                 }
                 grid.appendChild(cell);
             });
-            updateLighting();
             checkWin();
         }
 
         function handleSelect(idx) {
             playClickSound();
-            if (numbers[idx] === 5) numbers[idx] = 0;
-            else if (numbers[idx] === 0 || numbers[idx] === 1) numbers[idx] = 5;
+            boardState[idx] = (boardState[idx] === 5) ? 0 : 5;
             render();
         }
 
         function checkWin() {
-            if (numbers.some(n => n < 0) && numbers.every(n => n >= 0)) return; 
-            if (numbers.some(n => n === 0)) return;
-            // 승리 시 상태 업데이트
-            const status = document.getElementById('status');
-            if(numbers.length > 0 && !numbers.some(n => n === 0)) {
-                status.innerText = "🎉 미션 클리어!";
-                status.style.color = "var(--accent-color)";
+            const hasEmpty = boardState.some((val, idx) => val === 0 && !isLit[idx]);
+            if (!hasEmpty && boardState.some(v => v !== -1)) {
+                // 전구끼리 마주보는지 체크 등 추가 로직 가능하지만 일단 기초 승리 조건
+                document.getElementById('status').innerText = "🎉 모든 곳이 밝아졌습니다!";
+                document.getElementById('status').style.color = "var(--accent-color)";
             }
         }
 
-        // 3. 안내 메시지 수정
         window.onload = () => {
-            currentSize = 5;
             document.getElementById('grid').innerHTML = 
-                `<div style="grid-column: 1 / span ${currentSize}; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-color); font-weight: 600; font-size: 0.95rem; line-height: 1.6;">
+                `<div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-color); font-weight: 600;">
                     '새 판 깔기'를 누르고 시작하세요.
                 </div>`;
         }
