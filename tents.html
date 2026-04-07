@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>텐트와 나무</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #d8edd8;
+    --bg2: #cce5cc;
+    --surface: #e8f5e8;
+    --surface2: #f2faf2;
+    --shadow-light: #ffffff;
+    --shadow-dark: #b8d4b8;
+    --accent: #6b9e6b;
+    --accent2: #4a7c4a;
+    --text: #3a5c3a;
+    --text2: #6b8f6b;
+    --tent-color: #d4820a;
+    --grass-color: #a0b8a0;
+    --danger: #c86060;
+    --clue-ok: #4a7c4a;
+    --clue-err: #c86060;
+    --cell-size: 44px;
+    --gap: 2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  .header {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 16px 10px;
+  }
+
+  .nav-btn {
+    width: 48px; height: 48px;
+    border-radius: 16px;
+    border: none;
+    background: var(--surface);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text2);
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1;
+  }
+  .nav-btn:active {
+    box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+    transform: scale(0.96);
+  }
+  .nav-btn .arrow { font-size: 18px; line-height: 1; }
+  .nav-btn .size-label { font-size: 11px; font-weight: 500; color: var(--text2); }
+  .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+  .title-wrap { text-align: center; }
+  .title-wrap h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .title-wrap .subtitle {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  /* BOARD SECTION */
+  .board-section {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    padding: 6px 12px;
+  }
+
+  .board-outer {
+    background: var(--surface);
+    border-radius: 28px;
+    padding: 14px;
+    box-shadow:
+      8px 8px 20px var(--shadow-dark),
+      -8px -8px 20px var(--shadow-light),
+      inset 1px 1px 2px rgba(255,255,255,0.8);
+  }
+
+  /* Grid wrapper: board + clue labels */
+  .grid-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Top clue row */
+  .clue-row-top {
+    display: flex;
+    gap: var(--gap);
+    padding-left: calc(var(--cell-size) + var(--gap)); /* offset for left clue col */
+  }
+
+  .clue-col {
+    width: var(--cell-size);
+    height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: color 0.2s;
+    border-radius: 6px;
+  }
+  .clue-col.ok { color: var(--clue-ok); }
+  .clue-col.err { color: var(--clue-err); font-weight: 700; }
+
+  /* Board rows with left clue */
+  .board-rows { display: flex; flex-direction: column; gap: var(--gap); }
+
+  .board-row { display: flex; gap: var(--gap); align-items: center; }
+
+  .clue-row-left {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    flex-shrink: 0;
+    transition: color 0.2s;
+    border-radius: 6px;
+  }
+  .clue-row-left.ok { color: var(--clue-ok); }
+  .clue-row-left.err { color: var(--clue-err); font-weight: 700; }
+
+  /* CELLS */
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border-radius: 12px;
+    background: var(--surface2);
+    box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+    font-size: calc(var(--cell-size) * 0.55);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .cell:active { transform: scale(0.91); }
+
+  /* Tree cell — fixed, not clickable */
+  .cell.tree {
+    cursor: default;
+    background: linear-gradient(135deg, #e8f5e0, #d4ecca);
+    box-shadow: inset 2px 2px 5px rgba(180,210,160,0.6), inset -2px -2px 5px rgba(255,255,255,0.8);
+  }
+  .cell.tree:active { transform: none; }
+
+  /* Grass mark (X) */
+  .cell.grass { background: linear-gradient(135deg, #eaf3ea, #ddeedd); }
+  .cell .grass-mark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: calc(var(--cell-size) * 0.38);
+    line-height: 1;
+    color: var(--grass-color);
+    font-weight: 700;
+    transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  .cell.grass .grass-mark { transform: translate(-50%, -50%) scale(1); }
+
+  /* Tent */
+  .cell.tent { background: linear-gradient(135deg, #fff8ee, #ffefd4); }
+  .cell.tent.conflict { background: #fde8e8 !important; }
+  .cell .tent-icon {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: calc(var(--cell-size) * 0.52);
+    line-height: 1;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  .cell.tent .tent-icon { transform: translate(-50%, -50%) scale(1); }
+  .cell.tent.conflict .tent-icon { filter: hue-rotate(320deg) saturate(1.5); }
+
+  /* CONTROLS */
+  .controls {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    padding: 8px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  .btn {
+    flex: 1;
+    height: 50px;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text2);
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  }
+  .btn-reset:active {
+    box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+  }
+
+  .btn-confirm {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
+  }
+  .btn-confirm:active {
+    box-shadow: 2px 2px 6px rgba(74,124,74,0.4);
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .status-bar .count { font-weight: 600; color: var(--accent2); }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--grass-color);
+    transition: background 0.3s;
+  }
+  .status-dot.ok { background: var(--accent); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 28px 36px;
+    text-align: center;
+    box-shadow: 12px 12px 30px var(--shadow-dark), -12px -12px 30px var(--shadow-light);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .toast .toast-icon { font-size: 48px; margin-bottom: 10px; }
+  .toast h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--text); margin-bottom: 6px;
+  }
+  .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
+  .toast .toast-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 14px;
+    padding: 12px 32px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    box-shadow: 3px 3px 10px rgba(74,124,74,0.4);
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(180,210,180,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 99; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <button class="nav-btn" id="btn-prev" onclick="changeSize(-1)">
+    <span class="arrow">‹</span>
+    <span class="size-label" id="prev-label">6×6</span>
+  </button>
+  <div class="title-wrap">
+    <h1>텐트와 나무</h1>
+    <div class="subtitle" id="size-subtitle">8 × 8</div>
+  </div>
+  <button class="nav-btn" id="btn-next" onclick="changeSize(1)">
+    <span class="arrow">›</span>
+    <span class="size-label" id="next-label">10×10</span>
+  </button>
+</div>
+
+<!-- BOARD -->
+<div class="board-section">
+  <div class="board-outer">
+    <div class="grid-wrap">
+      <div class="clue-row-top" id="clue-top"></div>
+      <div class="board-rows" id="board-rows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="status-bar">
+    <span class="status-dot" id="status-dot"></span>
+    <span>텐트 <span class="count" id="tent-count">0</span> / <span id="tent-total">0</span> 개 배치됨</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-reset" onclick="playClick(); resetBoard()">초기화</button>
+    <button class="btn btn-confirm" onclick="playClick(); checkWin()">확인</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeToast()"></div>
+<div class="toast" id="toast">
+  <div class="toast-icon">⛺</div>
+  <h2>완성!</h2>
+  <p>모든 나무에 텐트를 배치했어요</p>
+  <button class="toast-btn" onclick="playClick(); closeToast(); resetBoard()">다시 하기</button>
+</div>
+
+<script>
+// ─── Audio ────────────────────────────────────────────────
+const sfxClick = new Audio('effect 19.mp3');
+const sfxClear = new Audio('effect 1.mp3');
+function playClick() { sfxClick.currentTime = 0; sfxClick.play(); }
+function playClear() { sfxClear.currentTime = 0; sfxClear.play(); }
+
+// ─── State ────────────────────────────────────────────────
+const SIZES = [6, 8, 10];
+let currentSizeIdx = 0; // default 6x6
+let N = 6;
+
+// grid values: 'tree' | 0 (empty) | 1 (grass) | 2 (tent)
+let grid = [];
+let rowClues = [];  // number of tents per row
+let colClues = [];  // number of tents per col
+
+// ─── Puzzle Generator ─────────────────────────────────────
+function generatePuzzle(n) {
+  // 1) Place trees and find a valid tent solution
+  // Strategy: place n trees, find tent positions satisfying all rules, derive clues
+
+  const TREE = 'tree';
+  let trees, tents, attempts = 0;
+
+  while (attempts < 200) {
+    attempts++;
+    const g = Array.from({length: n}, () => Array(n).fill(0));
+
+    // Place n trees randomly (one per row roughly)
+    const treeCells = [];
+    const used = new Set();
+    let ok = true;
+
+    for (let i = 0; i < n; i++) {
+      let placed = false;
+      for (let t = 0; t < 30; t++) {
+        const r = Math.floor(Math.random() * n);
+        const c = Math.floor(Math.random() * n);
+        const key = r * n + c;
+        if (!used.has(key)) {
+          used.add(key);
+          g[r][c] = TREE;
+          treeCells.push([r, c]);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) { ok = false; break; }
+    }
+    if (!ok) continue;
+
+    // Try to find tent placement via backtracking
+    const tentPos = solveTents(n, g, treeCells);
+    if (!tentPos) continue;
+
+    // Build clues
+    const rClues = Array(n).fill(0);
+    const cClues = Array(n).fill(0);
+    for (const [r, c] of tentPos) {
+      rClues[r]++;
+      cClues[c]++;
+    }
+
+    return { grid: g, treeCells, tentPos, rowClues: rClues, colClues: cClues };
+  }
+
+  // Fallback: simple diagonal pattern
+  return fallbackPuzzle(n);
+}
+
+function solveTents(n, g, treeCells) {
+  // Backtracking: assign one tent to each tree (orthogonal), no tent-tent adjacency
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  const treeCount = treeCells.length;
+  const tentGrid = Array.from({length: n}, () => Array(n).fill(false));
+  const assignment = []; // tent pos per tree
+
+  function isAdjacent(r1, c1, r2, c2) {
+    return Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
+  }
+
+  function bt(idx) {
+    if (idx === treeCount) return true;
+    const [tr, tc] = treeCells[idx];
+    const options = [];
+    for (const [dr, dc] of dirs) {
+      const nr = tr+dr, nc = tc+dc;
+      if (nr < 0 || nr >= n || nc < 0 || nc >= n) continue;
+      if (g[nr][nc] === 'tree') continue;
+      if (tentGrid[nr][nc]) continue;
+      // check no adjacent tent already placed
+      let conflict = false;
+      for (const [pr, pc] of assignment) {
+        if (isAdjacent(nr, nc, pr, pc)) { conflict = true; break; }
+      }
+      if (!conflict) options.push([nr, nc]);
+    }
+    // shuffle options for variety
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    for (const [nr, nc] of options) {
+      tentGrid[nr][nc] = true;
+      assignment.push([nr, nc]);
+      if (bt(idx + 1)) return true;
+      tentGrid[nr][nc] = false;
+      assignment.pop();
+    }
+    return false;
+  }
+
+  if (bt(0)) return assignment;
+  return null;
+}
+
+function fallbackPuzzle(n) {
+  // Simple known-valid layout
+  const g = Array.from({length: n}, () => Array(n).fill(0));
+  const treeCells = [];
+  const tentPos = [];
+  for (let i = 0; i < n; i++) {
+    const tc = (i * 2) % n;
+    const tentC = (tc + 1) % n;
+    g[i][tc] = 'tree';
+    treeCells.push([i, tc]);
+    tentPos.push([i, tentC]);
+  }
+  const rClues = Array(n).fill(1);
+  const cClues = Array(n).fill(0);
+  for (const [r, c] of tentPos) cClues[c]++;
+  return { grid: g, treeCells, tentPos, rowClues: rClues, colClues: cClues };
+}
+
+// ─── Build Board ──────────────────────────────────────────
+function buildBoard() {
+  N = SIZES[currentSizeIdx];
+
+  // Responsive cell size
+  const vw = Math.min(window.innerWidth, 440);
+  // board width = clue col + N cells + gaps
+  const available = vw - 28 - 28 - (N) * 2; // outer padding + gaps
+  const cellSize = Math.max(28, Math.floor(available / (N + 1)));
+  document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
+  document.documentElement.style.setProperty('--gap', '2px');
+
+  const puzzle = generatePuzzle(N);
+  grid = puzzle.grid;
+  rowClues = puzzle.rowClues;
+  colClues = puzzle.colClues;
+
+  // Player grid (what user fills): copy tree positions, rest = 0
+  // 0=empty, 1=grass, 2=tent, 'tree'=fixed
+  // already in grid as 'tree' or 0
+
+  renderBoard();
+  updateClues();
+  updateStatus();
+  updateNavButtons();
+}
+
+function renderBoard() {
+  // Top clue row
+  const clueTop = document.getElementById('clue-top');
+  clueTop.innerHTML = '';
+  document.documentElement.style.setProperty('--cell-size', document.documentElement.style.getPropertyValue('--cell-size'));
+  for (let c = 0; c < N; c++) {
+    const div = document.createElement('div');
+    div.className = 'clue-col';
+    div.id = `clue-col-${c}`;
+    div.textContent = colClues[c];
+    clueTop.appendChild(div);
+  }
+
+  // Board rows with left clues
+  const boardRows = document.getElementById('board-rows');
+  boardRows.innerHTML = '';
+  for (let r = 0; r < N; r++) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'board-row';
+
+    // Left clue
+    const clueLeft = document.createElement('div');
+    clueLeft.className = 'clue-row-left';
+    clueLeft.id = `clue-row-${r}`;
+    clueLeft.textContent = rowClues[r];
+    rowDiv.appendChild(clueLeft);
+
+    for (let c = 0; c < N; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+
+      if (grid[r][c] === 'tree') {
+        cell.classList.add('tree');
+        cell.textContent = '🌲';
+      } else {
+        // grass mark (X)
+        const gm = document.createElement('span');
+        gm.className = 'grass-mark';
+        gm.textContent = '✕';
+        cell.appendChild(gm);
+        // tent icon
+        const ti = document.createElement('span');
+        ti.className = 'tent-icon';
+        ti.textContent = '⛺';
+        cell.appendChild(ti);
+        cell.addEventListener('click', () => onCellClick(r, c));
+      }
+
+      rowDiv.appendChild(cell);
+    }
+    boardRows.appendChild(rowDiv);
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function renderCell(r, c) {
+  const cell = getCell(r, c);
+  if (!cell || grid[r][c] === 'tree') return;
+  cell.classList.remove('grass', 'tent', 'conflict');
+  if (grid[r][c] === 1) cell.classList.add('grass');
+  if (grid[r][c] === 2) cell.classList.add('tent');
+}
+
+// ─── Cell Click: 0→2→1→0 (empty → tent → grass → empty) ─
+function onCellClick(r, c) {
+  if (grid[r][c] === 'tree') return;
+  playClick();
+  // cycle: 0 → 2 → 1 → 0
+  if (grid[r][c] === 0) grid[r][c] = 2;
+  else if (grid[r][c] === 2) grid[r][c] = 1;
+  else grid[r][c] = 0;
+  renderCell(r, c);
+  highlightConflicts();
+  updateClues();
+  updateStatus();
+}
+
+// ─── Conflict Highlighting ────────────────────────────────
+function highlightConflicts() {
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      getCell(r, c)?.classList.remove('conflict');
+
+  const tents = [];
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      if (grid[r][c] === 2) tents.push([r, c]);
+
+  const conflictSet = new Set();
+  // adjacency check between tents
+  for (let i = 0; i < tents.length; i++) {
+    const [r1, c1] = tents[i];
+    for (let j = i+1; j < tents.length; j++) {
+      const [r2, c2] = tents[j];
+      if (Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1) {
+        conflictSet.add(`${r1},${c1}`);
+        conflictSet.add(`${r2},${c2}`);
+      }
+    }
+  }
+  conflictSet.forEach(key => {
+    const [r, c] = key.split(',').map(Number);
+    getCell(r, c)?.classList.add('conflict');
+  });
+}
+
+// ─── Clue Coloring ───────────────────────────────────────
+function updateClues() {
+  for (let r = 0; r < N; r++) {
+    let cnt = 0;
+    for (let c = 0; c < N; c++) if (grid[r][c] === 2) cnt++;
+    const el = document.getElementById(`clue-row-${r}`);
+    if (!el) continue;
+    el.classList.remove('ok', 'err');
+    if (cnt === rowClues[r]) el.classList.add('ok');
+    else if (cnt > rowClues[r]) el.classList.add('err');
+  }
+  for (let c = 0; c < N; c++) {
+    let cnt = 0;
+    for (let r = 0; r < N; r++) if (grid[r][c] === 2) cnt++;
+    const el = document.getElementById(`clue-col-${c}`);
+    if (!el) continue;
+    el.classList.remove('ok', 'err');
+    if (cnt === colClues[c]) el.classList.add('ok');
+    else if (cnt > colClues[c]) el.classList.add('err');
+  }
+}
+
+// ─── Status Bar ──────────────────────────────────────────
+function updateStatus() {
+  let treeCount = 0;
+  let tentCount = 0;
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++) {
+      if (grid[r][c] === 'tree') treeCount++;
+      if (grid[r][c] === 2) tentCount++;
+    }
+  document.getElementById('tent-count').textContent = tentCount;
+  document.getElementById('tent-total').textContent = treeCount;
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (tentCount === treeCount && treeCount > 0 ? ' ok' : '');
+}
+
+// ─── Win Check ───────────────────────────────────────────
+function checkWin() {
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+
+  // 1) Count tents
+  let tentCount = 0, treeCount = 0;
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++) {
+      if (grid[r][c] === 2) tentCount++;
+      if (grid[r][c] === 'tree') treeCount++;
+    }
+  if (tentCount !== treeCount) { shakeBoard(); return; }
+
+  // 2) Row & col clues match
+  for (let r = 0; r < N; r++) {
+    let cnt = 0;
+    for (let c = 0; c < N; c++) if (grid[r][c] === 2) cnt++;
+    if (cnt !== rowClues[r]) { shakeBoard(); return; }
+  }
+  for (let c = 0; c < N; c++) {
+    let cnt = 0;
+    for (let r = 0; r < N; r++) if (grid[r][c] === 2) cnt++;
+    if (cnt !== colClues[c]) { shakeBoard(); return; }
+  }
+
+  // 3) No two tents adjacent
+  const tents = [];
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      if (grid[r][c] === 2) tents.push([r, c]);
+  for (let i = 0; i < tents.length; i++) {
+    const [r1, c1] = tents[i];
+    for (let j = i+1; j < tents.length; j++) {
+      const [r2, c2] = tents[j];
+      if (Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1) { shakeBoard(); return; }
+    }
+  }
+
+  // 4) Each tent is adjacent to at least one tree
+  for (const [r, c] of tents) {
+    let hasTree = false;
+    for (const [dr, dc] of dirs) {
+      const nr = r+dr, nc = c+dc;
+      if (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === 'tree') {
+        hasTree = true; break;
+      }
+    }
+    if (!hasTree) { shakeBoard(); return; }
+  }
+
+  // WIN!
+  playClear();
+  setTimeout(() => {
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('toast').classList.add('show');
+  }, 300);
+}
+
+function shakeBoard() {
+  const outer = document.querySelector('.board-outer');
+  outer.style.transition = 'transform 0.1s';
+  const frames = [0, -8, 8, -6, 6, -4, 4, 0];
+  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
+  setTimeout(() => outer.style.transform = '', frames.length * 55);
+}
+
+function closeToast() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('toast').classList.remove('show');
+}
+
+function resetBoard() {
+  closeToast();
+  buildBoard();
+}
+
+// ─── Size Navigation ─────────────────────────────────────
+function changeSize(delta) {
+  const newIdx = currentSizeIdx + delta;
+  if (newIdx < 0 || newIdx >= SIZES.length) return;
+  currentSizeIdx = newIdx;
+  playClick();
+  buildBoard();
+}
+
+function updateNavButtons() {
+  const n = SIZES[currentSizeIdx];
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  document.getElementById('size-subtitle').textContent = `${n} × ${n}`;
+
+  if (currentSizeIdx === 0) {
+    prevBtn.classList.add('disabled');
+  } else {
+    prevBtn.classList.remove('disabled');
+    document.getElementById('prev-label').textContent = `${SIZES[currentSizeIdx-1]}×${SIZES[currentSizeIdx-1]}`;
+  }
+  if (currentSizeIdx === SIZES.length - 1) {
+    nextBtn.classList.add('disabled');
+  } else {
+    nextBtn.classList.remove('disabled');
+    document.getElementById('next-label').textContent = `${SIZES[currentSizeIdx+1]}×${SIZES[currentSizeIdx+1]}`;
+  }
+}
+
+// ─── Prevent scroll ──────────────────────────────────────
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+// ─── Init ─────────────────────────────────────────────────
+buildBoard();
+</script>
+</body>
+</html>
