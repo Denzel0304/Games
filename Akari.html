@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Akari - Healing Games</title>
     <style>
-        /* 1. 디자인 및 모바일 터치 제어 (CSS 정밀 설정) */
         :root {
-            --bg-color: #f0ede5; /* 배경색 */
-            --text-color: #5d5a52; /* 기본 글자색 */
-            --shadow-dark: rgba(188, 185, 178, 0.8); /* 어두운 입체 그림자 */
-            --shadow-light: rgba(255, 255, 255, 0.9); /* 밝은 하이라이트 */
-            --accent-color: #8e9775; /* 포인트 컬러 (성공 메시지 등) */
-            --bulb-glow: rgba(255, 235, 59, 0.4); /* 전구 빛나는 효과 */
-            --wall-color: #4a473e; /* 검은 벽 색상 */
+            --bg-color: #f0ede5;
+            --text-color: #5d5a52;
+            --shadow-dark: rgba(188, 185, 178, 0.8);
+            --shadow-light: rgba(255, 255, 255, 0.9);
+            --accent-color: #8e9775;
+            --bulb-glow: rgba(255, 235, 59, 0.4);
+            --wall-color: #4a473e;
         }
 
         html, body {
@@ -22,8 +21,6 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Pretendard', sans-serif;
-            
-            /* 모바일 드래그/스크롤/바운스 방지 핵심 */
             overflow: hidden; 
             overscroll-behavior: none;
             user-select: none;
@@ -33,13 +30,12 @@
 
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: start;
-            padding-top: 10vh; /* 위쪽 여유 공간 */
+            padding-top: 5vh; /* 1. 전체적으로 조금 위로 올림 */
         }
 
-        /* 헤더 디자인 */
         .header {
             display: flex; flex-direction: column; align-items: center;
-            gap: 10px; margin-bottom: 30px;
+            gap: 8px; margin-bottom: 25px; /* 간격 미세 조정 */
         }
 
         .title-row { display: flex; align-items: center; gap: 15px; }
@@ -58,51 +54,40 @@
         h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
         #status { font-size: 0.9rem; color: var(--text-color); font-weight: 600; height: 1.2rem; }
 
-        /* 퍼즐 영역 (사진의 입체적인 사각형) */
         .grid-container {
-            width: 85vw; height: 85vw; /* 반응형 정사각형 */
-            max-width: 360px; max-height: 360px;
+            width: 88vw; height: 88vw;
+            max-width: 380px; max-height: 380px;
             background: var(--bg-color);
-            border-radius: 25px; /* 사진과 같은 둥근 모서리 */
+            border-radius: 25px;
             box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
             padding: 10px; box-sizing: border-box;
-            display: grid; gap: 4px; /* 셀 사이 간격 */
+            display: grid; gap: 4px;
         }
 
-        /* 셀 (칸) 디자인 */
         .cell {
-            aspect-ratio: 1 / 1; border-radius: 8px; /* 사진의 둥근 모서리 */
+            aspect-ratio: 1 / 1; border-radius: 8px;
             background: var(--bg-color);
             box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
             display: flex; justify-content: center; align-items: center;
-            font-weight: 800; font-size: 1rem;
-            transition: background-color 0.2s, color 0.2s;
+            font-weight: 800; font-size: 1.1rem;
+            transition: background-color 0.2s;
             cursor: pointer; position: relative;
         }
 
-        /* 💡 전구 빛 (Lit): 전구가 켜졌을 때 빛이 퍼지는 효과 */
-        .cell.lit {
-            background-color: var(--bulb-glow);
-            color: #d8c20e; /* 빛나는 전구 색상 */
-        }
-
-        /* ■ 검은 벽 (Wall) 디자인 */
+        .cell.lit { background-color: var(--bulb-glow); }
         .cell.wall {
             background-color: var(--wall-color); color: white;
-            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.5); /* 벽 내부 그림자 */
-            pointer-events: none; /* 클릭 불가 */
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.5);
+            pointer-events: none;
         }
-
-        /* 💡 전구 (Bulb) 아이콘 */
         .cell.bulb { color: #fbc02d; font-size: 1.4rem; }
 
-        /* 하단 버튼 디자인 */
         .footer {
-            margin-top: 50px; display: flex; flex-direction: column; gap: 15px;
+            margin-top: 40px; display: flex; flex-direction: column; gap: 15px;
         }
 
         .btn {
-            padding: 15px 35px; border: none; border-radius: 20px;
+            padding: 15px 40px; border: none; border-radius: 20px;
             background: var(--bg-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             font-weight: 700; color: var(--text-color); font-size: 1rem;
@@ -112,10 +97,11 @@
         .btn:active {
             box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
         }
-
     </style>
 </head>
-<body onclick="unlockAudio()"> <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+<body onclick="unlockAudio()">
+
+    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
 
     <div class="header">
         <div class="title-row">
@@ -123,7 +109,7 @@
             <h1>Akari</h1>
             <button class="size-btn" onclick="changeLevel(8)">8x8</button>
         </div>
-        <div id="status">6X6 모드 시작!</div>
+        <div id="status">5X5 모드 시작!</div>
     </div>
 
     <div id="grid" class="grid-container"></div>
@@ -133,54 +119,44 @@
     </div>
 
     <script>
-        /* 2. 게임 로직 (JS 정밀 구현) */
-        let currentSize = 6;
-        let numbers = []; // 0: 빈칸, 1: 빛, -1~-5: 벽(0~4), 5: 전구
-        let solution = []; // 정답판 (생성용)
-        let selectedIdx = null;
+        let currentSize = 5; // 2. 기본 크기 5로 설정
+        let numbers = []; 
         let audioUnlocked = false;
 
-        // 소리 해금 함수 (브라우저 보안 우회)
         function unlockAudio() {
             if (audioUnlocked) return;
             const sound = document.getElementById('click-sound');
             sound.play().then(() => {
                 audioUnlocked = true;
-                sound.pause(); sound.currentTime = 0; // 소리 초기화
-            }).catch(e => console.log("Audio still waiting..."));
+                sound.pause(); sound.currentTime = 0;
+            }).catch(e => console.log("Audio waiting..."));
         }
 
-        // 효과음 재생 함수 (즉각 재생 보장)
         function playClickSound() {
             if (!audioUnlocked) return;
             const sound = document.getElementById('click-sound');
-            sound.currentTime = 0; // 처음부터 재생
+            sound.currentTime = 0;
             sound.play();
         }
 
         function changeLevel(size) {
-            playClickSound(); // 레벨 변경 버튼 소리
+            playClickSound();
             currentSize = size;
             document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
-            regenerate(false); // 소리 없이 생성
+            regenerate(false);
         }
 
         function regenerate(shouldPlaySound = true) {
-            if (shouldPlaySound) playClickSound(); // '새 판' 버튼 소리
+            if (shouldPlaySound) playClickSound();
             numbers = Array.from({length: currentSize * currentSize}, () => 0);
-            createSolvableBoard(); // 해결 가능한 판 생성
+            createSolvableBoard();
             render();
         }
 
-        // 3. 핵심 알고리즘: '정답 보장형' 판 생성 (역설계)
         function createSolvableBoard() {
-            solution = Array.from({length: currentSize * currentSize}, () => 0);
-            
-            // 1) 정답 전구를 먼저 무작위로 심음 (모든 칸이 비춰지게)
-            let remainingCells = solution.map((c, i) => i);
-            const solveCells = solution.map((c, i) => i);
+            let tempSolution = Array.from({length: currentSize * currentSize}, () => 0);
+            let remainingCells = tempSolution.map((_, i) => i);
 
-            // 빛을 비추는 함수 (생성용)
             function getLitPaths(idx, s) {
                 let paths = []; let r = Math.floor(idx / currentSize); let c = idx % currentSize;
                 const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -193,53 +169,44 @@
                 return paths;
             }
 
-            // 억지로 모든 칸을 비추는 전구를 심음
+            // 모든 칸 비추는 전구 배치
             while(remainingCells.length > 0) {
                 let randomIdx = remainingCells[Math.floor(Math.random() * remainingCells.length)];
-                solution[randomIdx] = 5; // 정답판에 전구
-                let paths = getLitPaths(randomIdx, solution);
+                tempSolution[randomIdx] = 5;
+                let paths = getLitPaths(randomIdx, tempSolution);
                 paths.forEach(p => remainingCells = remainingCells.filter(c => c !== p));
                 remainingCells = remainingCells.filter(c => c !== randomIdx);
             }
 
-            // 2) 전구 사이사이에 검은 벽 배치
-            for(let i = 0; i < solution.length; i++) {
-                if (solution[i] === 0 && Math.random() < 0.2) {
-                    solution[i] = -1; // 빈 벽
-                }
+            // 무작위 벽 생성
+            for(let i = 0; i < tempSolution.length; i++) {
+                if (tempSolution[i] === 0 && Math.random() < 0.2) tempSolution[i] = -1;
             }
 
-            // 3) 벽 주변 전구 개수 세서 숫자 벽 생성 (난이도 계단식 설정)
-            const numbersOut = solution.slice(); // 실제 문제판
-            for(let i = 0; i < numbersOut.length; i++) {
-                if (numbersOut[i] === -1) { // 벽이라면
+            // 벽 숫자 생성
+            const problem = tempSolution.slice();
+            for(let i = 0; i < problem.length; i++) {
+                if (problem[i] === -1) {
                     let r = Math.floor(i / currentSize); let c = i % currentSize;
                     const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
                     let count = 0;
                     for (let [dr, dc] of dirs) {
                         let nr = r + dr; let nc = c + dc;
-                        if (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && solution[nr * currentSize + nc] === 5) {
-                            count++;
-                        }
+                        if (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize && tempSolution[nr * currentSize + nc] === 5) count++;
                     }
-                    // 90% 확률로 숫자를 노출 (상급 난이도 조절 포인트)
-                    if (Math.random() < 0.9) numbersOut[i] = -(count + 1); // -1:벽, -2:벽0, -3:벽1, ...
-                    else numbersOut[i] = -1; // 빈 벽
-                } else if (numbersOut[i] === 5) {
-                    numbersOut[i] = 0; // 정답 전구는 숨김
+                    if (Math.random() < 0.85) problem[i] = -(count + 1);
+                    else problem[i] = -1;
+                } else if (problem[i] === 5) {
+                    problem[i] = 0;
                 }
             }
-            numbers = numbersOut;
+            numbers = problem;
         }
 
-        // 4. 빛 계산 (플레이어용)
         function updateLighting() {
-            // 전구와 벽을 제외한 칸의 빛을 초기화
             for(let i=0; i<numbers.length; i++) if(numbers[i] > 0 && numbers[i] !== 5) numbers[i] = 0;
-
             const bulbs = [];
             numbers.forEach((num, idx) => { if (num === 5) bulbs.push(idx); });
-
             bulbs.forEach(idx => {
                 let r = Math.floor(idx / currentSize); let c = idx % currentSize;
                 const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -247,75 +214,63 @@
                     let nr = r + dr; let nc = c + dc;
                     while (nr >= 0 && nr < currentSize && nc >= 0 && nc < currentSize) {
                         let currentIdx = nr * currentSize + nc;
-                        if (numbers[currentIdx] < 0) break; // 벽 만나면 빛 차단
-                        if (numbers[currentIdx] === 0) numbers[currentIdx] = 1; // 빛나게 함
+                        if (numbers[currentIdx] < 0) break;
+                        if (numbers[currentIdx] === 0) numbers[currentIdx] = 1;
                         nr += dr; nc += dc;
                     }
                 }
             });
         }
 
-        // 렌더링 함수
         function render() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-            const fontSize = currentSize === 8 ? '0.9rem' : '1rem';
-
+            
             numbers.forEach((num, idx) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.style.fontSize = fontSize;
-                
-                if (num < 0) { // 벽
+                if (num < 0) {
                     cell.classList.add('wall');
                     let wallNum = -(num + 1);
-                    cell.innerText = wallNum > 0 || wallNum === 0 ? wallNum : ''; // 0도 표시
+                    cell.innerText = wallNum >= 0 ? wallNum : '';
                 } else {
                     cell.onclick = () => handleSelect(idx);
-                    if (num === 5) { // 전구
-                        cell.innerText = '💡';
-                        cell.classList.add('bulb');
-                    } else if (num === 1) { // 빛
-                        cell.classList.add('lit');
-                    }
+                    if (num === 5) { cell.innerText = '💡'; cell.classList.add('bulb'); }
+                    else if (num === 1) cell.classList.add('lit');
                 }
                 grid.appendChild(cell);
             });
-            updateLighting(); // 실시간 빛 계산
-            checkWin(); // 성공 여부 체크
+            updateLighting();
+            checkWin();
         }
 
         function handleSelect(idx) {
-            playClickSound(); // 셀 클릭 시 즉시 소리
-            if (numbers[idx] === 5) {
-                numbers[idx] = 0; // 전구 제거
-            } else if (numbers[idx] === 0 || numbers[idx] === 1) {
-                numbers[idx] = 5; // 전구 배치
-            }
+            playClickSound();
+            if (numbers[idx] === 5) numbers[idx] = 0;
+            else if (numbers[idx] === 0 || numbers[idx] === 1) numbers[idx] = 5;
             render();
         }
 
         function checkWin() {
-            if (numbers.some(n => n < 0)) return; // 아직 판이 안 깔린 경우
-
-            // 1) 모든 빈칸이 빛나야 함 (0이 없어야 함)
+            if (numbers.some(n => n < 0) && numbers.every(n => n >= 0)) return; 
             if (numbers.some(n => n === 0)) return;
-
-            // 2) 전구끼리 마주 보면 안 됨 (생략 가능, 위 알고리즘상 안 마주 보게 생성됨)
-
-            // 3) 벽 숫자 만족해야 함 (생략 가능, 위 알고리즘상 정답이 존재하게 생성됨)
-
-            document.getElementById('status').innerText = "🎉 미션 클리어! 전구가 모두 켜졌어요.";
-            document.getElementById('status').style.color = "#8e9775";
+            // 승리 시 상태 업데이트
+            const status = document.getElementById('status');
+            if(numbers.length > 0 && !numbers.some(n => n === 0)) {
+                status.innerText = "🎉 미션 클리어!";
+                status.style.color = "var(--accent-color)";
+            }
         }
 
-        // 페이지 로드 시 첫 생성
+        // 3. 안내 메시지 수정
         window.onload = () => {
-            currentSize = 6;
-            document.getElementById('grid').innerHTML = '<div style="color:#5d5a52; text-align:center; padding-top:20px;">먼저 화면을 클릭해서<br>소리를 켜주세요!<br><br>그 다음 "새 판 깔기"를 누르세요.</div>';
+            currentSize = 5;
+            document.getElementById('grid').innerHTML = 
+                `<div style="grid-column: 1 / span ${currentSize}; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-color); font-weight: 600; font-size: 0.95rem; line-height: 1.6;">
+                    '새 판 깔기'를 누르고 시작하세요.
+                </div>`;
         }
-
     </script>
 </body>
 </html>
