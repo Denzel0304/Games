@@ -140,7 +140,7 @@
 
   .numpad {
     display: flex; flex-wrap: nowrap;
-    justify-content: center; gap: 7px;
+    justify-content: center; gap: 4px;
   }
 
   .num-btn {
@@ -422,12 +422,12 @@ function buildNumpad() {
   pad.innerHTML = '';
 
   // 버튼 개수: N개 숫자 + C = N+1
-  // 가용 너비: 화면너비 - 양쪽패딩(32) - 갭(7 * N개)
+  // 가용 너비: 화면너비 - 양쪽패딩(32) - 갭(4 * N개)
   const totalBtns = N + 1;
-  const availW = Math.min(window.innerWidth, 440) - 32;
-  const totalGap = 7 * (totalBtns - 1);
-  const btnW = Math.max(28, Math.floor((availW - totalGap) / totalBtns));
-  const btnFont = Math.max(11, Math.floor(btnW * 0.42));
+  const availW = Math.min(window.innerWidth, 440) - 36;
+  const totalGap = 4 * (totalBtns - 1);
+  const btnW = Math.max(26, Math.floor((availW - totalGap) / totalBtns));
+  const btnFont = Math.max(12, Math.floor(btnW * 0.62));
 
   for (let i = 1; i <= N; i++) {
     const btn = document.createElement('button');
@@ -442,7 +442,7 @@ function buildNumpad() {
   clr.className = 'num-btn clear-btn';
   clr.textContent = 'C';
   clr.style.width = btnW + 'px';
-  clr.style.fontSize = Math.max(11, Math.floor(btnFont * 0.82)) + 'px';
+  clr.style.fontSize = btnFont + 'px';
   clr.addEventListener('click', ()=>{ playClick(); inputNumber(0); });
   pad.appendChild(clr);
 }
