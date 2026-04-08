@@ -116,6 +116,7 @@
     font-family: 'Playfair Display', serif;
     font-weight: 700; color: var(--text);
     line-height: 1; flex-shrink: 0;
+    padding: 0;
     /* width/height/font-size set by JS */
   }
   .cell:active { transform: scale(0.92); }
@@ -151,6 +152,8 @@
     font-weight: 700;
     cursor: pointer; transition: all 0.15s;
     flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; line-height: 1;
   }
   .num-btn:active {
     box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -1px -1px 3px var(--shadow-light);
@@ -475,8 +478,12 @@ function renderBoard() {
     cell.style.height = CELL_SIZE + 'px';
     cell.style.fontSize = Math.round(CELL_SIZE * 0.58) + 'px';
     if (i===selectedCell) cell.classList.add('selected');
-    if (userBoard[i]>0) {
-      cell.textContent = userBoard[i];
+    if (userBoard[i] > 0) {
+      const span = document.createElement('span');
+      span.style.display = 'block';
+      span.style.lineHeight = '1';
+      span.textContent = userBoard[i];
+      cell.appendChild(span);
       cell.classList.add(errors.has(i) ? 'error' : 'filled');
     }
     cell.addEventListener('click', ()=>{
