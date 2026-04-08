@@ -17,12 +17,8 @@
     --text: #3a5c3a;
     --text2: #6b8f6b;
     --danger: #c86060;
-    --chain-color: #7a9e7a;
     --selected-bg: #c8e6c8;
-    --selected-shadow: #5a8a5a;
     --error-bg: #fde8e8;
-    --cell-size: 52px;
-    --gap: 6px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -36,7 +32,7 @@
     background: var(--bg);
     font-family: 'DM Sans', sans-serif;
     display: flex; flex-direction: column; align-items: center;
-    min-height: 100dvh; overflow: hidden; position: relative;
+    height: 100dvh; overflow: hidden; position: relative;
   }
 
   body::before {
@@ -47,12 +43,14 @@
     pointer-events: none; z-index: 0;
   }
 
-  /* HEADER */
+  /* ── HEADER (고정 높이) ── */
   .header {
+    flex-shrink: 0;
     position: relative; z-index: 10;
     width: 100%; max-width: 440px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 16px 10px;
+    padding: 16px 16px 8px;
+    height: 76px;
   }
 
   .nav-btn {
@@ -62,6 +60,7 @@
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: all 0.15s;
     color: var(--text2); flex-direction: column; gap: 1px; line-height: 1;
+    flex-shrink: 0;
   }
   .nav-btn:active {
     box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
@@ -78,11 +77,12 @@
   }
   .title-wrap .subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-  /* BOARD */
+  /* ── BOARD SECTION (flex:1 → 남은 공간 차지) ── */
   .board-section {
+    flex: 1; min-height: 0;
     position: relative; z-index: 10;
     display: flex; align-items: center; justify-content: center;
-    flex: 1; width: 100%; padding: 6px 16px;
+    width: 100%; padding: 4px 16px;
   }
 
   .board-outer {
@@ -92,25 +92,21 @@
       -8px -8px 20px var(--shadow-light),
       inset 1px 1px 2px rgba(255,255,255,0.8);
     position: relative;
+    /* 크기는 JS에서 명시적으로 설정 */
   }
 
-  /* SVG chain layer sits behind cells */
   #chain-svg {
     position: absolute;
     top: 14px; left: 14px;
-    pointer-events: none;
-    z-index: 1;
+    pointer-events: none; z-index: 1;
   }
 
   #board {
     display: grid;
-    gap: var(--gap);
-    position: relative;
-    z-index: 2;
+    position: relative; z-index: 2;
   }
 
   .cell {
-    width: var(--cell-size); height: var(--cell-size);
     border-radius: 50%;
     background: var(--surface2);
     box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
@@ -118,9 +114,9 @@
     cursor: pointer; position: relative;
     transition: all 0.15s;
     font-family: 'Playfair Display', serif;
-    font-size: calc(var(--cell-size) * 0.42);
     font-weight: 700; color: var(--text);
     line-height: 1; flex-shrink: 0;
+    /* width/height/font-size set by JS */
   }
   .cell:active { transform: scale(0.92); }
 
@@ -129,35 +125,32 @@
     box-shadow: inset 3px 3px 7px rgba(90,138,90,0.3), inset -2px -2px 5px rgba(255,255,255,0.8);
     color: var(--accent2);
   }
+  .cell.error { background: var(--error-bg); color: var(--danger); }
+  .cell.filled { background: linear-gradient(135deg, #e8f5e8, #d4ecca); }
 
-  .cell.error {
-    background: var(--error-bg);
-    color: var(--danger);
-  }
-
-  .cell.filled {
-    background: linear-gradient(135deg, #e8f5e8, #d4ecca);
-  }
-
-  /* NUMPAD */
+  /* ── NUMPAD (고정 높이) ── */
   .numpad-section {
+    flex-shrink: 0;
     position: relative; z-index: 10;
     width: 100%; max-width: 440px;
-    padding: 6px 16px 0;
+    padding: 6px 16px 4px;
+    height: 62px;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .numpad {
-    display: flex; flex-wrap: wrap;
-    justify-content: center; gap: 8px;
+    display: flex; flex-wrap: nowrap;
+    justify-content: center; gap: 7px;
   }
 
   .num-btn {
-    width: 44px; height: 44px; border-radius: 14px; border: none;
+    width: 42px; height: 42px; border-radius: 14px; border: none;
     background: var(--surface); color: var(--text);
     box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
     font-family: 'Playfair Display', serif;
-    font-size: 18px; font-weight: 700;
+    font-size: 17px; font-weight: 700;
     cursor: pointer; transition: all 0.15s;
+    flex-shrink: 0;
   }
   .num-btn:active {
     box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -1px -1px 3px var(--shadow-light);
@@ -165,17 +158,17 @@
   }
   .num-btn.clear-btn {
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 600;
-    color: var(--text2);
-    width: 52px;
+    font-size: 13px; font-weight: 600; color: var(--text2);
   }
 
-  /* CONTROLS */
+  /* ── CONTROLS (고정 높이) ── */
   .controls {
+    flex-shrink: 0;
     position: relative; z-index: 10;
     width: 100%; max-width: 440px;
-    padding: 10px 16px 20px;
-    display: flex; flex-direction: column; gap: 10px;
+    padding: 6px 16px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+    height: 90px;
   }
 
   .status-bar {
@@ -192,10 +185,10 @@
   .btn-row { display: flex; gap: 10px; }
 
   .btn {
-    flex: 1; height: 50px; border-radius: 16px; border: none;
+    flex: 1; height: 46px; border-radius: 16px; border: none;
     cursor: pointer; font-family: 'DM Sans', sans-serif;
     font-size: 15px; font-weight: 500;
-    transition: all 0.15s; letter-spacing: 0.3px;
+    transition: all 0.15s;
   }
   .btn:active { transform: scale(0.96); }
 
@@ -203,16 +196,10 @@
     background: var(--surface); color: var(--text2);
     box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
   }
-  .btn-reset:active {
-    box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
-  }
-
   .btn-confirm {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
     box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
   }
-  .btn-confirm:active { box-shadow: 2px 2px 6px rgba(74,124,74,0.4); }
 
   /* TOAST */
   .toast {
@@ -233,25 +220,21 @@
   .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
   .toast .toast-btn {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; border: none; border-radius: 14px;
-    padding: 12px 32px;
+    color: #fff; border: none; border-radius: 14px; padding: 12px 32px;
     font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
-    cursor: pointer; box-shadow: 3px 3px 10px rgba(74,124,74,0.4);
+    cursor: pointer;
   }
 
   .overlay {
     position: fixed; inset: 0;
-    background: rgba(180,210,180,0.4);
-    backdrop-filter: blur(4px);
-    z-index: 99; opacity: 0; pointer-events: none;
-    transition: opacity 0.3s;
+    background: rgba(180,210,180,0.4); backdrop-filter: blur(4px);
+    z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <button class="nav-btn" id="btn-prev" onclick="changeSize(-1)">
     <span class="arrow">‹</span>
@@ -267,7 +250,6 @@
   </button>
 </div>
 
-<!-- BOARD -->
 <div class="board-section">
   <div class="board-outer" id="board-outer">
     <svg id="chain-svg"></svg>
@@ -275,12 +257,10 @@
   </div>
 </div>
 
-<!-- NUMPAD -->
 <div class="numpad-section">
   <div class="numpad" id="numpad"></div>
 </div>
 
-<!-- CONTROLS -->
 <div class="controls">
   <div class="status-bar">
     <span class="status-dot" id="status-dot"></span>
@@ -301,374 +281,290 @@
 </div>
 
 <script>
-// ─── Audio ────────────────────────────────────────────────
 const sfxClick = new Audio('effect 19.mp3');
 const sfxClear = new Audio('effect 1.mp3');
 function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
 function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-// ─── State ────────────────────────────────────────────────
 const SIZES = [5, 6, 8, 10];
 let sizeIdx = 0;
 let N = 5;
-let chains = [];       // array of arrays of cell indices
-let solution = [];     // correct answer
-let userBoard = [];    // player's input (0 = empty)
+let chains = [];
+let solution = [];
+let userBoard = [];
 let selectedCell = -1;
+let CELL_SIZE = 48; // computed
+const GAP = 5;
+const PAD = 14;
 
-// ─── Puzzle Generator ─────────────────────────────────────
-// Generate a valid Latin square solution, then build chains on top
-function generateSolution(n) {
-  // Create a valid n×n Latin square using cyclic shift
-  const sol = [];
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      sol.push(((r + c) % n) + 1);
-    }
-  }
-  // Shuffle rows and columns to randomize
-  // Shuffle row groups
-  const rowPerm = shuffle(Array.from({length: n}, (_, i) => i));
-  const colPerm = shuffle(Array.from({length: n}, (_, i) => i));
-  const result = Array(n * n).fill(0);
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      result[rowPerm[r] * n + colPerm[c]] = sol[r * n + c];
-    }
-  }
-  // Also shuffle values (relabel numbers)
-  const valPerm = shuffle(Array.from({length: n}, (_, i) => i + 1));
-  return result.map(v => valPerm[v - 1]);
-}
+// ── Chain colors (dark, clearly visible) ──
+const CHAIN_COLORS = [
+  '#2e7d32','#c62828','#1565c0','#6a1b9a',
+  '#e65100','#00695c','#4e342e','#283593',
+  '#558b2f','#ad1457'
+];
 
 function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
   }
   return arr;
 }
 
+function generateSolution(n) {
+  const sol = [];
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      sol.push(((r + c) % n) + 1);
+  const rowP = shuffle([...Array(n).keys()]);
+  const colP = shuffle([...Array(n).keys()]);
+  const result = Array(n*n).fill(0);
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      result[rowP[r]*n + colP[c]] = sol[r*n+c];
+  const valP = shuffle([...Array(n).keys()].map(i=>i+1));
+  return result.map(v => valP[v-1]);
+}
+
 function generateChains(n) {
-  // Cover all n*n cells with chains of length 2~n
-  // Each chain must contain distinct values in solution → guaranteed by construction
-  // Strategy: generate chains greedily, ensuring each chain has distinct solution values
   const visited = new Set();
   const result = [];
-  const allCells = shuffle(Array.from({length: n * n}, (_, i) => i));
-
+  const allCells = shuffle([...Array(n*n).keys()]);
   function getNeighbors(idx) {
-    const r = Math.floor(idx / n), c = idx % n;
-    const nb = [];
-    if (r > 0) nb.push(idx - n);
-    if (r < n-1) nb.push(idx + n);
-    if (c > 0) nb.push(idx - 1);
-    if (c < n-1) nb.push(idx + 1);
+    const r=Math.floor(idx/n), c=idx%n, nb=[];
+    if(r>0) nb.push(idx-n);
+    if(r<n-1) nb.push(idx+n);
+    if(c>0) nb.push(idx-1);
+    if(c<n-1) nb.push(idx+1);
     return nb;
   }
-
   for (const start of allCells) {
     if (visited.has(start)) continue;
-    const chain = [start];
-    visited.add(start);
-    const usedVals = new Set([solution[start]]);
-    let curr = start;
-    const maxLen = Math.min(n, Math.floor(Math.random() * (n - 1)) + 2);
-
-    for (let step = 1; step < maxLen; step++) {
-      const nb = shuffle(getNeighbors(curr).filter(nb => {
-        return !visited.has(nb) && !usedVals.has(solution[nb]);
-      }));
-      if (nb.length === 0) break;
-      const next = nb[0];
-      chain.push(next);
-      visited.add(next);
-      usedVals.add(solution[next]);
-      curr = next;
+    const chain=[start]; visited.add(start);
+    const usedVals=new Set([solution[start]]);
+    let curr=start;
+    const maxLen=Math.min(n, Math.floor(Math.random()*(n-1))+2);
+    for (let step=1; step<maxLen; step++) {
+      const nb=shuffle(getNeighbors(curr).filter(nb=>!visited.has(nb)&&!usedVals.has(solution[nb])));
+      if(!nb.length) break;
+      chain.push(nb[0]); visited.add(nb[0]); usedVals.add(solution[nb[0]]); curr=nb[0];
     }
-    if (chain.length >= 2) result.push(chain);
+    if(chain.length>=2) result.push(chain);
   }
-
-  // Any unvisited single cells → add as length-1 chains (rare)
-  for (let i = 0; i < n * n; i++) {
-    if (!visited.has(i)) result.push([i]);
-  }
-
+  for (let i=0; i<n*n; i++) if(!visited.has(i)) result.push([i]);
   return result;
 }
 
-// ─── Build Board ──────────────────────────────────────────
+// ── Compute cell size from available space ──
+function computeCellSize() {
+  // Fixed zones: header=76, numpad=62, controls=90, board padding=PAD*2
+  const vh = window.innerHeight;
+  const vw = Math.min(window.innerWidth, 440);
+  const boardAreaH = vh - 76 - 62 - 90 - 16; // 16 = board-section padding
+  const boardAreaW = vw - 32; // 16px each side
+  // board grid size: N*cs + (N-1)*GAP + PAD*2
+  const maxFromH = Math.floor((boardAreaH - PAD*2 - (N-1)*GAP) / N);
+  const maxFromW = Math.floor((boardAreaW - PAD*2 - (N-1)*GAP) / N);
+  return Math.max(24, Math.min(maxFromH, maxFromW));
+}
+
+function applyLayout() {
+  CELL_SIZE = computeCellSize();
+  const boardPx = N * CELL_SIZE + (N-1) * GAP;
+  const outerPx = boardPx + PAD * 2;
+
+  // Set board grid gap & columns
+  const boardEl = document.getElementById('board');
+  boardEl.style.gridTemplateColumns = `repeat(${N}, ${CELL_SIZE}px)`;
+  boardEl.style.gap = GAP + 'px';
+
+  // Fix board-outer size
+  const outer = document.getElementById('board-outer');
+  outer.style.width = outerPx + 'px';
+  outer.style.height = outerPx + 'px';
+
+  // Apply cell sizes
+  document.querySelectorAll('.cell').forEach(c => {
+    c.style.width = CELL_SIZE + 'px';
+    c.style.height = CELL_SIZE + 'px';
+    c.style.fontSize = Math.round(CELL_SIZE * 0.58) + 'px';
+  });
+}
+
 function newBoard() {
   closeToast();
   N = SIZES[sizeIdx];
   solution = generateSolution(N);
   chains = generateChains(N);
-  userBoard = Array(N * N).fill(0);
+  userBoard = Array(N*N).fill(0);
   selectedCell = -1;
-
-  setCellSize();
   buildNumpad();
   renderBoard();
-  setTimeout(drawChains, 80);
+  applyLayout();
+  setTimeout(drawChains, 60);
   updateStatus();
   updateNavButtons();
 }
 
 function resetBoard() {
   closeToast();
-  userBoard = Array(N * N).fill(0);
+  userBoard = Array(N*N).fill(0);
   selectedCell = -1;
   renderBoard();
+  applyLayout();
+  setTimeout(drawChains, 60);
   updateStatus();
-}
-
-function setCellSize() {
-  const vw = Math.min(window.innerWidth, 440);
-  const available = vw - 28 - 28 - (N - 1) * 6;
-  const cs = Math.max(28, Math.floor(available / N));
-  document.documentElement.style.setProperty('--cell-size', cs + 'px');
 }
 
 function buildNumpad() {
   const pad = document.getElementById('numpad');
   pad.innerHTML = '';
-  for (let i = 1; i <= N; i++) {
+  for (let i=1; i<=N; i++) {
     const btn = document.createElement('button');
     btn.className = 'num-btn';
     btn.textContent = i;
-    btn.addEventListener('click', () => { playClick(); inputNumber(i); });
+    btn.addEventListener('click', ()=>{ playClick(); inputNumber(i); });
     pad.appendChild(btn);
   }
   const clr = document.createElement('button');
   clr.className = 'num-btn clear-btn';
   clr.textContent = 'C';
-  clr.addEventListener('click', () => { playClick(); inputNumber(0); });
+  clr.addEventListener('click', ()=>{ playClick(); inputNumber(0); });
   pad.appendChild(clr);
-}
-
-// ─── Render ───────────────────────────────────────────────
-function renderBoard() {
-  const boardEl = document.getElementById('board');
-  boardEl.style.gridTemplateColumns = `repeat(${N}, var(--cell-size))`;
-  boardEl.innerHTML = '';
-
-  // Detect errors: duplicate in row, col, or chain
-  const errors = getErrors();
-
-  for (let i = 0; i < N * N; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.dataset.idx = i;
-
-    if (i === selectedCell) cell.classList.add('selected');
-    if (userBoard[i] > 0) {
-      cell.textContent = userBoard[i];
-      if (errors.has(i)) cell.classList.add('error');
-      else cell.classList.add('filled');
-    }
-
-    cell.addEventListener('click', () => {
-      playClick();
-      selectedCell = i;
-      renderBoard();
-      setTimeout(drawChains, 20);
-    });
-
-    boardEl.appendChild(cell);
-  }
 }
 
 function getErrors() {
   const errors = new Set();
-
-  // Check rows
-  for (let r = 0; r < N; r++) {
-    const seen = {}, dups = new Set();
-    for (let c = 0; c < N; c++) {
-      const v = userBoard[r * N + c];
-      if (!v) continue;
-      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(r * N + c); }
-      else seen[v] = r * N + c;
+  function checkGroup(indices) {
+    const seen={}, dups=new Set();
+    for (const i of indices) {
+      const v=userBoard[i]; if(!v) continue;
+      if(seen[v]!==undefined){dups.add(seen[v]);dups.add(i);}
+      else seen[v]=i;
     }
-    dups.forEach(i => errors.add(i));
+    dups.forEach(i=>errors.add(i));
   }
-
-  // Check cols
-  for (let c = 0; c < N; c++) {
-    const seen = {}, dups = new Set();
-    for (let r = 0; r < N; r++) {
-      const v = userBoard[r * N + c];
-      if (!v) continue;
-      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(r * N + c); }
-      else seen[v] = r * N + c;
-    }
-    dups.forEach(i => errors.add(i));
-  }
-
-  // Check chains
-  for (const chain of chains) {
-    if (chain.length < 2) continue;
-    const seen = {}, dups = new Set();
-    for (const idx of chain) {
-      const v = userBoard[idx];
-      if (!v) continue;
-      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(idx); }
-      else seen[v] = idx;
-    }
-    dups.forEach(i => errors.add(i));
-  }
-
+  for (let r=0;r<N;r++) checkGroup([...Array(N).keys()].map(c=>r*N+c));
+  for (let c=0;c<N;c++) checkGroup([...Array(N).keys()].map(r=>r*N+c));
+  for (const chain of chains) if(chain.length>=2) checkGroup(chain);
   return errors;
 }
 
-// ─── Draw Chains ──────────────────────────────────────────
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  const errors = getErrors();
+  for (let i=0; i<N*N; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.style.width = CELL_SIZE + 'px';
+    cell.style.height = CELL_SIZE + 'px';
+    cell.style.fontSize = Math.round(CELL_SIZE * 0.58) + 'px';
+    if (i===selectedCell) cell.classList.add('selected');
+    if (userBoard[i]>0) {
+      cell.textContent = userBoard[i];
+      cell.classList.add(errors.has(i) ? 'error' : 'filled');
+    }
+    cell.addEventListener('click', ()=>{
+      playClick(); selectedCell=i;
+      renderBoard(); applyLayout(); setTimeout(drawChains,20);
+    });
+    boardEl.appendChild(cell);
+  }
+}
+
 function drawChains() {
   const svg = document.getElementById('chain-svg');
-  const boardEl = document.getElementById('board');
-  const boardRect = boardEl.getBoundingClientRect();
-  const outerRect = document.getElementById('board-outer').getBoundingClientRect();
-
-  const cs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
-  const gap = 6;
-  const W = N * cs + (N - 1) * gap;
-
-  svg.setAttribute('width', W);
-  svg.setAttribute('height', W);
+  const boardPx = N * CELL_SIZE + (N-1) * GAP;
+  svg.setAttribute('width', boardPx);
+  svg.setAttribute('height', boardPx);
   svg.innerHTML = '';
-
-  // Chain colors — cycle through a palette
-  const CHAIN_COLORS = [
-    '#7a9e7a','#9e7a7a','#7a8e9e','#9e9a6a',
-    '#8a7a9e','#7a9e8e','#9e7a8a','#6a8e7a',
-    '#8e9e7a','#9e8a7a'
-  ];
 
   chains.forEach((chain, ci) => {
     if (chain.length < 2) return;
     const color = CHAIN_COLORS[ci % CHAIN_COLORS.length];
+    const sw = Math.max(6, Math.round(CELL_SIZE * 0.32));
 
-    for (let k = 0; k < chain.length - 1; k++) {
-      const i1 = chain[k], i2 = chain[k + 1];
-      const r1 = Math.floor(i1 / N), c1 = i1 % N;
-      const r2 = Math.floor(i2 / N), c2 = i2 % N;
+    for (let k=0; k<chain.length-1; k++) {
+      const i1=chain[k], i2=chain[k+1];
+      const r1=Math.floor(i1/N), c1=i1%N;
+      const r2=Math.floor(i2/N), c2=i2%N;
+      const x1=c1*(CELL_SIZE+GAP)+CELL_SIZE/2;
+      const y1=r1*(CELL_SIZE+GAP)+CELL_SIZE/2;
+      const x2=c2*(CELL_SIZE+GAP)+CELL_SIZE/2;
+      const y2=r2*(CELL_SIZE+GAP)+CELL_SIZE/2;
 
-      const x1 = c1 * (cs + gap) + cs / 2;
-      const y1 = r1 * (cs + gap) + cs / 2;
-      const x2 = c2 * (cs + gap) + cs / 2;
-      const y2 = r2 * (cs + gap) + cs / 2;
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
       line.setAttribute('stroke', color);
-      line.setAttribute('stroke-width', Math.max(8, cs * 0.28));
-      line.setAttribute('stroke-linecap', 'round');
-      line.setAttribute('opacity', '0.55');
+      line.setAttribute('stroke-width', sw);
+      line.setAttribute('stroke-linecap','round');
+      line.setAttribute('opacity','0.9');
       svg.appendChild(line);
     }
   });
 }
 
-// ─── Input ────────────────────────────────────────────────
 function inputNumber(val) {
-  if (selectedCell < 0) return;
-  userBoard[selectedCell] = val;
-  renderBoard();
-  setTimeout(drawChains, 20);
+  if (selectedCell<0) return;
+  userBoard[selectedCell]=val;
+  renderBoard(); applyLayout(); setTimeout(drawChains,20);
   updateStatus();
 }
 
-// ─── Status ───────────────────────────────────────────────
 function updateStatus() {
-  const filled = userBoard.filter(v => v > 0).length;
-  const total = N * N;
-  const errors = getErrors();
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-
-  if (errors.size > 0) {
-    dot.className = 'status-dot err';
-    txt.textContent = `오류 ${errors.size}개 발견`;
-  } else if (filled === total) {
-    dot.className = 'status-dot ok';
-    txt.textContent = '모든 칸이 채워졌어요!';
-  } else {
-    dot.className = 'status-dot';
-    txt.textContent = `${filled} / ${total} 칸 입력됨`;
-  }
+  const filled=userBoard.filter(v=>v>0).length;
+  const errors=getErrors();
+  const dot=document.getElementById('status-dot');
+  const txt=document.getElementById('status-text');
+  if (errors.size>0){ dot.className='status-dot err'; txt.textContent=`오류 ${errors.size}개 발견`; }
+  else if (filled===N*N){ dot.className='status-dot ok'; txt.textContent='모든 칸이 채워졌어요!'; }
+  else { dot.className='status-dot'; txt.textContent=`${filled} / ${N*N} 칸 입력됨`; }
 }
 
-// ─── Win Check ────────────────────────────────────────────
 function checkWin() {
-  // All filled?
-  if (userBoard.some(v => v === 0)) {
-    shakeBoard(); return;
-  }
-  // Any errors?
-  if (getErrors().size > 0) {
-    shakeBoard(); return;
-  }
-  // All values match solution (or any valid Latin square + chain solution)
-  // We validate via rules, not by comparing to our generated solution
-  // (already done by getErrors — if no errors and all filled, it's valid)
-
+  if (userBoard.some(v=>v===0)){ shakeBoard(); return; }
+  if (getErrors().size>0){ shakeBoard(); return; }
   playClear();
-  setTimeout(() => {
+  setTimeout(()=>{
     document.getElementById('overlay').classList.add('show');
     document.getElementById('toast').classList.add('show');
-  }, 300);
+  },300);
 }
 
 function shakeBoard() {
-  const outer = document.getElementById('board-outer');
-  const frames = [0, -8, 8, -6, 6, -4, 4, 0];
-  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
-  setTimeout(() => outer.style.transform = '', frames.length * 55);
+  const outer=document.getElementById('board-outer');
+  const frames=[0,-8,8,-6,6,-4,4,0];
+  frames.forEach((x,i)=>setTimeout(()=>outer.style.transform=`translateX(${x}px)`,i*55));
+  setTimeout(()=>outer.style.transform='',frames.length*55);
 }
 
-// ─── Nav ──────────────────────────────────────────────────
 function changeSize(delta) {
-  const newIdx = sizeIdx + delta;
-  if (newIdx < 0 || newIdx >= SIZES.length) return;
-  sizeIdx = newIdx;
-  playClick();
-  newBoard();
+  const newIdx=sizeIdx+delta;
+  if(newIdx<0||newIdx>=SIZES.length) return;
+  sizeIdx=newIdx; playClick(); newBoard();
 }
 
 function updateNavButtons() {
-  const prevBtn = document.getElementById('btn-prev');
-  const nextBtn = document.getElementById('btn-next');
-  document.getElementById('size-subtitle').textContent = `${N} × ${N}`;
-
-  if (sizeIdx === 0) {
-    prevBtn.classList.add('disabled');
-  } else {
-    prevBtn.classList.remove('disabled');
-    document.getElementById('prev-label').textContent = `${SIZES[sizeIdx-1]}×${SIZES[sizeIdx-1]}`;
-  }
-  if (sizeIdx === SIZES.length - 1) {
-    nextBtn.classList.add('disabled');
-  } else {
-    nextBtn.classList.remove('disabled');
-    document.getElementById('next-label').textContent = `${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`;
-  }
+  const prev=document.getElementById('btn-prev');
+  const next=document.getElementById('btn-next');
+  document.getElementById('size-subtitle').textContent=`${N} × ${N}`;
+  if(sizeIdx===0){ prev.classList.add('disabled'); }
+  else { prev.classList.remove('disabled'); document.getElementById('prev-label').textContent=`${SIZES[sizeIdx-1]}×${SIZES[sizeIdx-1]}`; }
+  if(sizeIdx===SIZES.length-1){ next.classList.add('disabled'); }
+  else { next.classList.remove('disabled'); document.getElementById('next-label').textContent=`${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`; }
 }
 
-// ─── Toast ────────────────────────────────────────────────
 function closeToast() {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('toast').classList.remove('show');
 }
 
-// ─── Scroll prevention ────────────────────────────────────
-document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+window.addEventListener('resize',()=>{ applyLayout(); setTimeout(drawChains,80); });
 
-window.addEventListener('resize', () => {
-  setCellSize();
-  setTimeout(drawChains, 100);
-});
-
-// ─── Init ─────────────────────────────────────────────────
 newBoard();
 </script>
 </body>
