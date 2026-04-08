@@ -374,12 +374,8 @@ function generatePuzzle(n) {
         const nr=r+dr,nc=c+dc;
         if(inBounds(nr,nc) && solution[idx(nr,nc)]===1) adjBulbs++;
       }
-      // Assign numbered clue with 55% probability, blank wall otherwise
-      if(Math.random()<0.55){
-        puzzle[i] = wallClue(adjBulbs); // numbered wall
-      } else {
-        puzzle[i] = WALL_NO_NUM; // blank wall
-      }
+      // All walls have numbered clues (100%)
+      puzzle[i] = wallClue(adjBulbs);
     } else {
       puzzle[i] = 0; // empty cell (may have bulb in solution)
     }
