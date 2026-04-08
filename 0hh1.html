@@ -1,280 +1,411 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>0h h1 Logic Puzzle</title>
-    <style>
-        :root {
-            --bg-color: #e0e5ec;
-            --text-color: #37474f;
-            --shadow-dark: rgba(163, 177, 198, 0.7);
-            --shadow-light: rgba(255, 255, 255, 0.9);
-            --red-color: #d32f2f;
-            --blue-color: #1976d2;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>0h h1</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #d8edd8;
+    --surface: #e8f5e8;
+    --surface2: #f2faf2;
+    --shadow-light: #ffffff;
+    --shadow-dark: #b8d4b8;
+    --accent: #6b9e6b;
+    --accent2: #4a7c4a;
+    --text: #3a5c3a;
+    --text2: #6b8f6b;
+    --red: #d32f2f;
+    --red-light: #ffebee;
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --cell-empty: #e8f2e8;
+  }
 
-        html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        body { display: flex; flex-direction: column; align-items: center; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden; touch-action: none; user-select: none;
+  }
 
-        /* 상단 영역: 제목과 난이도 버튼 */
-        .header {
-            height: 22%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    height: 100dvh; overflow: hidden; position: relative;
+  }
 
-        .title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
 
-        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+  /* HEADER */
+  .header {
+    flex-shrink: 0;
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 8px;
+    height: 76px;
+  }
 
-        .size-btn {
-            width: 50px;
-            height: 50px;
-            border: none;
-            border-radius: 12px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-weight: bold;
-            font-size: 0.8rem;
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            cursor: pointer;
-        }
+  .nav-btn {
+    width: 48px; height: 48px; border-radius: 16px; border: none;
+    background: var(--surface);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+    color: var(--text2); flex-direction: column; gap: 1px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .nav-btn:active {
+    box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+    transform: scale(0.96);
+  }
+  .nav-btn .arrow { font-size: 18px; line-height: 1; }
+  .nav-btn .size-label { font-size: 11px; font-weight: 500; color: var(--text2); }
+  .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
 
-        .size-btn:active {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
-        }
+  .title-wrap { text-align: center; }
+  .title-wrap h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; color: var(--text); letter-spacing: -0.5px; line-height: 1;
+  }
+  .title-wrap .subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-        #status { margin-top: 10px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
+  /* BOARD */
+  .board-section {
+    flex: 1; min-height: 0;
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 4px 16px;
+  }
 
-        /* 중앙 판 영역 */
-        .game-area {
-            height: 53%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  .board-outer {
+    background: var(--surface); border-radius: 28px; padding: 14px;
+    box-shadow:
+      8px 8px 20px var(--shadow-dark),
+      -8px -8px 20px var(--shadow-light),
+      inset 1px 1px 2px rgba(255,255,255,0.8);
+    position: relative;
+  }
 
-        #grid {
-            display: grid;
-            gap: 10px;
-            width: 85vw;
-            max-width: 340px;
-            aspect-ratio: 1 / 1;
-            padding: 15px;
-            background: var(--bg-color);
-            border-radius: 20px;
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-        }
+  #board { display: grid; }
 
-        .cell {
-            background-color: var(--bg-color);
-            border-radius: 10px;
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-            transition: background-color 0.1s;
-            -webkit-tap-highlight-color: transparent;
-        }
+  .cell {
+    border-radius: 12px;
+    background: var(--cell-empty);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  .cell:active { transform: scale(0.91); }
 
-        .cell[data-state="1"] { 
-            background-color: var(--red-color); 
-            box-shadow: 3px 3px 6px rgba(211, 47, 47, 0.3);
-        }
-        .cell[data-state="2"] { 
-            background-color: var(--blue-color); 
-            box-shadow: 3px 3px 6px rgba(25, 118, 210, 0.3);
-        }
+  .cell[data-state="1"] {
+    background: var(--red);
+    box-shadow: 3px 3px 8px rgba(211,47,47,0.4), -2px -2px 6px rgba(255,255,255,0.3);
+  }
+  .cell[data-state="2"] {
+    background: var(--blue);
+    box-shadow: 3px 3px 8px rgba(21,101,192,0.4), -2px -2px 6px rgba(255,255,255,0.3);
+  }
 
-        /* 하단 영역 */
-        .footer {
-            height: 25%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding-bottom: 20px;
-        }
+  /* CONTROLS */
+  .controls {
+    flex-shrink: 0;
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    padding: 10px 16px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    height: 100px;
+  }
 
-        .controls {
-            display: flex;
-            gap: 15px;
-            width: 85vw;
-            max-width: 340px;
-        }
+  .status-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; font-size: 13px; color: var(--text2);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #a0b8a0; transition: background 0.3s;
+  }
+  .status-dot.ok { background: var(--accent); }
+  .status-dot.err { background: var(--red); }
 
-        .action-btn {
-            flex: 1;
-            padding: 18px 0;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            background: var(--bg-color);
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-        }
+  .btn-row { display: flex; gap: 10px; }
 
-        #check-btn {
-            background: linear-gradient(145deg, #2ecc71, #27ae60);
-            color: white;
-            box-shadow: 4px 4px 10px rgba(39, 174, 96, 0.3);
-        }
+  .btn {
+    flex: 1; height: 50px; border-radius: 16px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500; transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
 
-        .action-btn:active {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
-            transform: translateY(2px);
-        }
-    </style>
+  .btn-reset {
+    background: var(--surface); color: var(--text2);
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  }
+  .btn-confirm {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    background: var(--surface); border-radius: 24px;
+    padding: 28px 36px; text-align: center;
+    box-shadow: 12px 12px 30px var(--shadow-dark), -12px -12px 30px var(--shadow-light);
+    z-index: 100; opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .toast .toast-icon { font-size: 48px; margin-bottom: 10px; }
+  .toast h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--text); margin-bottom: 6px;
+  }
+  .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
+  .toast .toast-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 14px; padding: 12px 32px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer;
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(180,210,180,0.4); backdrop-filter: blur(4px);
+    z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+</style>
 </head>
 <body>
 
-    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+<div class="header">
+  <button class="nav-btn" id="btn-prev" onclick="changeSize(-1)">
+    <span class="arrow">‹</span>
+    <span class="size-label" id="prev-label"></span>
+  </button>
+  <div class="title-wrap">
+    <h1>0h h1</h1>
+    <div class="subtitle" id="size-subtitle">4 × 4</div>
+  </div>
+  <button class="nav-btn" id="btn-next" onclick="changeSize(1)">
+    <span class="arrow">›</span>
+    <span class="size-label" id="next-label"></span>
+  </button>
+</div>
 
-    <div class="header">
-        <div class="title-wrapper">
-            <button class="size-btn" onclick="changeSize(6)">6x6</button>
-            <h1>0h h1</h1>
-            <button class="size-btn" onclick="changeSize(8)">8x8</button>
-        </div>
-        <div id="status">빈칸을 터치해 보세요!</div>
-    </div>
-    
-    <div class="game-area">
-        <div id="grid"></div>
-    </div>
+<div class="board-section">
+  <div class="board-outer" id="board-outer">
+    <div id="board"></div>
+  </div>
+</div>
 
-    <div class="footer">
-        <div class="controls">
-            <button class="action-btn" onclick="resetBoard()">초기화</button>
-            <button id="check-btn" class="action-btn" onclick="checkWin()">확인</button>
-        </div>
-    </div>
+<div class="controls">
+  <div class="status-bar">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">빈칸을 터치해 채워보세요</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-reset" onclick="playClick(); resetBoard()">초기화</button>
+    <button class="btn btn-confirm" onclick="playClick(); checkWin()">확인</button>
+  </div>
+</div>
 
-    <script>
-        let currentSize = 4;
-        const gridElement = document.getElementById('grid');
-        const statusElement = document.getElementById('status');
-        let board = [];
+<div class="overlay" id="overlay" onclick="closeToast()"></div>
+<div class="toast" id="toast">
+  <div class="toast-icon">🎉</div>
+  <h2>완성!</h2>
+  <p>모든 조건을 충족했어요</p>
+  <button class="toast-btn" onclick="playClick(); closeToast(); newBoard()">새 판 하기</button>
+</div>
 
-        function changeSize(newSize) {
-            currentSize = newSize;
-            statusElement.innerText = `${newSize}x${newSize} 모드 시작!`;
-            statusElement.style.color = "#78909c";
-            initGame();
-        }
+<script>
+const sfxClick = new Audio('effect 19.mp3');
+const sfxClear = new Audio('effect 1.mp3');
+function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
+function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-        function initGame() {
-            // 그리드 레이아웃 동적 변경
-            gridElement.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-            board = Array(currentSize).fill().map(() => Array(currentSize).fill(0));
-            
-            gridElement.innerHTML = '';
-            for (let r = 0; r < currentSize; r++) {
-                for (let c = 0; c < currentSize; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.state = 0;
-                    cell.addEventListener('pointerdown', (e) => {
-                        e.preventDefault();
-                        toggleCell(r, c, cell);
-                    });
-                    gridElement.appendChild(cell);
-                }
-            }
-        }
+// 0h h1은 짝수 크기만 가능
+const SIZES = [4, 6, 8, 10];
+let sizeIdx = 0; // 기본 4×4
+let N = 4;
+let board = [];
+const GAP = 6;
+const PAD = 14;
 
-       
+function computeCellSize() {
+  const vh = window.innerHeight;
+  const vw = Math.min(window.innerWidth, 440);
+  const boardAreaH = vh - 76 - 100 - 12;
+  const boardAreaW = vw - 32;
+  const maxH = Math.floor((boardAreaH - PAD*2 - (N-1)*GAP) / N);
+  const maxW = Math.floor((boardAreaW - PAD*2 - (N-1)*GAP) / N);
+  return Math.max(24, Math.min(maxH, maxW));
+}
 
-        function resetBoard() {
-            initGame();
-            statusElement.innerText = "보드가 초기화되었습니다.";
-        }
+function applyLayout() {
+  const cs = computeCellSize();
+  const boardPx = N * cs + (N-1) * GAP;
+  const outerPx = boardPx + PAD * 2;
 
-        function checkWin() {
-            if (board.flat().includes(0)) {
-                statusElement.innerText = "모든 칸을 채워주세요!";
-                return;
-            }
+  const boardEl = document.getElementById('board');
+  boardEl.style.gridTemplateColumns = `repeat(${N}, ${cs}px)`;
+  boardEl.style.gap = GAP + 'px';
 
-            let rowStrings = [];
-            let colStrings = [];
-            let isValid = true;
+  const outer = document.getElementById('board-outer');
+  outer.style.width = outerPx + 'px';
+  outer.style.height = outerPx + 'px';
 
-            for (let i = 0; i < currentSize; i++) {
-                let row = board[i];
-                let col = board.map(r => r[i]);
-                
-                if (!checkLine(row) || !checkLine(col)) { isValid = false; break; }
-                
-                rowStrings.push(row.join(''));
-                colStrings.push(col.join(''));
-            }
+  document.querySelectorAll('.cell').forEach(c => {
+    c.style.width = cs + 'px';
+    c.style.height = cs + 'px';
+  });
+}
 
-            // 중복 줄 체크 (8x8에서 특히 중요)
-            if (isValid && (new Set(rowStrings).size !== currentSize || new Set(colStrings).size !== currentSize)) {
-                isValid = false;
-            }
+function newBoard() {
+  closeToast();
+  N = SIZES[sizeIdx];
+  board = Array.from({length: N}, () => Array(N).fill(0));
 
-            if (isValid) {
-                statusElement.innerText = `🎉 ${currentSize}x${currentSize} 클리어!`;
-                statusElement.style.color = "#27ae60";
-            } else {
-                statusElement.innerText = "규칙 위반! 다시 확인해보세요.";
-                statusElement.style.color = "#d32f2f";
-            }
-        }
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
 
-        function checkLine(line) {
-            const reds = line.filter(v => v === 1).length;
-            const blues = line.filter(v => v === 2).length;
-            if (reds !== currentSize/2 || blues !== currentSize/2) return false;
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.state = 0;
+      cell.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        playClick();
+        board[r][c] = (board[r][c] + 1) % 3;
+        cell.dataset.state = board[r][c];
+        updateStatus();
+      });
+      boardEl.appendChild(cell);
+    }
+  }
 
-            for (let i = 0; i < line.length - 2; i++) {
-                if (line[i] === line[i+1] && line[i] === line[i+2]) return false;
-            }
-            return true;
-        }
+  applyLayout();
+  updateStatus();
+  updateNavButtons();
+}
 
-        // 최초 실행
-        initGame();
+function resetBoard() {
+  closeToast();
+  board = Array.from({length: N}, () => Array(N).fill(0));
+  document.querySelectorAll('.cell').forEach(c => c.dataset.state = 0);
+  updateStatus();
+}
 
-        // --- 효과음
-        let isAudioUnlocked = false; 
+function updateStatus() {
+  const total = N * N;
+  const filled = board.flat().filter(v => v !== 0).length;
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
 
-        function toggleCell(r, c, element) {
-            const sound = document.getElementById('click-sound');
-            
-            if (!isAudioUnlocked) {
-                // 첫 터치: 잠금 해제와 동시에 재생 시도
-                sound.play().then(() => {
-                    isAudioUnlocked = true;
-                }).catch(err => console.log("Waiting for interaction..."));
-            } else {
-                // 두 번째 터치부터: 일반 재생
-                sound.currentTime = 0;
-                sound.play();
-            }
-            
-            board[r][c] = (board[r][c] + 1) % 3;
-            element.dataset.state = board[r][c];
-        }
-        // --- 여기까지 ---
-        
-    </script>
+  // Live violation check
+  let hasViolation = false;
+  for (let i = 0; i < N; i++) {
+    const row = board[i];
+    const col = board.map(r => r[i]);
+    if (checkLineViolation(row) || checkLineViolation(col)) { hasViolation = true; break; }
+  }
+
+  if (hasViolation) {
+    dot.className = 'status-dot err';
+    txt.textContent = '규칙 위반이 있어요';
+  } else if (filled === total) {
+    dot.className = 'status-dot ok';
+    txt.textContent = '모든 칸이 채워졌어요!';
+  } else {
+    dot.className = 'status-dot';
+    txt.textContent = `${filled} / ${total} 칸 입력됨`;
+  }
+}
+
+// 실시간 위반 체크 (연속 3개 같은 색만 체크, 개수는 확인 버튼에서)
+function checkLineViolation(line) {
+  for (let i = 0; i < line.length - 2; i++) {
+    if (line[i] !== 0 && line[i] === line[i+1] && line[i] === line[i+2]) return true;
+  }
+  return false;
+}
+
+function checkLine(line) {
+  const reds = line.filter(v => v === 1).length;
+  const blues = line.filter(v => v === 2).length;
+  if (reds !== N/2 || blues !== N/2) return false;
+  for (let i = 0; i < line.length - 2; i++) {
+    if (line[i] !== 0 && line[i] === line[i+1] && line[i] === line[i+2]) return false;
+  }
+  return true;
+}
+
+function checkWin() {
+  if (board.flat().includes(0)) { shakeBoard(); return; }
+
+  const rowStrings = [], colStrings = [];
+  for (let i = 0; i < N; i++) {
+    const row = board[i];
+    const col = board.map(r => r[i]);
+    if (!checkLine(row) || !checkLine(col)) { shakeBoard(); return; }
+    rowStrings.push(row.join(''));
+    colStrings.push(col.join(''));
+  }
+  // 중복 행/열 체크
+  if (new Set(rowStrings).size !== N || new Set(colStrings).size !== N) { shakeBoard(); return; }
+
+  playClear();
+  setTimeout(() => {
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('toast').classList.add('show');
+  }, 300);
+}
+
+function shakeBoard() {
+  const outer = document.getElementById('board-outer');
+  const frames = [0, -8, 8, -6, 6, -4, 4, 0];
+  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
+  setTimeout(() => outer.style.transform = '', frames.length * 55);
+}
+
+function changeSize(delta) {
+  const newIdx = sizeIdx + delta;
+  if (newIdx < 0 || newIdx >= SIZES.length) return;
+  sizeIdx = newIdx; playClick(); newBoard();
+}
+
+function updateNavButtons() {
+  const prev = document.getElementById('btn-prev');
+  const next = document.getElementById('btn-next');
+  document.getElementById('size-subtitle').textContent = `${N} × ${N}`;
+  if (sizeIdx === 0) { prev.classList.add('disabled'); }
+  else { prev.classList.remove('disabled'); document.getElementById('prev-label').textContent = `${SIZES[sizeIdx-1]}×${SIZES[sizeIdx-1]}`; }
+  if (sizeIdx === SIZES.length-1) { next.classList.add('disabled'); }
+  else { next.classList.remove('disabled'); document.getElementById('next-label').textContent = `${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`; }
+}
+
+function closeToast() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('toast').classList.remove('show');
+}
+
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+window.addEventListener('resize', applyLayout);
+
+newBoard();
+</script>
 </body>
 </html>
