@@ -18,11 +18,9 @@
     --text2: #6b8f6b;
     --danger: #c86060;
     --filled: #4a7c4a;
-    --filled-light: #6b9e6b;
     --xmark: #a0b8a0;
     --clue-ok: #4a7c4a;
     --clue-err: #c86060;
-    --clue-done: #c8e6c8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -47,7 +45,7 @@
     pointer-events: none; z-index: 0;
   }
 
-  /* HEADER */
+  /* ── HEADER 고정 72px ── */
   .header {
     flex-shrink: 0;
     position: relative; z-index: 10;
@@ -81,93 +79,78 @@
   }
   .title-wrap .subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-  /* BOARD SECTION */
+  /* ── BOARD SECTION flex:1 ── */
   .board-section {
     flex: 1; min-height: 0;
     position: relative; z-index: 10;
     display: flex; align-items: center; justify-content: center;
-    width: 100%; padding: 4px 10px;
+    width: 100%; padding: 6px 10px;
   }
 
+  /* board-outer: 고정 크기, JS에서 한 번만 설정 */
   .board-outer {
     background: var(--surface); border-radius: 24px; padding: 12px;
     box-shadow:
       8px 8px 20px var(--shadow-dark),
       -8px -8px 20px var(--shadow-light),
       inset 1px 1px 2px rgba(255,255,255,0.8);
+    /* width/height fixed by JS */
+    flex-shrink: 0;
+    overflow: hidden;
   }
 
-  /* GRID LAYOUT: clues + cells */
+  /* puzzle-wrap: 행힌트 + 셀그리드 정렬 */
   .puzzle-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+    display: flex; flex-direction: column;
   }
 
-  /* Top clue area */
   .top-clues {
     display: flex;
-    /* margin-left = row-clue column width, set by JS */
+    align-items: flex-end;
   }
 
   .col-clue {
     display: flex; flex-direction: column;
     align-items: center; justify-content: flex-end;
-    gap: 1px;
-    /* width set by JS */
+    flex-shrink: 0;
   }
-
   .col-clue span {
-    font-size: 11px; font-weight: 600;
-    color: var(--text2); line-height: 1.2;
+    font-weight: 600; color: var(--text2);
     display: flex; align-items: center; justify-content: center;
+    width: 100%; line-height: 1.1;
   }
   .col-clue.done span { color: var(--clue-ok); }
   .col-clue.over span { color: var(--clue-err); }
 
-  /* Middle: row clues + grid */
-  .middle-wrap {
-    display: flex;
-  }
+  .middle-wrap { display: flex; }
 
-  /* Row clues column */
   .row-clues {
     display: flex; flex-direction: column;
-    gap: 0; /* matches cell gap */
-    /* width set by JS */
+    flex-shrink: 0;
   }
-
   .row-clue {
     display: flex; flex-direction: row;
     align-items: center; justify-content: flex-end;
-    gap: 3px;
-    /* height set by JS */
-    padding-right: 4px;
+    flex-shrink: 0;
+    /* gap, padding-right set by JS */
   }
-
   .row-clue span {
-    font-size: 11px; font-weight: 600;
-    color: var(--text2); line-height: 1;
+    font-weight: 600; color: var(--text2); line-height: 1;
   }
   .row-clue.done span { color: var(--clue-ok); }
   .row-clue.over span { color: var(--clue-err); }
 
-  /* CELLS */
-  #board {
-    display: grid;
-    /* cols/gap set by JS */
-  }
+  /* ── CELLS ── */
+  #board { display: grid; }
 
   .cell {
-    border-radius: 5px;
+    border-radius: 4px;
     background: var(--surface2);
     box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
     cursor: pointer;
     transition: background 0.1s, transform 0.08s;
-    display: flex; align-items: center; justify-content: center;
     position: relative;
     flex-shrink: 0;
-    /* width/height set by JS */
   }
   .cell:active { transform: scale(0.88); }
 
@@ -175,34 +158,27 @@
     background: var(--filled);
     box-shadow: inset 2px 2px 5px rgba(30,60,30,0.4), inset -1px -1px 3px rgba(255,255,255,0.1);
   }
-
-  .cell.xmark {
-    background: var(--surface2);
-    box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
-  }
   .cell.xmark::after {
     content: '×';
     color: var(--xmark);
-    font-size: 70%;
     font-weight: 700;
-    line-height: 1;
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
+    font-size: 75%;
+    line-height: 1;
   }
+  .cell.sep-right  { border-right:  2px solid rgba(74,124,74,0.35) !important; }
+  .cell.sep-bottom { border-bottom: 2px solid rgba(74,124,74,0.35) !important; }
 
-  /* 5-cell grouping separator lines */
-  .cell.sep-right { border-right: 2px solid var(--shadow-dark) !important; }
-  .cell.sep-bottom { border-bottom: 2px solid var(--shadow-dark) !important; }
-
-  /* CONTROLS */
+  /* ── CONTROLS 고정 96px ── */
   .controls {
     flex-shrink: 0;
     position: relative; z-index: 10;
     width: 100%; max-width: 460px;
-    padding: 8px 16px 18px;
+    padding: 10px 16px 22px;
     display: flex; flex-direction: column; gap: 8px;
-    height: 88px;
+    height: 96px;
   }
 
   .status-bar {
@@ -228,9 +204,7 @@
     background: var(--surface); color: var(--text2);
     box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
   }
-  .btn-reset:active {
-    box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
-  }
+  .btn-reset:active { box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light); }
   .btn-confirm {
     background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
     box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
@@ -249,16 +223,12 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
   .toast .toast-icon { font-size: 48px; margin-bottom: 10px; }
-  .toast h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px; color: var(--text); margin-bottom: 6px;
-  }
+  .toast h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
   .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
   .toast .toast-btn {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: #fff; border: none; border-radius: 14px; padding: 12px 32px;
-    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
-    cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer;
   }
 
   .overlay {
@@ -286,7 +256,7 @@
   </button>
 </div>
 
-<div class="board-section">
+<div class="board-section" id="board-section">
   <div class="board-outer" id="board-outer">
     <div class="puzzle-wrap" id="puzzle-wrap">
       <div class="top-clues" id="top-clues"></div>
@@ -313,7 +283,7 @@
 <div class="toast" id="toast">
   <div class="toast-icon">🖼️</div>
   <h2>완성!</h2>
-  <p id="toast-msg">그림이 완성됐어요</p>
+  <p>그림이 완성됐어요</p>
   <button class="toast-btn" onclick="playClick(); closeToast(); newBoard()">새 판 하기</button>
 </div>
 
@@ -324,350 +294,267 @@ const sfxClear = new Audio('effect 1.mp3');
 function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
 function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-// ── Sizes ──────────────────────────────────────────────────
-const SIZES = [5, 8, 10, 15];
+// ── Sizes ─────────────────────────────────────────────────
+const SIZES = [5, 8, 10, 12];
 let sizeIdx = 0;
 let N = 5;
 
-// ── State ──────────────────────────────────────────────────
-let solution = [];   // 2D array of 0/1
-let userBoard = [];  // 0=empty, 1=filled, 2=xmark
+// ── State ─────────────────────────────────────────────────
+let solution = [];
+let userBoard = [];
 let rowClues = [];
 let colClues = [];
-let CELL_SIZE = 28;
-const CELL_GAP = 2;
-const PAD = 12;
 
-// ── Pixel art patterns (per size) ─────────────────────────
-// Each pattern is a flat array of 0/1 for N×N grid
-// Multiple patterns per size — randomly pick one
-
+// ── Patterns ──────────────────────────────────────────────
 const PATTERNS = {
   5: [
-    // Heart
-    [0,1,0,1,0,
-     1,1,1,1,1,
-     1,1,1,1,1,
-     0,1,1,1,0,
-     0,0,1,0,0],
-    // Arrow up
-    [0,0,1,0,0,
-     0,1,1,1,0,
-     1,1,1,1,1,
-     0,0,1,0,0,
-     0,0,1,0,0],
-    // House
-    [0,0,1,0,0,
-     0,1,1,1,0,
-     1,1,1,1,1,
-     1,1,0,1,1,
-     1,1,0,1,1],
-    // Diamond
-    [0,0,1,0,0,
-     0,1,1,1,0,
-     1,1,1,1,1,
-     0,1,1,1,0,
-     0,0,1,0,0],
-    // Cross
-    [0,0,1,0,0,
-     0,0,1,0,0,
-     1,1,1,1,1,
-     0,0,1,0,0,
-     0,0,1,0,0],
-    // Fish
-    [0,1,1,0,0,
-     1,1,1,1,0,
-     1,1,1,1,1,
-     1,1,1,1,0,
-     0,1,1,0,0],
-    // Star5
-    [0,0,1,0,0,
-     1,1,1,1,1,
-     0,1,1,1,0,
-     1,0,1,0,1,
-     1,0,0,0,1],
-    // Cup
-    [1,0,0,0,1,
-     1,0,0,0,1,
-     0,1,1,1,0,
-     0,0,1,0,0,
-     0,1,1,1,0],
+    [0,1,0,1,0, 1,1,1,1,1, 1,1,1,1,1, 0,1,1,1,0, 0,0,1,0,0], // heart
+    [0,0,1,0,0, 0,1,1,1,0, 1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0], // arrow
+    [0,0,1,0,0, 0,1,1,1,0, 1,1,1,1,1, 1,1,1,1,1, 1,1,0,1,1], // house
+    [0,0,1,0,0, 0,1,1,1,0, 1,1,1,1,1, 0,1,1,1,0, 0,0,1,0,0], // diamond
+    [0,0,1,0,0, 0,0,1,0,0, 1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0], // cross
+    [1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0, 0,0,1,0,0, 0,1,1,1,0], // cup
+    [0,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0], // ring
+    [1,1,0,1,1, 1,1,1,1,1, 0,1,1,1,0, 0,0,1,0,0, 0,0,1,0,0], // person
   ],
   8: [
     // Rocket
-    [0,0,0,1,1,0,0,0,
-     0,0,1,1,1,1,0,0,
-     0,0,1,1,1,1,0,0,
-     0,1,1,1,1,1,1,0,
-     0,1,1,1,1,1,1,0,
-     1,1,0,1,1,0,1,1,
-     0,0,0,1,1,0,0,0,
-     0,0,0,1,1,0,0,0],
+    [0,0,0,1,1,0,0,0, 0,0,1,1,1,1,0,0, 0,0,1,1,1,1,0,0,
+     0,1,1,1,1,1,1,0, 0,1,1,1,1,1,1,0, 1,1,0,1,1,0,1,1,
+     0,0,0,1,1,0,0,0, 0,0,0,1,1,0,0,0],
     // Tree
-    [0,0,0,1,1,0,0,0,
-     0,0,1,1,1,1,0,0,
-     0,1,1,1,1,1,1,0,
-     1,1,1,1,1,1,1,1,
-     0,0,0,1,1,0,0,0,
-     0,0,0,1,1,0,0,0,
-     0,0,1,1,1,1,0,0,
-     0,0,0,0,0,0,0,0],
+    [0,0,0,1,1,0,0,0, 0,0,1,1,1,1,0,0, 0,1,1,1,1,1,1,0,
+     1,1,1,1,1,1,1,1, 0,0,0,1,1,0,0,0, 0,0,0,1,1,0,0,0,
+     0,0,1,1,1,1,0,0, 0,0,0,0,0,0,0,0],
     // Boat
-    [0,0,0,1,0,0,0,0,
-     0,0,1,1,0,0,0,0,
-     0,1,1,1,1,1,1,0,
-     1,1,1,1,1,1,1,1,
-     0,1,1,1,1,1,1,0,
-     0,0,1,1,1,1,0,0,
-     0,0,0,1,1,0,0,0,
-     0,0,0,0,0,0,0,0],
-    // Flower
-    [0,0,1,1,1,1,0,0,
-     0,1,1,0,0,1,1,0,
-     1,1,0,1,1,0,1,1,
-     1,0,1,1,1,1,0,1,
-     1,0,1,1,1,1,0,1,
-     1,1,0,1,1,0,1,1,
-     0,1,1,0,0,1,1,0,
-     0,0,1,1,1,1,0,0],
+    [0,0,0,1,0,0,0,0, 0,0,1,1,0,0,0,0, 0,1,1,1,1,1,1,0,
+     1,1,1,1,1,1,1,1, 0,1,1,1,1,1,1,0, 0,0,1,1,1,1,0,0,
+     0,0,0,1,1,0,0,0, 0,0,0,0,0,0,0,0],
     // Rabbit
-    [1,1,0,0,0,0,1,1,
-     1,1,0,0,0,0,1,1,
-     0,1,1,1,1,1,1,0,
-     0,1,1,0,0,1,1,0,
-     0,1,1,1,1,1,1,0,
-     0,1,0,1,1,0,1,0,
-     0,1,1,0,0,1,1,0,
-     0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,1,1, 1,1,0,0,0,0,1,1, 0,1,1,1,1,1,1,0,
+     0,1,1,0,0,1,1,0, 0,1,1,1,1,1,1,0, 0,1,0,1,1,0,1,0,
+     0,1,1,0,0,1,1,0, 0,0,0,0,0,0,0,0],
     // Castle
-    [1,0,1,0,0,1,0,1,
-     1,1,1,0,0,1,1,1,
-     1,1,1,1,1,1,1,1,
-     1,1,0,1,1,0,1,1,
-     1,1,0,1,1,0,1,1,
-     1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,
-     0,0,0,0,0,0,0,0],
+    [1,0,1,0,0,1,0,1, 1,1,1,0,0,1,1,1, 1,1,1,1,1,1,1,1,
+     1,1,0,1,1,0,1,1, 1,1,0,1,1,0,1,1, 1,1,1,1,1,1,1,1,
+     1,1,1,1,1,1,1,1, 0,0,0,0,0,0,0,0],
+    // Flower
+    [0,0,1,1,1,1,0,0, 0,1,1,0,0,1,1,0, 1,1,0,1,1,0,1,1,
+     1,0,1,1,1,1,0,1, 1,0,1,1,1,1,0,1, 1,1,0,1,1,0,1,1,
+     0,1,1,0,0,1,1,0, 0,0,1,1,1,1,0,0],
   ],
   10: [
     // Cat
-    [1,1,0,0,0,0,0,0,1,1,
-     1,1,0,0,0,0,0,0,1,1,
-     0,1,1,1,1,1,1,1,1,0,
-     0,1,1,0,1,1,0,1,1,0,
-     0,1,1,1,1,1,1,1,1,0,
-     0,0,1,1,1,1,1,1,0,0,
-     0,0,1,1,0,0,1,1,0,0,
-     0,1,1,1,0,0,1,1,1,0,
-     0,1,0,0,0,0,0,0,1,0,
+    [1,1,0,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,0,1,1, 0,1,1,1,1,1,1,1,1,0,
+     0,1,1,0,1,1,0,1,1,0, 0,1,1,1,1,1,1,1,1,0, 0,0,1,1,1,1,1,1,0,0,
+     0,0,1,1,0,0,1,1,0,0, 0,1,1,1,0,0,1,1,1,0, 0,1,0,0,0,0,0,0,1,0,
      0,0,0,0,0,0,0,0,0,0],
     // Airplane
-    [0,0,0,0,1,1,0,0,0,0,
-     0,0,0,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,0,0,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     0,0,1,1,1,1,1,1,0,0,
-     0,0,0,1,1,1,1,0,0,0,
-     0,0,0,1,0,0,1,0,0,0,
-     0,0,0,1,0,0,1,0,0,0,
+    [0,0,0,0,1,1,0,0,0,0, 0,0,0,1,1,1,1,0,0,0, 0,0,1,1,1,1,1,1,0,0,
+     1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1, 0,0,1,1,1,1,1,1,0,0,
+     0,0,0,1,1,1,1,0,0,0, 0,0,0,1,0,0,1,0,0,0, 0,0,0,1,0,0,1,0,0,0,
      0,0,0,0,0,0,0,0,0,0],
     // Crown
-    [1,0,0,0,0,0,0,0,0,1,
-     1,0,1,0,0,0,1,0,0,1,
-     1,1,1,1,0,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     0,1,1,1,1,1,1,1,1,0,
-     0,1,1,1,1,1,1,1,1,0,
-     0,0,0,0,0,0,0,0,0,0,
+    [1,0,0,0,0,0,0,0,0,1, 1,0,1,0,0,0,1,0,0,1, 1,1,1,1,0,1,1,1,1,1,
+     1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,
+     0,1,1,1,1,1,1,1,1,0, 0,1,1,1,1,1,1,1,1,0, 0,0,0,0,0,0,0,0,0,0,
      0,0,0,0,0,0,0,0,0,0],
-    // House10
-    [0,0,0,0,1,1,0,0,0,0,
-     0,0,0,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,0,0,
-     0,1,1,1,1,1,1,1,1,0,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,0,0,0,0,1,1,1,
-     1,1,1,0,0,0,0,1,1,1,
-     1,1,1,0,0,0,0,1,1,1,
+    // House
+    [0,0,0,0,1,1,0,0,0,0, 0,0,0,1,1,1,1,0,0,0, 0,0,1,1,1,1,1,1,0,0,
+     0,1,1,1,1,1,1,1,1,0, 1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,
+     1,1,1,0,0,0,0,1,1,1, 1,1,1,0,0,0,0,1,1,1, 1,1,1,0,0,0,0,1,1,1,
      1,1,1,1,1,1,1,1,1,1],
     // Mushroom
-    [0,0,0,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,0,0,
-     0,1,1,0,1,1,0,1,1,0,
-     1,1,1,1,1,1,1,1,1,1,
-     1,1,1,1,1,1,1,1,1,1,
-     0,0,1,1,1,1,1,1,0,0,
-     0,0,0,1,1,1,1,0,0,0,
-     0,0,0,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,0,0,
+    [0,0,0,1,1,1,1,0,0,0, 0,0,1,1,1,1,1,1,0,0, 0,1,1,0,1,1,0,1,1,0,
+     1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1, 0,0,1,1,1,1,1,1,0,0,
+     0,0,0,1,1,1,1,0,0,0, 0,0,0,1,1,1,1,0,0,0, 0,0,1,1,1,1,1,1,0,0,
      0,0,0,0,0,0,0,0,0,0],
   ],
-  15: [
+  12: [
     // Big heart
-    [0,0,1,1,1,0,0,0,1,1,1,0,0,0,0,
-     0,1,1,1,1,1,0,1,1,1,1,1,0,0,0,
-     1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
-     1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
-     1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
-     0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,
-     0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,
-     0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,
-     0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Big star
-    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,
-     0,1,0,1,1,1,1,1,1,1,0,1,0,0,0,
-     0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,
-     0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-     1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
-     0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-     0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,
-     0,1,0,1,1,1,1,1,1,1,0,1,0,0,0,
-     1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,
-     0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,0,0,0,0,1,1,0,0,0,
+     1,1,1,1,0,0,1,1,1,1,0,0,
+     1,1,1,1,1,1,1,1,1,1,1,0,
+     1,1,1,1,1,1,1,1,1,1,1,0,
+     1,1,1,1,1,1,1,1,1,1,1,0,
+     0,1,1,1,1,1,1,1,1,1,0,0,
+     0,0,1,1,1,1,1,1,1,0,0,0,
+     0,0,0,1,1,1,1,1,0,0,0,0,
+     0,0,0,0,1,1,1,0,0,0,0,0,
+     0,0,0,0,0,1,0,0,0,0,0,0,
+     0,0,0,0,0,0,0,0,0,0,0,0,
+     0,0,0,0,0,0,0,0,0,0,0,0],
     // Big tree
-    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,
-     0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,
-     0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,
-     0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-     1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
-     0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
-     0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    // Big anchor
-    [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,
-     0,0,0,0,1,1,0,1,1,0,0,0,0,0,0,
-     0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
-     0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,
-     0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,
-     0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,
-     0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,
-     0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,
-     0,1,1,0,0,1,1,1,0,0,1,1,0,0,0,
-     1,1,0,0,0,1,1,1,0,0,0,1,1,0,0,
-     0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,
+     0,0,0,0,1,1,1,1,0,0,0,0,
+     0,0,0,1,1,1,1,1,1,0,0,0,
+     0,0,1,1,1,1,1,1,1,1,0,0,
+     0,1,1,1,1,1,1,1,1,1,1,0,
+     1,1,1,1,1,1,1,1,1,1,1,1,
+     0,0,0,0,0,1,1,0,0,0,0,0,
+     0,0,0,0,0,1,1,0,0,0,0,0,
+     0,0,0,0,0,1,1,0,0,0,0,0,
+     0,0,0,1,1,1,1,1,1,0,0,0,
+     0,0,0,0,0,0,0,0,0,0,0,0,
+     0,0,0,0,0,0,0,0,0,0,0,0],
+    // Rocket
+    [0,0,0,0,1,1,1,0,0,0,0,0,
+     0,0,0,1,1,1,1,1,0,0,0,0,
+     0,0,1,1,1,1,1,1,1,0,0,0,
+     0,0,1,1,1,1,1,1,1,0,0,0,
+     0,0,1,1,1,1,1,1,1,0,0,0,
+     0,1,1,1,1,1,1,1,1,1,0,0,
+     0,1,1,1,1,1,1,1,1,1,0,0,
+     0,1,1,1,1,1,1,1,1,1,0,0,
+     1,1,0,0,1,1,1,0,0,1,1,0,
+     1,1,0,0,1,1,1,0,0,1,1,0,
+     0,0,0,0,0,0,0,0,0,0,0,0,
+     0,0,0,0,0,0,0,0,0,0,0,0],
+    // Castle
+    [1,0,1,0,0,0,0,0,0,1,0,1,
+     1,1,1,0,0,0,0,0,0,1,1,1,
+     1,1,1,1,1,1,1,1,1,1,1,1,
+     1,1,1,1,1,1,1,1,1,1,1,1,
+     1,1,0,1,1,0,0,1,1,0,1,1,
+     1,1,0,1,1,0,0,1,1,0,1,1,
+     1,1,0,1,1,0,0,1,1,0,1,1,
+     1,1,1,1,1,1,1,1,1,1,1,1,
+     1,1,1,1,1,1,1,1,1,1,1,1,
+     1,1,0,0,0,0,0,0,0,0,1,1,
+     1,1,0,0,0,0,0,0,0,0,1,1,
+     0,0,0,0,0,0,0,0,0,0,0,0],
+    // Anchor
+    [0,0,0,0,1,1,1,1,0,0,0,0,
+     0,0,0,1,1,0,0,1,1,0,0,0,
+     0,0,0,1,1,0,0,1,1,0,0,0,
+     0,0,0,0,1,1,1,1,0,0,0,0,
+     0,1,0,0,1,1,1,1,0,0,1,0,
+     0,1,1,1,1,1,1,1,1,1,1,0,
+     0,1,0,0,1,1,1,1,0,0,1,0,
+     0,1,0,0,1,1,1,1,0,0,1,0,
+     0,1,1,0,1,1,1,1,0,1,1,0,
+     1,1,0,0,1,1,1,1,0,0,1,1,
+     0,1,1,1,1,1,1,1,1,1,1,0,
+     0,0,0,0,0,0,0,0,0,0,0,0],
   ]
 };
 
 // ── Clue calculator ───────────────────────────────────────
 function calcClues(line) {
-  const clues = [];
-  let count = 0;
+  const clues = []; let count = 0;
   for (const v of line) {
-    if (v === 1) { count++; }
+    if (v === 1) count++;
     else { if (count > 0) { clues.push(count); count = 0; } }
   }
   if (count > 0) clues.push(count);
   return clues.length ? clues : [0];
 }
 
-// ── Generate puzzle ────────────────────────────────────────
 function generatePuzzle(n) {
   const pool = PATTERNS[n];
   const flat = pool[Math.floor(Math.random() * pool.length)];
   const sol = [];
   for (let r = 0; r < n; r++) sol.push(flat.slice(r * n, r * n + n));
-
   const rClues = sol.map(row => calcClues(row));
   const cClues = [];
-  for (let c = 0; c < n; c++) {
-    const col = sol.map(row => row[c]);
-    cClues.push(calcClues(col));
-  }
+  for (let c = 0; c < n; c++) cClues.push(calcClues(sol.map(row => row[c])));
   return { sol, rClues, cClues };
 }
 
-// ── Layout ────────────────────────────────────────────────
-function computeSizes() {
+// ── Layout: 판 크기 고정, 셀만 변함 ─────────────────────
+// board-outer 안쪽 실제 사용 가능한 공간 계산
+const OUTER_PAD = 12; // board-outer padding
+const CELL_GAP = 2;
+
+function computeLayout() {
   const vh = window.innerHeight;
   const vw = Math.min(window.innerWidth, 460);
-  const boardH = vh - 72 - 88 - 12; // header + controls + padding
-  const boardW = vw - 20;            // outer padding
 
-  // Max clue label widths (approximate)
-  const maxRowClueW = Math.max(...rowClues.map(c => c.length)) * 14 + 6;
-  const maxColClueH = Math.max(...colClues.map(c => c.length)) * 14 + 4;
+  // 고정 영역: header 72 + controls 96 + board-section padding 12
+  const boardSectionH = vh - 72 - 96 - 12;
+  const boardSectionW = vw - 20; // 좌우 10px씩
 
-  const availW = boardW - 24 - maxRowClueW; // PAD*2 + rowClue width
-  const availH = boardH - 24 - maxColClueH;
+  // board-outer 크기 = board-section의 min dimension (정사각형 유지)
+  const outerSize = Math.min(boardSectionH, boardSectionW);
 
-  const csW = Math.floor((availW - (N-1)*CELL_GAP) / N);
-  const csH = Math.floor((availH - (N-1)*CELL_GAP) / N);
-  CELL_SIZE = Math.max(16, Math.min(csW, csH, 34));
+  // 힌트 영역 크기 계산 (각 숫자 셀을 12px 폭으로 가정)
+  const numW = 12; // 숫자 1개당 폭
+  const numH = 13; // 숫자 1개당 높이
+  const maxRowNums  = Math.max(...rowClues.map(c => c.length));
+  const maxColNums  = Math.max(...colClues.map(c => c.length));
+  const rowClueW = maxRowNums * numW + 4; // 행 힌트 열 너비
+  const colClueH = maxColNums * numH + 2; // 열 힌트 행 높이
+
+  // 셀 그리드 사용 가능 크기
+  const innerSize = outerSize - OUTER_PAD * 2;
+  const gridW = innerSize - rowClueW;
+  const gridH = innerSize - colClueH;
+
+  // 셀 크기
+  const csW = Math.floor((gridW - (N - 1) * CELL_GAP) / N);
+  const csH = Math.floor((gridH - (N - 1) * CELL_GAP) / N);
+  const cs = Math.max(12, Math.min(csW, csH));
+
+  return { outerSize, rowClueW, colClueH, cs, numW, numH };
 }
 
 function applyLayout() {
-  computeSizes();
+  const { outerSize, rowClueW, colClueH, cs, numW, numH } = computeLayout();
 
-  const cs = CELL_SIZE;
-  const gap = CELL_GAP;
+  // board-outer 크기 고정
+  const outer = document.getElementById('board-outer');
+  outer.style.width  = outerSize + 'px';
+  outer.style.height = outerSize + 'px';
 
-  // Apply cell sizes
-  document.querySelectorAll('.cell').forEach(cell => {
-    cell.style.width = cs + 'px';
-    cell.style.height = cs + 'px';
+  // 셀 크기
+  document.querySelectorAll('.cell').forEach(c => {
+    c.style.width  = cs + 'px';
+    c.style.height = cs + 'px';
   });
 
-  // Board grid
+  // board grid
   const boardEl = document.getElementById('board');
   boardEl.style.gridTemplateColumns = `repeat(${N}, ${cs}px)`;
-  boardEl.style.gap = gap + 'px';
+  boardEl.style.gap = CELL_GAP + 'px';
 
-  // Row clue heights
-  const maxRowClueW = Math.max(...rowClues.map(c => c.length)) * (N <= 8 ? 14 : 12) + 4;
+  // 행 힌트: 각 숫자 폭 = numW, 높이 = cs
   document.querySelectorAll('.row-clue').forEach((el, r) => {
     el.style.height = cs + 'px';
-    el.style.minWidth = maxRowClueW + 'px';
-    if (r < N - 1) el.style.marginBottom = gap + 'px';
-  });
-  document.getElementById('row-clues').style.marginTop =
-    (Math.max(...colClues.map(c => c.length)) * 14 + 4) + 'px';
-
-  // Col clue widths
-  document.querySelectorAll('.col-clue').forEach(el => {
-    el.style.width = cs + 'px';
-    if (N > 8) el.style.marginRight = (gap - 1) + 'px';
-    else el.style.marginRight = gap + 'px';
+    el.style.width  = rowClueW + 'px';
+    el.style.gap    = '2px';
+    el.style.paddingRight = '4px';
+    if (r < N - 1) el.style.marginBottom = CELL_GAP + 'px';
+    el.querySelectorAll('span').forEach(s => {
+      s.style.fontSize = (numW - 1) + 'px';
+      s.style.minWidth = numW + 'px';
+    });
   });
 
-  // Col clues top margin (left offset for row clue column)
-  document.getElementById('top-clues').style.marginLeft = maxRowClueW + 'px';
-  document.getElementById('top-clues').style.gap = gap + 'px';
+  // 열 힌트: 각 숫자 높이 = numH, 너비 = cs
+  document.querySelectorAll('.col-clue').forEach((el, c) => {
+    el.style.width  = cs + 'px';
+    el.style.height = colClueH + 'px';
+    el.style.gap    = '1px';
+    if (c < N - 1) el.style.marginRight = CELL_GAP + 'px';
+    el.querySelectorAll('span').forEach(s => {
+      s.style.fontSize = (numW - 1) + 'px';
+      s.style.height   = numH + 'px';
+    });
+  });
+
+  // top-clues: 왼쪽에 행힌트 열 너비만큼 offset
+  document.getElementById('top-clues').style.marginLeft = rowClueW + 'px';
+
+  // row-clues: 열힌트 높이만큼 위쪽 여백
+  document.getElementById('row-clues').style.marginTop = colClueH + 'px';
 }
 
-// ── Build board ────────────────────────────────────────────
+// ── Build board ───────────────────────────────────────────
 function newBoard() {
   closeToast();
   N = SIZES[sizeIdx];
   const { sol, rClues, cClues } = generatePuzzle(N);
-  solution = sol;
-  rowClues = rClues;
-  colClues = cClues;
+  solution = sol; rowClues = rClues; colClues = cClues;
   userBoard = Array.from({length: N}, () => Array(N).fill(0));
 
   buildDOM();
@@ -684,39 +571,32 @@ function resetBoard() {
     c.className = 'cell';
     applySepClasses(c);
   });
-  updateClues();
-  updateStatus();
+  updateClues(); updateStatus();
 }
 
 function buildDOM() {
   // Top clues
-  const topClues = document.getElementById('top-clues');
-  topClues.innerHTML = '';
+  const topEl = document.getElementById('top-clues');
+  topEl.innerHTML = '';
   for (let c = 0; c < N; c++) {
     const div = document.createElement('div');
-    div.className = 'col-clue';
-    div.id = `cc-${c}`;
+    div.className = 'col-clue'; div.id = `cc-${c}`;
     colClues[c].forEach(n => {
-      const span = document.createElement('span');
-      span.textContent = n;
-      div.appendChild(span);
+      const s = document.createElement('span'); s.textContent = n; div.appendChild(s);
     });
-    topClues.appendChild(div);
+    topEl.appendChild(div);
   }
 
   // Row clues
-  const rowCluesEl = document.getElementById('row-clues');
-  rowCluesEl.innerHTML = '';
+  const rowEl = document.getElementById('row-clues');
+  rowEl.innerHTML = '';
   for (let r = 0; r < N; r++) {
     const div = document.createElement('div');
-    div.className = 'row-clue';
-    div.id = `rc-${r}`;
+    div.className = 'row-clue'; div.id = `rc-${r}`;
     rowClues[r].forEach(n => {
-      const span = document.createElement('span');
-      span.textContent = n;
-      div.appendChild(span);
+      const s = document.createElement('span'); s.textContent = n; div.appendChild(s);
     });
-    rowCluesEl.appendChild(div);
+    rowEl.appendChild(div);
   }
 
   // Cells
@@ -735,8 +615,7 @@ function buildDOM() {
 }
 
 function applySepClasses(cell) {
-  const r = parseInt(cell.dataset.r);
-  const c = parseInt(cell.dataset.c);
+  const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
   if (N >= 10) {
     if ((c + 1) % 5 === 0 && c < N - 1) cell.classList.add('sep-right');
     if ((r + 1) % 5 === 0 && r < N - 1) cell.classList.add('sep-bottom');
@@ -747,95 +626,68 @@ function getCell(r, c) {
   return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
 }
 
-// ── Cell click: 0→1→2→0 ──────────────────────────────────
+// ── Cell click ────────────────────────────────────────────
 function onCellClick(r, c) {
   playClick();
   userBoard[r][c] = (userBoard[r][c] + 1) % 3;
-  renderCell(r, c);
-  updateClues();
-  updateStatus();
-}
-
-function renderCell(r, c) {
   const cell = getCell(r, c);
-  const v = userBoard[r][c];
   cell.className = 'cell';
   applySepClasses(cell);
-  if (v === 1) cell.classList.add('filled');
-  else if (v === 2) cell.classList.add('xmark');
+  if (userBoard[r][c] === 1) cell.classList.add('filled');
+  else if (userBoard[r][c] === 2) cell.classList.add('xmark');
+  updateClues(); updateStatus();
 }
 
-// ── Clue status ───────────────────────────────────────────
+// ── Clue logic ────────────────────────────────────────────
 function getUserLine(isRow, idx) {
-  if (isRow) return userBoard[idx];
-  return userBoard.map(row => row[idx]);
+  return isRow ? userBoard[idx] : userBoard.map(row => row[idx]);
 }
 
-function clueMatch(userLine, clues) {
-  // Only count filled cells (state=1), ignore xmarks
-  const filled = userLine.map(v => v === 1 ? 1 : 0);
-  const actual = calcClues(filled);
-  if (actual.length !== clues.length) return false;
-  return actual.every((v, i) => v === clues[i]);
+function clueMatch(line, clues) {
+  const actual = calcClues(line.map(v => v === 1 ? 1 : 0));
+  return actual.length === clues.length && actual.every((v, i) => v === clues[i]);
 }
 
-function clueOver(userLine, clues) {
-  const filled = userLine.map(v => v === 1 ? 1 : 0);
-  const filledCount = filled.reduce((a, b) => a + b, 0);
-  const clueSum = clues.reduce((a, b) => a + b, 0);
-  return filledCount > clueSum;
+function clueOver(line, clues) {
+  return line.filter(v => v === 1).length > clues.reduce((a, b) => a + b, 0);
 }
 
 function updateClues() {
   for (let r = 0; r < N; r++) {
-    const line = getUserLine(true, r);
     const el = document.getElementById(`rc-${r}`);
     if (!el) continue;
+    const line = getUserLine(true, r);
     el.classList.remove('done', 'over');
     if (clueMatch(line, rowClues[r])) el.classList.add('done');
     else if (clueOver(line, rowClues[r])) el.classList.add('over');
   }
   for (let c = 0; c < N; c++) {
-    const line = getUserLine(false, c);
     const el = document.getElementById(`cc-${c}`);
     if (!el) continue;
+    const line = getUserLine(false, c);
     el.classList.remove('done', 'over');
     if (clueMatch(line, colClues[c])) el.classList.add('done');
     else if (clueOver(line, colClues[c])) el.classList.add('over');
   }
 }
 
-// ── Status bar ────────────────────────────────────────────
+// ── Status ────────────────────────────────────────────────
 function updateStatus() {
-  const total = N * N;
-  const filled = userBoard.flat().filter(v => v === 1).length;
-  const solFilled = solution.flat().reduce((a, b) => a + b, 0);
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-
   const rowsDone = rowClues.filter((_, r) => clueMatch(getUserLine(true, r), rowClues[r])).length;
   const colsDone = colClues.filter((_, c) => clueMatch(getUserLine(false, c), colClues[c])).length;
-
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
   if (rowsDone === N && colsDone === N) {
-    dot.className = 'status-dot ok';
-    txt.textContent = '모든 힌트가 맞아요!';
+    dot.className = 'status-dot ok'; txt.textContent = '모든 힌트가 맞아요!';
   } else {
-    dot.className = 'status-dot';
-    txt.textContent = `행 ${rowsDone}/${N} · 열 ${colsDone}/${N} 완성`;
+    dot.className = 'status-dot'; txt.textContent = `행 ${rowsDone}/${N} · 열 ${colsDone}/${N} 완성`;
   }
 }
 
 // ── Win check ─────────────────────────────────────────────
 function checkWin() {
-  // All row and col clues must match
-  for (let r = 0; r < N; r++) {
-    if (!clueMatch(getUserLine(true, r), rowClues[r])) { shakeBoard(); return; }
-  }
-  for (let c = 0; c < N; c++) {
-    if (!clueMatch(getUserLine(false, c), colClues[c])) { shakeBoard(); return; }
-  }
-
-  // WIN
+  for (let r = 0; r < N; r++) if (!clueMatch(getUserLine(true, r), rowClues[r])) { shakeBoard(); return; }
+  for (let c = 0; c < N; c++) if (!clueMatch(getUserLine(false, c), colClues[c])) { shakeBoard(); return; }
   playClear();
   setTimeout(() => {
     document.getElementById('overlay').classList.add('show');
@@ -845,9 +697,9 @@ function checkWin() {
 
 function shakeBoard() {
   const outer = document.getElementById('board-outer');
-  const frames = [0, -8, 8, -6, 6, -4, 4, 0];
-  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
-  setTimeout(() => outer.style.transform = '', frames.length * 55);
+  const frames = [0,-8,8,-6,6,-4,4,0];
+  frames.forEach((x,i) => setTimeout(() => outer.style.transform=`translateX(${x}px)`, i*55));
+  setTimeout(() => outer.style.transform='', frames.length*55);
 }
 
 // ── Nav ───────────────────────────────────────────────────
@@ -867,17 +719,14 @@ function updateNavButtons() {
   else { next.classList.remove('disabled'); document.getElementById('next-label').textContent = `${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`; }
 }
 
-// ── Toast ─────────────────────────────────────────────────
 function closeToast() {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('toast').classList.remove('show');
 }
 
-// ── Scroll prevention ─────────────────────────────────────
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 window.addEventListener('resize', applyLayout);
 
-// ── Init ──────────────────────────────────────────────────
 newBoard();
 </script>
 </body>
