@@ -1,382 +1,675 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chain Sudoku - Master</title>
-    <style>
-        :root {
-            --bg-color: #f0ede5;
-            --text-color: #5d5a52;
-            --shadow-dark: rgba(188, 185, 178, 0.8);
-            --shadow-light: rgba(255, 255, 255, 0.9);
-            --accent-color: #8e9775;
-            --chain-color: #4a473f; /* 짙은 색 체인 */
-            --selected-bg: #e8e4da;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Chain Sudoku</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #d8edd8;
+    --surface: #e8f5e8;
+    --surface2: #f2faf2;
+    --shadow-light: #ffffff;
+    --shadow-dark: #b8d4b8;
+    --accent: #6b9e6b;
+    --accent2: #4a7c4a;
+    --text: #3a5c3a;
+    --text2: #6b8f6b;
+    --danger: #c86060;
+    --chain-color: #7a9e7a;
+    --selected-bg: #c8e6c8;
+    --selected-shadow: #5a8a5a;
+    --error-bg: #fde8e8;
+    --cell-size: 52px;
+    --gap: 6px;
+  }
 
-        html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Pretendard', sans-serif;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        body { display: flex; flex-direction: column; align-items: center; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden; touch-action: none; user-select: none;
+  }
 
-        .header {
-            height: 20%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100dvh; overflow: hidden; position: relative;
+  }
 
-        .title-row {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
 
-        .size-btn {
-            width: 55px;
-            height: 55px;
-            border: none;
-            border-radius: 15px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-weight: 800;
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-            cursor: pointer;
-        }
+  /* HEADER */
+  .header {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 16px 10px;
+  }
 
-        .size-btn:active {
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-        }
+  .nav-btn {
+    width: 48px; height: 48px; border-radius: 16px; border: none;
+    background: var(--surface);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+    color: var(--text2); flex-direction: column; gap: 1px; line-height: 1;
+  }
+  .nav-btn:active {
+    box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+    transform: scale(0.96);
+  }
+  .nav-btn .arrow { font-size: 18px; line-height: 1; }
+  .nav-btn .size-label { font-size: 11px; font-weight: 500; color: var(--text2); }
+  .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
 
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
-        #status { margin-top: 10px; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; height: 1.2rem; }
+  .title-wrap { text-align: center; }
+  .title-wrap h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--text); letter-spacing: -0.5px; line-height: 1;
+  }
+  .title-wrap .subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
 
-        .game-area {
-            height: 50%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  /* BOARD */
+  .board-section {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    flex: 1; width: 100%; padding: 6px 16px;
+  }
 
-        .grid-container {
-            position: relative;
-            width: 85vw;
-            height: 85vw;
-            max-width: 360px;
-            max-height: 360px;
-            background: var(--bg-color);
-            border-radius: 30px;
-            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
-            padding: 15px;
-            box-sizing: border-box;
-        }
+  .board-outer {
+    background: var(--surface); border-radius: 28px; padding: 14px;
+    box-shadow:
+      8px 8px 20px var(--shadow-dark),
+      -8px -8px 20px var(--shadow-light),
+      inset 1px 1px 2px rgba(255,255,255,0.8);
+    position: relative;
+  }
 
-        #grid {
-            display: grid;
-            width: 100%;
-            height: 100%;
-            gap: 8px;
-            position: relative;
-            z-index: 2;
-        }
+  /* SVG chain layer sits behind cells */
+  #chain-svg {
+    position: absolute;
+    top: 14px; left: 14px;
+    pointer-events: none;
+    z-index: 1;
+  }
 
-        #chain-svg {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
+  #board {
+    display: grid;
+    gap: var(--gap);
+    position: relative;
+    z-index: 2;
+  }
 
-        .cell {
-            width: 100%;
-            height: 100%;
-            background: var(--bg-color);
-            border-radius: 50%;
-            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 800;
-            transition: all 0.1s;
-            box-sizing: border-box;
-        }
+  .cell {
+    width: var(--cell-size); height: var(--cell-size);
+    border-radius: 50%;
+    background: var(--surface2);
+    box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    transition: all 0.15s;
+    font-family: 'Playfair Display', serif;
+    font-size: calc(var(--cell-size) * 0.42);
+    font-weight: 700; color: var(--text);
+    line-height: 1; flex-shrink: 0;
+  }
+  .cell:active { transform: scale(0.92); }
 
-        .cell.active {
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-            background-color: var(--selected-bg);
-        }
+  .cell.selected {
+    background: var(--selected-bg);
+    box-shadow: inset 3px 3px 7px rgba(90,138,90,0.3), inset -2px -2px 5px rgba(255,255,255,0.8);
+    color: var(--accent2);
+  }
 
-        .footer {
-            height: 30%;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
+  .cell.error {
+    background: var(--error-bg);
+    color: var(--danger);
+  }
 
-        #num-pad {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            width: 90%;
-        }
+  .cell.filled {
+    background: linear-gradient(135deg, #e8f5e8, #d4ecca);
+  }
 
-        .num-btn {
-            width: 45px;
-            height: 45px;
-            border: none;
-            border-radius: 12px;
-            background: var(--bg-color);
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--text-color);
-        }
+  /* NUMPAD */
+  .numpad-section {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    padding: 6px 16px 0;
+  }
 
-        .num-btn:active {
-            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
-        }
+  .numpad {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 8px;
+  }
 
-        .action-btns { display: flex; gap: 15px; }
-        .btn {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 18px;
-            background: var(--bg-color);
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-            font-weight: 700;
-            color: var(--text-color);
-        }
-        .btn-check { background-color: var(--accent-color); color: white; }
-    </style>
+  .num-btn {
+    width: 44px; height: 44px; border-radius: 14px; border: none;
+    background: var(--surface); color: var(--text);
+    box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .num-btn:active {
+    box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -1px -1px 3px var(--shadow-light);
+    transform: scale(0.94);
+  }
+  .num-btn.clear-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--text2);
+    width: 52px;
+  }
+
+  /* CONTROLS */
+  .controls {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    padding: 10px 16px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .status-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; font-size: 13px; color: var(--text2);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #a0b8a0; transition: background 0.3s;
+  }
+  .status-dot.ok { background: var(--accent); }
+  .status-dot.err { background: var(--danger); }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  .btn {
+    flex: 1; height: 50px; border-radius: 16px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500;
+    transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-reset {
+    background: var(--surface); color: var(--text2);
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  }
+  .btn-reset:active {
+    box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+  }
+
+  .btn-confirm {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
+  }
+  .btn-confirm:active { box-shadow: 2px 2px 6px rgba(74,124,74,0.4); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    background: var(--surface); border-radius: 24px;
+    padding: 28px 36px; text-align: center;
+    box-shadow: 12px 12px 30px var(--shadow-dark), -12px -12px 30px var(--shadow-light);
+    z-index: 100; opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .toast .toast-icon { font-size: 48px; margin-bottom: 10px; }
+  .toast h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--text); margin-bottom: 6px;
+  }
+  .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
+  .toast .toast-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 14px;
+    padding: 12px 32px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; box-shadow: 3px 3px 10px rgba(74,124,74,0.4);
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(180,210,180,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 99; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+</style>
 </head>
 <body>
 
-    <audio id="click-sound" src="effect 19.mp3" preload="auto"></audio>
+<!-- HEADER -->
+<div class="header">
+  <button class="nav-btn" id="btn-prev" onclick="changeSize(-1)">
+    <span class="arrow">‹</span>
+    <span class="size-label" id="prev-label"></span>
+  </button>
+  <div class="title-wrap">
+    <h1>Chain Sudoku</h1>
+    <div class="subtitle" id="size-subtitle">5 × 5</div>
+  </div>
+  <button class="nav-btn" id="btn-next" onclick="changeSize(1)">
+    <span class="arrow">›</span>
+    <span class="size-label" id="next-label"></span>
+  </button>
+</div>
 
-    <div class="header">
-        <div class="title-row">
-            <button class="size-btn" onclick="changeLevel(6)">6x6</button>
-            <h1>Chain Sudoku</h1>
-            <button class="size-btn" onclick="changeLevel(8)">8x8</button>
-        </div>
-        <div id="status">판을 완성해보세요!</div>
-    </div>
+<!-- BOARD -->
+<div class="board-section">
+  <div class="board-outer" id="board-outer">
+    <svg id="chain-svg"></svg>
+    <div id="board"></div>
+  </div>
+</div>
 
-    <div class="game-area">
-        <div class="grid-container" id="container">
-            <svg id="chain-svg"></svg>
-            <div id="grid"></div>
-        </div>
-    </div>
+<!-- NUMPAD -->
+<div class="numpad-section">
+  <div class="numpad" id="numpad"></div>
+</div>
 
-    <div class="footer">
-        <div id="num-pad"></div>
-        <div class="action-btns">
-            <button class="btn" onclick="handleManualReset()">초기화</button>
-            <button class="btn btn-check" onclick="checkWin()">확인</button>
-        </div>
-    </div>
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="status-bar">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">셀을 선택하고 숫자를 입력하세요</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-reset" onclick="playClick(); resetBoard()">초기화</button>
+    <button class="btn btn-confirm" onclick="playClick(); checkWin()">확인</button>
+  </div>
+</div>
 
-    <script>
-        let currentSize = 5;
-        let selectedCell = null;
-        let chains = [];
-        let audioUnlocked = false;
+<div class="overlay" id="overlay" onclick="closeToast()"></div>
+<div class="toast" id="toast">
+  <div class="toast-icon">🔗</div>
+  <h2>완성!</h2>
+  <p>모든 조건을 충족했어요</p>
+  <button class="toast-btn" onclick="playClick(); closeToast(); newBoard()">새 판 하기</button>
+</div>
 
-        function playClickSound() {
-            const sound = document.getElementById('click-sound');
-            if (!audioUnlocked) {
-                sound.play().then(() => {
-                    audioUnlocked = true;
-                    sound.currentTime = 0;
-                }).catch(e => console.log("Audio unlock waiting..."));
-            } else {
-                sound.currentTime = 0;
-                sound.play();
-            }
-        }
+<script>
+// ─── Audio ────────────────────────────────────────────────
+const sfxClick = new Audio('effect 19.mp3');
+const sfxClear = new Audio('effect 1.mp3');
+function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
+function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-        function changeLevel(size) {
-            playClickSound(); // 사용자가 버튼을 눌렀으므로 소리 재생
-            currentSize = size;
-            document.getElementById('status').innerText = `${size}x${size} 모드 시작!`;
-            initGame(false); // 내부 생성 시에는 소리 안 나게 false 전달
-        }
+// ─── State ────────────────────────────────────────────────
+const SIZES = [5, 6, 8, 10];
+let sizeIdx = 0;
+let N = 5;
+let chains = [];       // array of arrays of cell indices
+let solution = [];     // correct answer
+let userBoard = [];    // player's input (0 = empty)
+let selectedCell = -1;
 
-        function handleManualReset() {
-            playClickSound(); // "초기화" 버튼 클릭 시 소리 재생
-            initGame(false); // 이미 여기서 소리를 냈으므로 initGame 내부 중복 방지 위해 false
-        }
+// ─── Puzzle Generator ─────────────────────────────────────
+// Generate a valid Latin square solution, then build chains on top
+function generateSolution(n) {
+  // Create a valid n×n Latin square using cyclic shift
+  const sol = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      sol.push(((r + c) % n) + 1);
+    }
+  }
+  // Shuffle rows and columns to randomize
+  // Shuffle row groups
+  const rowPerm = shuffle(Array.from({length: n}, (_, i) => i));
+  const colPerm = shuffle(Array.from({length: n}, (_, i) => i));
+  const result = Array(n * n).fill(0);
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      result[rowPerm[r] * n + colPerm[c]] = sol[r * n + c];
+    }
+  }
+  // Also shuffle values (relabel numbers)
+  const valPerm = shuffle(Array.from({length: n}, (_, i) => i + 1));
+  return result.map(v => valPerm[v - 1]);
+}
 
-        function initGame(shouldPlaySound = false) {
-            if (shouldPlaySound) playClickSound();
-            
-            const grid = document.getElementById('grid');
-            const numPad = document.getElementById('num-pad');
-            grid.innerHTML = '';
-            numPad.innerHTML = '';
-            selectedCell = null;
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
-            const fontSize = currentSize > 7 ? '0.9rem' : '1.2rem';
-            grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
-            grid.style.gridTemplateRows = `repeat(${currentSize}, 1fr)`;
-            
-            for (let i = 0; i < currentSize * currentSize; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.id = `cell-${i}`;
-                cell.style.fontSize = fontSize;
-                cell.onclick = () => {
-                    playClickSound(); // 세포 클릭 시 소리 재생
-                    if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).classList.remove('active');
-                    selectedCell = i;
-                    cell.classList.add('active');
-                };
-                grid.appendChild(cell);
-            }
+function generateChains(n) {
+  // Cover all n*n cells with chains of length 2~n
+  // Each chain must contain distinct values in solution → guaranteed by construction
+  // Strategy: generate chains greedily, ensuring each chain has distinct solution values
+  const visited = new Set();
+  const result = [];
+  const allCells = shuffle(Array.from({length: n * n}, (_, i) => i));
 
-            for (let i = 1; i <= currentSize; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'num-btn';
-                btn.innerText = i;
-                btn.onclick = () => { 
-                    playClickSound(); // 숫자 버튼 클릭 시 소리 재생
-                    if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = i; 
-                };
-                numPad.appendChild(btn);
-            }
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'num-btn';
-            clearBtn.innerText = 'C';
-            clearBtn.onclick = () => { 
-                playClickSound(); // C 버튼 클릭 시 소리 재생
-                if(selectedCell !== null) document.getElementById(`cell-${selectedCell}`).innerText = ''; 
-            };
-            numPad.appendChild(clearBtn);
+  function getNeighbors(idx) {
+    const r = Math.floor(idx / n), c = idx % n;
+    const nb = [];
+    if (r > 0) nb.push(idx - n);
+    if (r < n-1) nb.push(idx + n);
+    if (c > 0) nb.push(idx - 1);
+    if (c < n-1) nb.push(idx + 1);
+    return nb;
+  }
 
-            generateChains();
-            setTimeout(drawChains, 150);
-        }
+  for (const start of allCells) {
+    if (visited.has(start)) continue;
+    const chain = [start];
+    visited.add(start);
+    const usedVals = new Set([solution[start]]);
+    let curr = start;
+    const maxLen = Math.min(n, Math.floor(Math.random() * (n - 1)) + 2);
 
-        function generateChains() {
-            chains = [];
-            let visited = new Set();
-            let allIndices = Array.from({length: currentSize * currentSize}, (_, i) => i).sort(() => Math.random() - 0.5);
+    for (let step = 1; step < maxLen; step++) {
+      const nb = shuffle(getNeighbors(curr).filter(nb => {
+        return !visited.has(nb) && !usedVals.has(solution[nb]);
+      }));
+      if (nb.length === 0) break;
+      const next = nb[0];
+      chain.push(next);
+      visited.add(next);
+      usedVals.add(solution[next]);
+      curr = next;
+    }
+    if (chain.length >= 2) result.push(chain);
+  }
 
-            for (let i of allIndices) {
-                if (visited.has(i)) continue;
-                let chain = [i];
-                visited.add(i);
-                let curr = i;
-                let maxLen = Math.floor(Math.random() * (currentSize - 1)) + 2; 
+  // Any unvisited single cells → add as length-1 chains (rare)
+  for (let i = 0; i < n * n; i++) {
+    if (!visited.has(i)) result.push([i]);
+  }
 
-                for (let j = 0; j < maxLen - 1; j++) {
-                    let neighbors = getNeighbors(curr).filter(n => !visited.has(n));
-                    if (neighbors.length === 0) break;
-                    let next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                    chain.push(next);
-                    visited.add(next);
-                    curr = next;
-                }
-                if (chain.length > 1) chains.push(chain);
-            }
-        }
+  return result;
+}
 
-        function getNeighbors(idx) {
-            let res = [];
-            let r = Math.floor(idx / currentSize);
-            let c = idx % currentSize;
-            if (r > 0) res.push(idx - currentSize);
-            if (r < currentSize - 1) res.push(idx + currentSize);
-            if (c > 0) res.push(idx - 1);
-            if (c < currentSize - 1) res.push(idx + 1);
-            return res;
-        }
+// ─── Build Board ──────────────────────────────────────────
+function newBoard() {
+  closeToast();
+  N = SIZES[sizeIdx];
+  solution = generateSolution(N);
+  chains = generateChains(N);
+  userBoard = Array(N * N).fill(0);
+  selectedCell = -1;
 
-        function drawChains() {
-            const svg = document.getElementById('chain-svg');
-            const container = document.getElementById('container');
-            const containerRect = container.getBoundingClientRect();
-            svg.innerHTML = '';
+  setCellSize();
+  buildNumpad();
+  renderBoard();
+  setTimeout(drawChains, 80);
+  updateStatus();
+  updateNavButtons();
+}
 
-            chains.forEach(chain => {
-                for (let i = 0; i < chain.length - 1; i++) {
-                    const c1 = document.getElementById(`cell-${chain[i]}`);
-                    const c2 = document.getElementById(`cell-${chain[i+1]}`);
-                    
-                    const r1 = c1.getBoundingClientRect();
-                    const r2 = c2.getBoundingClientRect();
+function resetBoard() {
+  closeToast();
+  userBoard = Array(N * N).fill(0);
+  selectedCell = -1;
+  renderBoard();
+  updateStatus();
+}
 
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    
-                    line.setAttribute("x1", (r1.left + r1.width / 2) - containerRect.left);
-                    line.setAttribute("y1", (r1.top + r1.height / 2) - containerRect.top);
-                    line.setAttribute("x2", (r2.left + r2.width / 2) - containerRect.left);
-                    line.setAttribute("y2", (r2.top + r2.height / 2) - containerRect.top);
-                    
-                    line.setAttribute("stroke", "var(--chain-color)");
-                    line.setAttribute("stroke-width", "10");
-                    line.setAttribute("stroke-linecap", "round");
-                    line.setAttribute("opacity", "0.8");
-                    svg.appendChild(line);
-                }
-            });
-        }
+function setCellSize() {
+  const vw = Math.min(window.innerWidth, 440);
+  const available = vw - 28 - 28 - (N - 1) * 6;
+  const cs = Math.max(28, Math.floor(available / N));
+  document.documentElement.style.setProperty('--cell-size', cs + 'px');
+}
 
-        function checkWin() {
-            playClickSound();
-            let board = [];
-            for(let i=0; i<currentSize*currentSize; i++) {
-                const val = document.getElementById(`cell-${i}`).innerText;
-                if(!val) { alert("모든 칸을 채워주세요!"); return; }
-                board.push(parseInt(val));
-            }
+function buildNumpad() {
+  const pad = document.getElementById('numpad');
+  pad.innerHTML = '';
+  for (let i = 1; i <= N; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = i;
+    btn.addEventListener('click', () => { playClick(); inputNumber(i); });
+    pad.appendChild(btn);
+  }
+  const clr = document.createElement('button');
+  clr.className = 'num-btn clear-btn';
+  clr.textContent = 'C';
+  clr.addEventListener('click', () => { playClick(); inputNumber(0); });
+  pad.appendChild(clr);
+}
 
-            if (validate(board)) {
-                document.getElementById('status').innerText = "🎉 미션 클리어!";
-                document.getElementById('status').style.color = "#27ae60";
-            } else {
-                document.getElementById('status').innerText = "규칙 오류가 있습니다!";
-                document.getElementById('status').style.color = "#d32f2f";
-            }
-        }
+// ─── Render ───────────────────────────────────────────────
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.style.gridTemplateColumns = `repeat(${N}, var(--cell-size))`;
+  boardEl.innerHTML = '';
 
-        function validate(board) {
-            for (let r = 0; r < currentSize; r++) {
-                let row = board.slice(r * currentSize, (r + 1) * currentSize);
-                if (new Set(row).size !== currentSize) return false;
-            }
-            for (let c = 0; c < currentSize; c++) {
-                let col = [];
-                for (let r = 0; r < currentSize; r++) col.push(board[r * currentSize + c]);
-                if (new Set(col).size !== currentSize) return false;
-            }
-            for (let chain of chains) {
-                let vals = chain.map(idx => board[idx]);
-                if (new Set(vals).size !== vals.length) return false;
-            }
-            return true;
-        }
+  // Detect errors: duplicate in row, col, or chain
+  const errors = getErrors();
 
-        // 페이지 로드 시에는 소리 없이 초기화만 진행
-        window.onload = () => initGame(false);
-        window.onresize = drawChains;
-    </script>
+  for (let i = 0; i < N * N; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.idx = i;
+
+    if (i === selectedCell) cell.classList.add('selected');
+    if (userBoard[i] > 0) {
+      cell.textContent = userBoard[i];
+      if (errors.has(i)) cell.classList.add('error');
+      else cell.classList.add('filled');
+    }
+
+    cell.addEventListener('click', () => {
+      playClick();
+      selectedCell = i;
+      renderBoard();
+      setTimeout(drawChains, 20);
+    });
+
+    boardEl.appendChild(cell);
+  }
+}
+
+function getErrors() {
+  const errors = new Set();
+
+  // Check rows
+  for (let r = 0; r < N; r++) {
+    const seen = {}, dups = new Set();
+    for (let c = 0; c < N; c++) {
+      const v = userBoard[r * N + c];
+      if (!v) continue;
+      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(r * N + c); }
+      else seen[v] = r * N + c;
+    }
+    dups.forEach(i => errors.add(i));
+  }
+
+  // Check cols
+  for (let c = 0; c < N; c++) {
+    const seen = {}, dups = new Set();
+    for (let r = 0; r < N; r++) {
+      const v = userBoard[r * N + c];
+      if (!v) continue;
+      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(r * N + c); }
+      else seen[v] = r * N + c;
+    }
+    dups.forEach(i => errors.add(i));
+  }
+
+  // Check chains
+  for (const chain of chains) {
+    if (chain.length < 2) continue;
+    const seen = {}, dups = new Set();
+    for (const idx of chain) {
+      const v = userBoard[idx];
+      if (!v) continue;
+      if (seen[v] !== undefined) { dups.add(seen[v]); dups.add(idx); }
+      else seen[v] = idx;
+    }
+    dups.forEach(i => errors.add(i));
+  }
+
+  return errors;
+}
+
+// ─── Draw Chains ──────────────────────────────────────────
+function drawChains() {
+  const svg = document.getElementById('chain-svg');
+  const boardEl = document.getElementById('board');
+  const boardRect = boardEl.getBoundingClientRect();
+  const outerRect = document.getElementById('board-outer').getBoundingClientRect();
+
+  const cs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+  const gap = 6;
+  const W = N * cs + (N - 1) * gap;
+
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', W);
+  svg.innerHTML = '';
+
+  // Chain colors — cycle through a palette
+  const CHAIN_COLORS = [
+    '#7a9e7a','#9e7a7a','#7a8e9e','#9e9a6a',
+    '#8a7a9e','#7a9e8e','#9e7a8a','#6a8e7a',
+    '#8e9e7a','#9e8a7a'
+  ];
+
+  chains.forEach((chain, ci) => {
+    if (chain.length < 2) return;
+    const color = CHAIN_COLORS[ci % CHAIN_COLORS.length];
+
+    for (let k = 0; k < chain.length - 1; k++) {
+      const i1 = chain[k], i2 = chain[k + 1];
+      const r1 = Math.floor(i1 / N), c1 = i1 % N;
+      const r2 = Math.floor(i2 / N), c2 = i2 % N;
+
+      const x1 = c1 * (cs + gap) + cs / 2;
+      const y1 = r1 * (cs + gap) + cs / 2;
+      const x2 = c2 * (cs + gap) + cs / 2;
+      const y2 = r2 * (cs + gap) + cs / 2;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', color);
+      line.setAttribute('stroke-width', Math.max(8, cs * 0.28));
+      line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('opacity', '0.55');
+      svg.appendChild(line);
+    }
+  });
+}
+
+// ─── Input ────────────────────────────────────────────────
+function inputNumber(val) {
+  if (selectedCell < 0) return;
+  userBoard[selectedCell] = val;
+  renderBoard();
+  setTimeout(drawChains, 20);
+  updateStatus();
+}
+
+// ─── Status ───────────────────────────────────────────────
+function updateStatus() {
+  const filled = userBoard.filter(v => v > 0).length;
+  const total = N * N;
+  const errors = getErrors();
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+
+  if (errors.size > 0) {
+    dot.className = 'status-dot err';
+    txt.textContent = `오류 ${errors.size}개 발견`;
+  } else if (filled === total) {
+    dot.className = 'status-dot ok';
+    txt.textContent = '모든 칸이 채워졌어요!';
+  } else {
+    dot.className = 'status-dot';
+    txt.textContent = `${filled} / ${total} 칸 입력됨`;
+  }
+}
+
+// ─── Win Check ────────────────────────────────────────────
+function checkWin() {
+  // All filled?
+  if (userBoard.some(v => v === 0)) {
+    shakeBoard(); return;
+  }
+  // Any errors?
+  if (getErrors().size > 0) {
+    shakeBoard(); return;
+  }
+  // All values match solution (or any valid Latin square + chain solution)
+  // We validate via rules, not by comparing to our generated solution
+  // (already done by getErrors — if no errors and all filled, it's valid)
+
+  playClear();
+  setTimeout(() => {
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('toast').classList.add('show');
+  }, 300);
+}
+
+function shakeBoard() {
+  const outer = document.getElementById('board-outer');
+  const frames = [0, -8, 8, -6, 6, -4, 4, 0];
+  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
+  setTimeout(() => outer.style.transform = '', frames.length * 55);
+}
+
+// ─── Nav ──────────────────────────────────────────────────
+function changeSize(delta) {
+  const newIdx = sizeIdx + delta;
+  if (newIdx < 0 || newIdx >= SIZES.length) return;
+  sizeIdx = newIdx;
+  playClick();
+  newBoard();
+}
+
+function updateNavButtons() {
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  document.getElementById('size-subtitle').textContent = `${N} × ${N}`;
+
+  if (sizeIdx === 0) {
+    prevBtn.classList.add('disabled');
+  } else {
+    prevBtn.classList.remove('disabled');
+    document.getElementById('prev-label').textContent = `${SIZES[sizeIdx-1]}×${SIZES[sizeIdx-1]}`;
+  }
+  if (sizeIdx === SIZES.length - 1) {
+    nextBtn.classList.add('disabled');
+  } else {
+    nextBtn.classList.remove('disabled');
+    document.getElementById('next-label').textContent = `${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`;
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────
+function closeToast() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('toast').classList.remove('show');
+}
+
+// ─── Scroll prevention ────────────────────────────────────
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+window.addEventListener('resize', () => {
+  setCellSize();
+  setTimeout(drawChains, 100);
+});
+
+// ─── Init ─────────────────────────────────────────────────
+newBoard();
+</script>
 </body>
 </html>
