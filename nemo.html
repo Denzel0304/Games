@@ -132,11 +132,15 @@
     display: flex; flex-direction: row;
     align-items: center; justify-content: flex-end;
     flex-shrink: 0;
-    /* gap, padding-right set by JS */
+    overflow: hidden;
+    padding-right: 5px;
+    gap: 2px;
   }
   .row-clue span {
-    font-weight: 600; color: var(--text2); line-height: 1;
-    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; color: var(--text2);
+    line-height: 1;
+    flex-shrink: 0;
+    text-align: center;
   }
   .row-clue.done span { color: var(--clue-ok); }
   .row-clue.over span { color: var(--clue-err); }
@@ -471,26 +475,26 @@ function computeLayout() {
   const vh = window.innerHeight;
   const vw = Math.min(window.innerWidth, 460);
 
-  // 고정 영역: header 72 + controls 88 + board-section padding(top+bottom) 12
+  // 고정 영역
   const boardSectionH = vh - 72 - 88 - 12;
-  const boardSectionW = vw - 20; // 좌우 10px씩
-
-  // board-outer 크기 = 가용 공간의 min (정사각형), 최대 400px
+  const boardSectionW = vw - 20;
   const outerSize = Math.min(boardSectionH, boardSectionW, 400);
+  const innerSize = outerSize - OUTER_PAD * 2;
 
-  // 힌트 숫자 크기: 셀 크기에 비례하지 않고 고정값 사용
-  const numW = 13; // 숫자 1개당 폭
-  const numH = 14; // 숫자 1개당 높이
+  // 먼저 셀 크기를 추정 (힌트 없다고 가정)
+  const csEst = Math.floor((innerSize - (N - 1) * CELL_GAP) / (N + 2));
+
+  // 힌트 폰트/크기를 셀 추정값 기반으로 결정
+  const numW = Math.max(8, Math.min(13, Math.floor(csEst * 0.55)));
+  const numH = numW + 3;
   const maxRowNums = Math.max(...rowClues.map(c => c.length));
   const maxColNums = Math.max(...colClues.map(c => c.length));
-  const rowClueW = maxRowNums * numW + 6;
-  const colClueH = maxColNums * numH + 4;
+  const rowClueW = maxRowNums * (numW + 3) + 6;
+  const colClueH = maxColNums * (numH + 1) + 4;
 
-  // 셀 그리드 가용 크기
-  const innerSize = outerSize - OUTER_PAD * 2;
+  // 실제 셀 크기 계산
   const gridW = innerSize - rowClueW;
   const gridH = innerSize - colClueH;
-
   const csW = Math.floor((gridW - (N - 1) * CELL_GAP) / N);
   const csH = Math.floor((gridH - (N - 1) * CELL_GAP) / N);
   const cs = Math.max(12, Math.min(csW, csH));
@@ -517,29 +521,28 @@ function applyLayout() {
   boardEl.style.gridTemplateColumns = `repeat(${N}, ${cs}px)`;
   boardEl.style.gap = CELL_GAP + 'px';
 
-  // 행 힌트: 높이 = cs, 수직 중앙정렬
+  // 행 힌트: 높이 = cs, 폰트는 셀 크기 기반
+  const rowFontSize = Math.max(8, Math.min(11, Math.floor(cs * 0.45)));
+  const rowNumW = rowFontSize + 3;
   document.querySelectorAll('.row-clue').forEach((el, r) => {
     el.style.height = cs + 'px';
     el.style.width  = rowClueW + 'px';
-    el.style.gap    = '2px';
-    el.style.paddingRight = '5px';
     if (r < N - 1) el.style.marginBottom = CELL_GAP + 'px';
     el.querySelectorAll('span').forEach(s => {
-      s.style.fontSize  = (numW - 1) + 'px';
-      s.style.minWidth  = numW + 'px';
-      s.style.height    = cs + 'px'; // span 높이 = 셀 높이로 맞춰 중앙정렬
+      s.style.fontSize = rowFontSize + 'px';
+      s.style.minWidth = rowNumW + 'px';
     });
   });
 
-  // 열 힌트: 각 숫자 높이 = numH, 너비 = cs
+  // 열 힌트: 너비 = cs, 폰트는 셀 크기 기반
+  const colFontSize = Math.max(8, Math.min(11, Math.floor(cs * 0.45)));
   document.querySelectorAll('.col-clue').forEach((el, c) => {
     el.style.width  = cs + 'px';
     el.style.height = colClueH + 'px';
-    el.style.gap    = '1px';
     if (c < N - 1) el.style.marginRight = CELL_GAP + 'px';
     el.querySelectorAll('span').forEach(s => {
-      s.style.fontSize = (numW - 1) + 'px';
-      s.style.height   = numH + 'px';
+      s.style.fontSize = colFontSize + 'px';
+      s.style.height   = (numH + 1) + 'px';
     });
   });
 
