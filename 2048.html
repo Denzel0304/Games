@@ -114,20 +114,30 @@
             padding-bottom: 20px;
         }
 
-        #status { margin-bottom: 15px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
+        #status { margin-bottom: 10px; margin-top: 8px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
 
-        .controls { display: flex; justify-content: center; width: 85vw; max-width: 340px; margin-top: 6px; }
+        .controls { display: flex; justify-content: center; gap: 14px; width: 85vw; max-width: 340px; margin-top: 6px; }
 
         .action-btn {
-            width: 70%; padding: 18px 0; border: none; border-radius: 15px;
-            font-size: 1.1rem; font-weight: 700;
+            flex: 1; padding: 18px 0; border: none; border-radius: 15px;
+            font-size: 1rem; font-weight: 700;
             background: var(--bg-color); color: var(--text-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             cursor: pointer; transition: transform 0.1s;
         }
 
         #restart-btn { background: linear-gradient(145deg, #ff9800, #f57c00); color: white; box-shadow: 4px 4px 10px rgba(245, 124, 0, 0.3); }
+        #save-btn { background: linear-gradient(145deg, #5c9bd6, #3a7fc1); color: white; box-shadow: 4px 4px 10px rgba(58, 127, 193, 0.3); }
         .action-btn:active { box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); transform: translateY(2px); }
+
+        /* 저장 완료 토스트 */
+        #save-toast {
+            position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #37474f; color: white; padding: 10px 24px;
+            border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+            opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 200;
+        }
+        #save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* 2048 달성 모달 */
         #modal-overlay {
@@ -193,11 +203,14 @@
     </div>
 
     <div class="footer">
-        <div id="status">달성 횟수 : 0</div>
+        <div id="status">2048 달성횟수 : 0</div>
         <div class="controls">
             <button id="restart-btn" class="action-btn" onclick="startGame()">새 게임</button>
+            <button id="save-btn" class="action-btn" onclick="saveGame()">저장하기</button>
         </div>
     </div>
+
+    <div id="save-toast">저장되었습니다 ✓</div>
 
     <!-- 2048 달성 모달 -->
     <div id="modal-overlay">
@@ -228,7 +241,7 @@
         updateAchieveStatus();
 
         function updateAchieveStatus() {
-            statusElement.innerText = `달성 횟수 : ${achieveCount}`;
+            statusElement.innerText = `2048 달성횟수 : ${achieveCount}`;
             statusElement.style.color = "#78909c";
         }
 
@@ -241,6 +254,40 @@
 
         function closeModal() {
             modalOverlay.classList.remove('active');
+        }
+
+        function saveGame() {
+            const saveData = {
+                board: board,
+                score: score,
+                achieved2048: achieved2048
+            };
+            localStorage.setItem('savedGame2048', JSON.stringify(saveData));
+            const toast = document.getElementById('save-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        function loadSavedGame() {
+            const raw = localStorage.getItem('savedGame2048');
+            if (!raw) return false;
+            try {
+                const data = JSON.parse(raw);
+                if (!data.board) return false;
+                board = data.board;
+                score = 0;
+                achieved2048 = data.achieved2048 || false;
+                updateScore(data.score || 0);
+                isGameOver = false;
+                updateAchieveStatus();
+                gridContainer.querySelectorAll('.tile').forEach(tile => tile.remove());
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        if (board[r][c] !== 0) drawTile(r, c, board[r][c]);
+                    }
+                }
+                return true;
+            } catch(e) { return false; }
         }
 
         function startGame() {
@@ -392,7 +439,9 @@
             touchStartX = null; touchStartY = null;
         });
 
-        startGame();
+        if (!loadSavedGame()) {
+            startGame();
+        }
 
         document.addEventListener('touchstart', function unlock() {
             const sound = document.getElementById('merge-sound');
