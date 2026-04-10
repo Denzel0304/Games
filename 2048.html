@@ -206,7 +206,7 @@
         <div id="status">2048 달성횟수 : 0</div>
         <div class="controls">
             <button id="restart-btn" class="action-btn" onclick="startGame()">새 게임</button>
-            <button id="save-btn" class="action-btn" onclick="saveGame()">저장하기</button>
+            <button id="save-btn" class="action-btn" onclick="loadSavedGame()">이어하기</button>
         </div>
     </div>
 
@@ -256,29 +256,36 @@
             modalOverlay.classList.remove('active');
         }
 
-        function saveGame() {
-            const saveData = {
-                board: board,
-                score: score,
-                achieved2048: achieved2048
-            };
+        function autoSave() {
+            if (isGameOver) return; // 게임오버 상태는 저장 안 함
+            const saveData = { board: board, score: score, achieved2048: achieved2048 };
             localStorage.setItem('savedGame2048', JSON.stringify(saveData));
-            const toast = document.getElementById('save-toast');
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 1800);
         }
+
+        // 창 닫기 / 탭 전환 / 모바일 백그라운드 모두 커버
+        window.addEventListener('beforeunload', autoSave);
+        window.addEventListener('pagehide', autoSave);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') autoSave();
+        });
 
         function loadSavedGame() {
             const raw = localStorage.getItem('savedGame2048');
-            if (!raw) return false;
+            if (!raw) {
+                const toast = document.getElementById('save-toast');
+                toast.innerText = '저장된 판이 없습니다';
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); toast.innerText = '저장되었습니다 ✓'; }, 1800);
+                return;
+            }
             try {
                 const data = JSON.parse(raw);
-                if (!data.board) return false;
+                if (!data.board) return;
                 board = data.board;
-                score = 0;
                 achieved2048 = data.achieved2048 || false;
-                updateScore(data.score || 0);
                 isGameOver = false;
+                closeModal();
+                updateScore(data.score || 0);
                 updateAchieveStatus();
                 gridContainer.querySelectorAll('.tile').forEach(tile => tile.remove());
                 for (let r = 0; r < 4; r++) {
@@ -286,8 +293,11 @@
                         if (board[r][c] !== 0) drawTile(r, c, board[r][c]);
                     }
                 }
-                return true;
-            } catch(e) { return false; }
+                const toast = document.getElementById('save-toast');
+                toast.innerText = '이어하기 ✓';
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); toast.innerText = '저장되었습니다 ✓'; }, 1800);
+            } catch(e) {}
         }
 
         function startGame() {
@@ -439,9 +449,7 @@
             touchStartX = null; touchStartY = null;
         });
 
-        if (!loadSavedGame()) {
-            startGame();
-        }
+        startGame();
 
         document.addEventListener('touchstart', function unlock() {
             const sound = document.getElementById('merge-sound');
