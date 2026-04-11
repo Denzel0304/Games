@@ -21,15 +21,22 @@
             --tent-teal: #00BCD4;
         }
 
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
             background-color: var(--bg-color);
             font-family: 'Pretendard', -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            touch-action: none;
         }
 
         header { margin-top: 40px; text-align: center; }
@@ -51,9 +58,9 @@
 
         .container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            padding: 25px 18px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 25px 14px;
             width: 100%;
             max-width: 380px;
             box-sizing: border-box;
@@ -62,7 +69,7 @@
         .menu-card {
             background: var(--card-bg);
             border-radius: 20px;
-            height: 100px;
+            height: 90px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -77,12 +84,12 @@
         .menu-card:active { transform: scale(0.97); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
         .icon-box {
-            width: 42px; height: 42px; border-radius: 12px;
+            width: 36px; height: 36px; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px; margin-bottom: 6px;
+            font-size: 19px; margin-bottom: 5px;
         }
 
-        .card-title { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .card-title { font-size: 11px; font-weight: 700; color: var(--text-main); text-align: center; white-space: nowrap; }
 
         .block-game { border-top: 3px solid var(--block-mint); }
         .block-game .icon-box { background-color: #e0f2f1; }
@@ -127,7 +134,7 @@
         </a>
         <a href="Tetris.html" class="menu-card tetris-game">
             <div class="icon-box">🧱</div>
-            <div class="card-title">고전 테트리스</div>
+            <div class="card-title">테트리스</div>
         </a>
         <a href="0hh1.html" class="menu-card zero-h1-game">
             <div class="icon-box">🔵</div>
