@@ -24,446 +24,304 @@
     --cell-size: 52px;
     --gap: 3px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    width: 100%; height: 100%;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-  }
-
+  html, body { width: 100%; height: 100%; overflow: hidden; touch-action: none; user-select: none; }
   body {
-    background: var(--bg);
-    font-family: 'DM Sans', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100dvh;
-    position: relative;
-    overflow: hidden;
+    background: var(--bg); font-family: 'DM Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100dvh; position: relative; overflow: hidden;
   }
-
-  /* Subtle background texture */
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
+    content: ''; position: fixed; inset: 0;
     background:
       radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
       radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
-
-  /* HEADER */
   .header {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 420px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    position: relative; z-index: 10; width: 100%; max-width: 420px;
+    display: flex; align-items: center; justify-content: space-between;
     padding: 18px 16px 10px;
   }
-
   .nav-btn {
-    width: 48px; height: 48px;
-    border-radius: 16px;
-    border: none;
+    width: 48px; height: 48px; border-radius: 16px; border: none;
     background: var(--surface);
-    box-shadow:
-      4px 4px 8px var(--shadow-dark),
-      -4px -4px 8px var(--shadow-light);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 500;
-    flex-direction: column;
-    gap: 1px;
-    line-height: 1;
+    cursor: pointer; transition: all 0.15s; color: var(--text2);
+    font-size: 13px; font-weight: 500; flex-direction: column; gap: 1px; line-height: 1;
   }
-  .nav-btn:active {
-    box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
-    transform: scale(0.96);
-  }
+  .nav-btn:active { box-shadow: 2px 2px 4px var(--shadow-dark), -1px -1px 3px var(--shadow-light); transform: scale(0.96); }
   .nav-btn .arrow { font-size: 18px; line-height: 1; }
   .nav-btn .size-label { font-size: 11px; font-weight: 500; color: var(--text2); }
   .nav-btn.disabled { opacity: 0.35; pointer-events: none; }
-
   .title-wrap { text-align: center; }
-  .title-wrap h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    line-height: 1;
-  }
-  .title-wrap .subtitle {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 3px;
-    letter-spacing: 0.5px;
-  }
-
-  /* BOARD WRAPPER */
+  .title-wrap h1 { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
+  .title-wrap .subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; letter-spacing: 0.5px; }
   .board-section {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    width: 100%;
-    padding: 8px 16px;
+    position: relative; z-index: 10; display: flex;
+    align-items: center; justify-content: center;
+    flex: 1; width: 100%; padding: 8px 16px;
   }
-
   .board-outer {
-    background: var(--surface);
-    border-radius: 28px;
-    padding: 16px;
-    box-shadow:
-      8px 8px 20px var(--shadow-dark),
-      -8px -8px 20px var(--shadow-light),
-      inset 1px 1px 2px rgba(255,255,255,0.8);
+    background: var(--surface); border-radius: 28px; padding: 16px;
+    box-shadow: 8px 8px 20px var(--shadow-dark), -8px -8px 20px var(--shadow-light), inset 1px 1px 2px rgba(255,255,255,0.8);
   }
-
-  #board {
-    display: grid;
-    gap: var(--gap);
-  }
-
+  #board { display: grid; gap: var(--gap); }
   .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    border-radius: 14px;
+    width: var(--cell-size); height: var(--cell-size); border-radius: 14px;
     background: var(--surface2);
-    box-shadow:
-      3px 3px 7px var(--shadow-dark),
-      -3px -3px 7px var(--shadow-light);
+    box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.1s, box-shadow 0.1s;
-    font-size: calc(var(--cell-size) * 0.5);
-    line-height: 1;
+    cursor: pointer; position: relative; transition: transform 0.1s, box-shadow 0.1s;
+    font-size: calc(var(--cell-size) * 0.5); line-height: 1;
   }
   .cell:active { transform: scale(0.93); }
-
-  /* region borders — thick inside */
   .cell.border-top    { border-top: 2.5px solid var(--accent); }
   .cell.border-right  { border-right: 2.5px solid var(--accent); }
   .cell.border-bottom { border-bottom: 2.5px solid var(--accent); }
   .cell.border-left   { border-left: 2.5px solid var(--accent); }
-
-  .cell .mark {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--mark);
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
-  }
+  .cell .mark { width: 10px; height: 10px; border-radius: 50%; background: var(--mark); opacity: 0; transform: scale(0); transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1); }
   .cell.marked .mark { opacity: 1; transform: scale(1); }
   .cell.starred { background: linear-gradient(135deg, #fffbe8, #fff3c0); }
   .cell .star {
-    position: absolute;
-    top: 50%; left: 50%;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    font-size: calc(var(--cell-size) * 0.52);
-    line-height: 1;
-    color: var(--star);
-    text-shadow: 1px 1px 3px var(--star-shadow);
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    pointer-events: none;
+    font-size: calc(var(--cell-size) * 0.52); line-height: 1;
+    color: var(--star); text-shadow: 1px 1px 3px var(--star-shadow);
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none;
   }
-  .cell.starred .star {
-    transform: translate(-50%, -50%) scale(1);
-  }
+  .cell.starred .star { transform: translate(-50%, -50%) scale(1); }
   .cell.conflict { background: #fde8e8 !important; }
   .cell.conflict .star { color: var(--danger) !important; }
-
-  /* BOTTOM CONTROLS */
   .controls {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 420px;
-    padding: 10px 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    position: relative; z-index: 10; width: 100%; max-width: 420px;
+    padding: 10px 16px 20px; display: flex; flex-direction: column; gap: 12px;
   }
-
-  .btn-row {
-    display: flex;
-    gap: 10px;
-  }
-
+  .btn-row { display: flex; gap: 10px; }
   .btn {
-    flex: 1;
-    height: 52px;
-    border-radius: 16px;
-    border: none;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.15s;
-    letter-spacing: 0.3px;
+    flex: 1; height: 52px; border-radius: 16px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    transition: all 0.15s; letter-spacing: 0.3px;
   }
   .btn:active { transform: scale(0.96); }
-
   .btn-reset {
-    background: var(--surface);
-    color: var(--text2);
-    box-shadow:
-      4px 4px 10px var(--shadow-dark),
-      -4px -4px 10px var(--shadow-light);
+    background: var(--surface); color: var(--text2);
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
   }
-  .btn-reset:active {
-    box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light);
+  .btn-reset:active { box-shadow: 2px 2px 5px var(--shadow-dark), -1px -1px 3px var(--shadow-light); }
+  .btn-new {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    box-shadow: 4px 4px 12px rgba(74,124,74,0.5), -2px -2px 8px rgba(255,255,255,0.6);
   }
-
-  .btn-confirm {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff;
-    box-shadow:
-      4px 4px 12px rgba(74,124,74,0.5),
-      -2px -2px 8px rgba(255,255,255,0.6);
-  }
-  .btn-confirm:active {
-    box-shadow: 2px 2px 6px rgba(74,124,74,0.4);
-  }
-
-  /* TOAST */
+  .btn-new:active { box-shadow: 2px 2px 6px rgba(74,124,74,0.4); }
   .toast {
-    position: fixed;
-    top: 50%;
-    left: 50%;
+    position: fixed; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0.85);
-    background: var(--surface);
-    border-radius: 24px;
-    padding: 28px 36px;
-    text-align: center;
-    box-shadow:
-      12px 12px 30px var(--shadow-dark),
-      -12px -12px 30px var(--shadow-light);
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
+    background: var(--surface); border-radius: 24px; padding: 28px 36px; text-align: center;
+    box-shadow: 12px 12px 30px var(--shadow-dark), -12px -12px 30px var(--shadow-light);
+    z-index: 100; opacity: 0; pointer-events: none;
     transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
   }
-  .toast.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    pointer-events: auto;
-  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
   .toast .toast-icon { font-size: 48px; margin-bottom: 10px; }
-  .toast h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
+  .toast h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
   .toast p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
   .toast .toast-btn {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff;
-    border: none;
-    border-radius: 14px;
-    padding: 12px 32px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 3px 3px 10px rgba(74,124,74,0.4);
+    color: #fff; border: none; border-radius: 14px; padding: 12px 32px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; box-shadow: 3px 3px 10px rgba(74,124,74,0.4);
   }
-
   .overlay {
-    position: fixed; inset: 0;
-    background: rgba(180,210,180,0.4);
-    backdrop-filter: blur(4px);
-    z-index: 99;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
+    position: fixed; inset: 0; background: rgba(180,210,180,0.4);
+    backdrop-filter: blur(4px); z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
-
-  /* Status bar */
-  .status-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--text2);
-    font-weight: 400;
-  }
-  .status-bar .stars-count {
-    font-weight: 600;
-    color: var(--accent2);
-  }
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--mark);
-  }
+  .status-bar { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text2); }
+  .status-bar .stars-count { font-weight: 600; color: var(--accent2); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mark); }
   .status-dot.ok { background: var(--accent); }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <button class="nav-btn" id="btn-prev" onclick="playClick(); changeSize(-2)">
+  <button class="nav-btn" id="btn-prev" onclick="playClick(); changeSize(-1)">
     <span class="arrow">‹</span>
-    <span class="size-label" id="prev-label">6×6</span>
+    <span class="size-label" id="prev-label"></span>
   </button>
   <div class="title-wrap">
     <h1>Star Battle</h1>
-    <div class="subtitle" id="size-subtitle">8 × 8 · 별 1개/열</div>
+    <div class="subtitle" id="size-subtitle">6 × 6 · 별 1개/열</div>
   </div>
-  <button class="nav-btn" id="btn-next" onclick="playClick(); changeSize(2)">
+  <button class="nav-btn" id="btn-next" onclick="playClick(); changeSize(1)">
     <span class="arrow">›</span>
-    <span class="size-label" id="next-label">10×10</span>
+    <span class="size-label" id="next-label"></span>
   </button>
 </div>
 
-<!-- BOARD -->
 <div class="board-section">
   <div class="board-outer">
     <div id="board"></div>
   </div>
 </div>
 
-<!-- CONTROLS -->
 <div class="controls">
   <div class="status-bar">
     <span class="status-dot" id="status-dot"></span>
-    <span>별 <span class="stars-count" id="stars-placed">0</span> / <span id="stars-total">8</span> 개 배치됨</span>
+    <span>별 <span class="stars-count" id="stars-placed">0</span> / <span id="stars-total">6</span> 개 배치됨</span>
   </div>
   <div class="btn-row">
-    <button class="btn btn-reset" onclick="playClick(); resetBoard()">초기화</button>
-    <button class="btn btn-confirm" onclick="playClick(); checkWin()">확인</button>
+    <button class="btn btn-reset" onclick="playClick(); clearBoard()">초기화</button>
+    <button class="btn btn-new" onclick="playClick(); newBoard()">새 판</button>
   </div>
 </div>
 
-<!-- OVERLAY & TOAST -->
 <div class="overlay" id="overlay" onclick="closeToast()"></div>
 <div class="toast" id="toast">
   <div class="toast-icon">🌟</div>
   <h2>완성!</h2>
   <p>모든 조건을 충족했어요</p>
-  <button class="toast-btn" onclick="playClick(); closeToast(); resetBoard()">다시 하기</button>
+  <button class="toast-btn" onclick="playClick(); closeToast(); newBoard()">새 판 하기</button>
 </div>
 
 <script>
 // ─── Audio ───────────────────────────────────────────────
 const sfxClick = new Audio('effect 19.mp3');
 const sfxClear = new Audio('effect 1.mp3');
+function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
+function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-function playClick() {
-  sfxClick.currentTime = 0;
-  sfxClick.play();
-}
-
-function playClear() {
-  sfxClear.currentTime = 0;
-  sfxClear.play();
-}
-
-// ─── Game State ───────────────────────────────────────────
+// ─── State ───────────────────────────────────────────────
 const SIZES = [6, 8, 10];
-let currentSizeIdx = 0; // default 6x6
-let N = 8;
-let grid = [];       // 0=empty, 1=marked, 2=star
-let regions = [];    // region id per cell
-let puzzle = null;
+let sizeIdx = 0;
+let N = SIZES[sizeIdx];
+let grid = [];      // flat: 0=empty, 1=marked, 2=star
+let regions = [];   // flat: regions[r*N+c] = region id
 
-// ─── Puzzle Generator ─────────────────────────────────────
-// Generates N regions for an NxN grid (1 star per row/col/region)
-function generatePuzzle(n) {
-  // Assign region colors via flood-fill style random growth
-  const reg = Array.from({length: n}, () => Array(n).fill(-1));
-  const regionCells = Array.from({length: n}, () => []);
-  
-  // Place seeds
-  const seeds = [];
-  const used = new Set();
-  for (let r = 0; r < n; r++) {
-    let c;
-    do { c = Math.floor(Math.random() * n); } while (used.has(r * n + c));
-    used.add(r * n + c);
-    seeds.push([r, c]);
-    reg[r][c] = r;
-    regionCells[r].push([r, c]);
+// ─── Shuffle ─────────────────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─── Step 1: 유효한 별 배치 생성 (solution-first) ────────
+// 각 행에 별 1개, 각 열에 별 1개, 대각선 포함 인접 없음
+function generateStarPlacement(n) {
+  const colUsed = Array(n).fill(false);
+  const stars = [];
+
+  function bt(r) {
+    if (r === n) return true;
+    const cols = shuffle([...Array(n).keys()]);
+    for (const c of cols) {
+      if (colUsed[c]) continue;
+      let ok = true;
+      for (const [pr, pc] of stars) {
+        if (Math.abs(r - pr) <= 1 && Math.abs(c - pc) <= 1) { ok = false; break; }
+      }
+      if (!ok) continue;
+      colUsed[c] = true;
+      stars.push([r, c]);
+      if (bt(r + 1)) return true;
+      stars.pop();
+      colUsed[c] = false;
+    }
+    return false;
   }
 
-  // Grow regions
+  return bt(0) ? stars : null;
+}
+
+// ─── Step 2: 별 위치를 시드로 영역 생성 ─────────────────
+// 별이 각 영역의 시드 → 영역에 반드시 해당 별이 포함됨
+// → 생성된 퍼즐에 해가 반드시 1개 이상 존재함을 수학적으로 보장
+function generateRegions(n, stars) {
   const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  const reg = Array(n * n).fill(-1);
+  const rc = stars.map(() => []);
+
+  // 별 위치를 해당 영역의 시드로 배정
+  for (let ri = 0; ri < n; ri++) {
+    const [r, c] = stars[ri];
+    reg[r * n + c] = ri;
+    rc[ri].push(r * n + c);
+  }
+
+  // 영역 성장 (랜덤 BFS)
   let unfilled = n * n - n;
-  let iterations = 0;
-  while (unfilled > 0 && iterations < 100000) {
-    iterations++;
+  let iter = 0;
+  while (unfilled > 0 && iter < 300000) {
+    iter++;
     const ri = Math.floor(Math.random() * n);
     const candidates = [];
-    for (const [cr, cc] of regionCells[ri]) {
+    for (const ci of rc[ri]) {
+      const r = Math.floor(ci / n), c = ci % n;
       for (const [dr, dc] of dirs) {
-        const nr = cr + dr, nc = cc + dc;
-        if (nr >= 0 && nr < n && nc >= 0 && nc < n && reg[nr][nc] === -1) {
-          candidates.push([nr, nc]);
-        }
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < n && nc >= 0 && nc < n && reg[nr * n + nc] === -1)
+          candidates.push(nr * n + nc);
       }
     }
-    if (candidates.length === 0) continue;
-    const [nr, nc] = candidates[Math.floor(Math.random() * candidates.length)];
-    reg[nr][nc] = ri;
-    regionCells[ri].push([nr, nc]);
+    if (!candidates.length) continue;
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    reg[pick] = ri;
+    rc[ri].push(pick);
     unfilled--;
   }
 
-  // Fill any remaining -1
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      if (reg[r][c] === -1) {
-        // assign to nearest region
-        let best = 0, bestDist = Infinity;
-        for (let ri = 0; ri < n; ri++) {
-          for (const [cr, cc] of regionCells[ri]) {
-            const d = Math.abs(cr - r) + Math.abs(cc - c);
-            if (d < bestDist) { bestDist = d; best = ri; }
-          }
-        }
-        reg[r][c] = best;
-        regionCells[best].push([r, c]);
+  // 혹시 남은 -1 셀: 가장 가까운 영역에 배정
+  for (let i = 0; i < n * n; i++) {
+    if (reg[i] !== -1) continue;
+    let best = 0, bestDist = Infinity;
+    const r0 = Math.floor(i / n), c0 = i % n;
+    for (let ri = 0; ri < n; ri++) {
+      for (const ci of rc[ri]) {
+        const d = Math.abs(Math.floor(ci / n) - r0) + Math.abs(ci % n - c0);
+        if (d < bestDist) { bestDist = d; best = ri; }
       }
     }
+    reg[i] = best;
+    rc[best].push(i);
   }
 
   return reg;
 }
 
-// ─── Board Rendering ──────────────────────────────────────
+// ─── Puzzle Generation Entry Point ───────────────────────
+function generatePuzzle(n) {
+  // 유효한 별 배치를 찾을 때까지 시도 (거의 항상 첫 시도에 성공)
+  let stars = null;
+  for (let i = 0; i < 100; i++) {
+    stars = generateStarPlacement(n);
+    if (stars) break;
+  }
+  if (!stars) stars = [[0,0],[1,2],[2,4],[3,1],[4,3],[5,5]].slice(0,n); // fallback
+
+  const reg = generateRegions(n, stars);
+  return reg;
+  // stars는 내부 정답으로만 사용 (검증 시 사용 가능하나 여기선 사용 안 함)
+}
+
+// ─── Region Colors ────────────────────────────────────────
 const REGION_COLORS = [
   '#c8e6c8','#b8d4f0','#f5d4c8','#e8d4f5',
   '#f5f0c8','#d4f0e8','#f5d4e8','#d4e0f5',
   '#e8f0c8','#f0dcc8'
 ];
 
+// ─── Board Build ─────────────────────────────────────────
 function buildBoard() {
-  N = SIZES[currentSizeIdx];
-  grid = Array.from({length: N}, () => Array(N).fill(0));
+  N = SIZES[sizeIdx];
+  grid = Array(N * N).fill(0);
   regions = generatePuzzle(N);
 
-  // Responsive cell size
   const vw = Math.min(window.innerWidth, 420);
-  const available = vw - 32 - 32 - (N - 1) * 3; // padding * 2, gap
+  const available = vw - 32 - 32 - (N - 1) * 3;
   const cellSize = Math.max(32, Math.floor(available / N));
   document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
 
@@ -475,15 +333,12 @@ function buildBoard() {
     for (let c = 0; c < N; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.dataset.r = r; cell.dataset.c = c;
+      cell.dataset.r = r;
+      cell.dataset.c = c;
 
-      // Region color tint
-      const rid = regions[r][c];
+      const rid = regions[r * N + c];
       cell.style.background = REGION_COLORS[rid % REGION_COLORS.length];
-
-      // Region borders
-      const borders = getRegionBorders(r, c);
-      borders.forEach(b => cell.classList.add('border-' + b));
+      getRegionBorders(r, c).forEach(b => cell.classList.add('border-' + b));
 
       const mark = document.createElement('div');
       mark.className = 'mark';
@@ -504,13 +359,13 @@ function buildBoard() {
 }
 
 function getRegionBorders(r, c) {
-  const rid = regions[r][c];
-  const borders = [];
-  if (r === 0 || regions[r-1][c] !== rid) borders.push('top');
-  if (r === N-1 || regions[r+1][c] !== rid) borders.push('bottom');
-  if (c === 0 || regions[r][c-1] !== rid) borders.push('left');
-  if (c === N-1 || regions[r][c+1] !== rid) borders.push('right');
-  return borders;
+  const rid = regions[r * N + c];
+  const b = [];
+  if (r === 0    || regions[(r-1)*N+c] !== rid) b.push('top');
+  if (r === N-1  || regions[(r+1)*N+c] !== rid) b.push('bottom');
+  if (c === 0    || regions[r*N+(c-1)] !== rid) b.push('left');
+  if (c === N-1  || regions[r*N+(c+1)] !== rid) b.push('right');
+  return b;
 }
 
 function getCell(r, c) {
@@ -519,16 +374,16 @@ function getCell(r, c) {
 
 function renderCell(r, c) {
   const cell = getCell(r, c);
-  const state = grid[r][c];
+  const state = grid[r * N + c];
   cell.classList.remove('marked', 'starred', 'conflict');
   if (state === 1) cell.classList.add('marked');
   if (state === 2) cell.classList.add('starred');
 }
 
-// ─── Cell Click: 0→1→2→0 cycle ──────────────────────────
+// ─── Cell Click: 0 → 1(mark) → 2(star) → 0 ─────────────
 function onCellClick(r, c) {
   playClick();
-  grid[r][c] = (grid[r][c] + 1) % 3;
+  grid[r * N + c] = (grid[r * N + c] + 1) % 3;
   renderCell(r, c);
   highlightConflicts();
   updateStatus();
@@ -536,7 +391,6 @@ function onCellClick(r, c) {
 
 // ─── Conflict Highlighting ────────────────────────────────
 function highlightConflicts() {
-  // Clear all conflicts first
   for (let r = 0; r < N; r++)
     for (let c = 0; c < N; c++)
       getCell(r, c).classList.remove('conflict');
@@ -544,18 +398,17 @@ function highlightConflicts() {
   const stars = [];
   for (let r = 0; r < N; r++)
     for (let c = 0; c < N; c++)
-      if (grid[r][c] === 2) stars.push([r, c]);
+      if (grid[r * N + c] === 2) stars.push([r, c]);
 
-  // Mark conflicts: adjacency, row/col dups, region dups
   const conflictSet = new Set();
   for (let i = 0; i < stars.length; i++) {
     const [r1, c1] = stars[i];
-    for (let j = i+1; j < stars.length; j++) {
+    for (let j = i + 1; j < stars.length; j++) {
       const [r2, c2] = stars[j];
-      const adjacent = Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
-      const sameRow = r1 === r2;
-      const sameCol = c1 === c2;
-      const sameRegion = regions[r1][c1] === regions[r2][c2];
+      const adjacent   = Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
+      const sameRow    = r1 === r2;
+      const sameCol    = c1 === c2;
+      const sameRegion = regions[r1*N+c1] === regions[r2*N+c2];
       if (adjacent || sameRow || sameCol || sameRegion) {
         conflictSet.add(`${r1},${c1}`);
         conflictSet.add(`${r2},${c2}`);
@@ -568,16 +421,13 @@ function highlightConflicts() {
   });
 }
 
-// ─── Status Bar ───────────────────────────────────────────
+// ─── Status ──────────────────────────────────────────────
 function updateStatus() {
-  let count = 0;
-  for (let r = 0; r < N; r++)
-    for (let c = 0; c < N; c++)
-      if (grid[r][c] === 2) count++;
+  const count = grid.filter(v => v === 2).length;
   document.getElementById('stars-placed').textContent = count;
   document.getElementById('stars-total').textContent = N;
-  const dot = document.getElementById('status-dot');
-  dot.className = 'status-dot' + (count === N ? ' ok' : '');
+  document.getElementById('status-dot').className =
+    'status-dot' + (count === N ? ' ok' : '');
 }
 
 // ─── Win Check ───────────────────────────────────────────
@@ -585,26 +435,23 @@ function checkWin() {
   const stars = [];
   for (let r = 0; r < N; r++)
     for (let c = 0; c < N; c++)
-      if (grid[r][c] === 2) stars.push([r, c]);
+      if (grid[r * N + c] === 2) stars.push([r, c]);
 
   if (stars.length !== N) { shakeBoard(); return; }
 
-  // Check rows
   const rows = new Set(stars.map(([r]) => r));
   const cols = new Set(stars.map(([,c]) => c));
-  const regs = new Set(stars.map(([r,c]) => regions[r][c]));
+  const regs = new Set(stars.map(([r,c]) => regions[r*N+c]));
   if (rows.size !== N || cols.size !== N || regs.size !== N) { shakeBoard(); return; }
 
-  // Check adjacency
   for (let i = 0; i < stars.length; i++) {
-    const [r1,c1] = stars[i];
-    for (let j = i+1; j < stars.length; j++) {
-      const [r2,c2] = stars[j];
+    const [r1, c1] = stars[i];
+    for (let j = i + 1; j < stars.length; j++) {
+      const [r2, c2] = stars[j];
       if (Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1) { shakeBoard(); return; }
     }
   }
 
-  // WIN!
   playClear();
   setTimeout(() => {
     document.getElementById('overlay').classList.add('show');
@@ -614,11 +461,8 @@ function checkWin() {
 
 function shakeBoard() {
   const outer = document.querySelector('.board-outer');
-  outer.style.transition = 'transform 0.1s';
   const frames = [0, -8, 8, -6, 6, -4, 4, 0];
-  frames.forEach((x, i) => {
-    setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55);
-  });
+  frames.forEach((x, i) => setTimeout(() => outer.style.transform = `translateX(${x}px)`, i * 55));
   setTimeout(() => outer.style.transform = '', frames.length * 55);
 }
 
@@ -627,43 +471,51 @@ function closeToast() {
   document.getElementById('toast').classList.remove('show');
 }
 
-// ─── Reset ───────────────────────────────────────────────
-function resetBoard() {
+// ─── 초기화: 입력만 클리어 (퍼즐 유지) ──────────────────
+function clearBoard() {
+  closeToast();
+  grid = Array(N * N).fill(0);
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      renderCell(r, c);
+  highlightConflicts();
+  updateStatus();
+}
+
+// ─── 새 판: 새 퍼즐 생성 ─────────────────────────────────
+function newBoard() {
   closeToast();
   buildBoard();
 }
 
 // ─── Size Navigation ─────────────────────────────────────
 function changeSize(delta) {
-  const newIdx = currentSizeIdx + (delta > 0 ? 1 : -1);
+  const newIdx = sizeIdx + delta;
   if (newIdx < 0 || newIdx >= SIZES.length) return;
-  currentSizeIdx = newIdx;
+  sizeIdx = newIdx;
   buildBoard();
 }
 
 function updateNavButtons() {
-  const n = SIZES[currentSizeIdx];
+  const n = SIZES[sizeIdx];
+  document.getElementById('size-subtitle').textContent = `${n} × ${n} · 별 1개/열`;
   const prevBtn = document.getElementById('btn-prev');
   const nextBtn = document.getElementById('btn-next');
-  document.getElementById('size-subtitle').textContent = `${n} × ${n} · 별 1개/열`;
-
-  if (currentSizeIdx === 0) {
+  if (sizeIdx === 0) {
     prevBtn.classList.add('disabled');
   } else {
     prevBtn.classList.remove('disabled');
-    document.getElementById('prev-label').textContent = `${SIZES[currentSizeIdx-1]}×${SIZES[currentSizeIdx-1]}`;
+    document.getElementById('prev-label').textContent = `${SIZES[sizeIdx-1]}×${SIZES[sizeIdx-1]}`;
   }
-  if (currentSizeIdx === SIZES.length - 1) {
+  if (sizeIdx === SIZES.length - 1) {
     nextBtn.classList.add('disabled');
   } else {
     nextBtn.classList.remove('disabled');
-    document.getElementById('next-label').textContent = `${SIZES[currentSizeIdx+1]}×${SIZES[currentSizeIdx+1]}`;
+    document.getElementById('next-label').textContent = `${SIZES[sizeIdx+1]}×${SIZES[sizeIdx+1]}`;
   }
 }
 
-// ─── Prevent pull-to-refresh / scroll ────────────────────
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-
 
 // ─── Init ─────────────────────────────────────────────────
 buildBoard();
