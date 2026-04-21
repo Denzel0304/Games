@@ -353,7 +353,7 @@ function generateChains(n) {
       if(!nb.length) break;
       chain.push(nb[0]); visited.add(nb[0]); usedVals.add(solution[nb[0]]); curr=nb[0];
     }
-    if(chain.length>=2) result.push(chain);
+    result.push(chain); // 길이 무관하게 항상 추가 (고아 셀 방지)
   }
   for (let i=0; i<n*n; i++) if(!visited.has(i)) result.push([i]);
   return result;
