@@ -319,16 +319,26 @@ let isGameOver = false;
 // ─── Puzzle Generator ─────────────────────────────────────
 // Generates a valid, uniquely-solvable Akari puzzle
 function generatePuzzle(n) {
-  // Step 1: place bulbs on blank grid to create a solution
-  let solution = Array(n * n).fill(0);
-  let litMap = Array(n * n).fill(false);
   const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-
   function idx(r,c) { return r*n+c; }
   function inBounds(r,c) { return r>=0&&r<n&&c>=0&&c<n; }
 
-  // Place bulbs greedily: pick unlit cells and place bulbs
-  let unlit = Array.from({length:n*n},(_,i)=>i);
+  // Step 1: place walls FIRST (before bulbs, so lighting respects walls)
+  let wallSet = new Set();
+  const wallCount = Math.floor(n*n * 0.22);
+  let attempts = 0;
+  while(wallSet.size < wallCount && attempts < 1000){
+    attempts++;
+    const pos = Math.floor(Math.random()*n*n);
+    if(!wallSet.has(pos)) wallSet.add(pos);
+  }
+
+  // Step 2: place bulbs on non-wall cells, lighting calculation respects walls
+  let solution = Array(n * n).fill(0);
+  let litMap = Array(n * n).fill(false);
+
+  // Only consider non-wall cells for bulb placement
+  let unlit = Array.from({length:n*n},(_,i)=>i).filter(i=>!wallSet.has(i));
   // shuffle
   for(let i=unlit.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -342,29 +352,20 @@ function generatePuzzle(n) {
     for(const [dr,dc] of dirs){
       let nr=r+dr,nc=c+dc;
       while(inBounds(nr,nc)){
-        litMap[idx(nr,nc)]=true;
+        const ni=idx(nr,nc);
+        if(wallSet.has(ni)) break; // walls block light
+        litMap[ni]=true;
         nr+=dr; nc+=dc;
       }
     }
   }
 
-  // Place bulbs until all cells lit
+  // Place bulbs until all non-wall cells are lit
   for(const pos of unlit){
     if(!litMap[pos]) placeBulb(pos);
   }
 
-  // Step 2: place walls strategically (not on bulbs, ~20-30% of cells)
-  let wallSet = new Set();
-  const wallCount = Math.floor(n*n * 0.22);
-  let attempts = 0;
-  while(wallSet.size < wallCount && attempts < 1000){
-    attempts++;
-    const pos = Math.floor(Math.random()*n*n);
-    if(solution[pos]===0 && !wallSet.has(pos)) wallSet.add(pos);
-  }
-
   // Step 3: for each wall, count adjacent bulbs in solution → assign clue
-  // Only assign numbered clues sometimes (50%), rest are blank walls
   let puzzle = Array(n*n).fill(0);
   for(let i=0;i<n*n;i++){
     if(wallSet.has(i)){
@@ -374,19 +375,11 @@ function generatePuzzle(n) {
         const nr=r+dr,nc=c+dc;
         if(inBounds(nr,nc) && solution[idx(nr,nc)]===1) adjBulbs++;
       }
-      // All walls have numbered clues (100%)
       puzzle[i] = wallClue(adjBulbs);
     } else {
       puzzle[i] = 0; // empty cell (may have bulb in solution)
     }
   }
-
-  // Step 4: verify the puzzle is solvable (has at least one valid solution)
-  // For simplicity, we verify our generated solution still satisfies all wall clues
-  // (walls don't block the solution bulbs since walls are only placed on non-bulb cells)
-  // Recheck: walls shouldn't be adjacent to bulbs they'd conflict with
-  // Actually walls are placed only where solution[pos]===0, bulbs are solution[pos]===1
-  // so our solution is valid for numbered walls
 
   return { puzzle, solution };
 }
