@@ -105,8 +105,24 @@
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
     flex-shrink: 0;
+    position: relative;
   }
   .cell:active { transform: scale(0.91); }
+
+  /* 힌트 셀: 고정, 클릭 불가 */
+  .cell.hint {
+    cursor: default;
+    opacity: 1;
+  }
+  .cell.hint::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.25);
+    pointer-events: none;
+  }
+  .cell.hint:active { transform: none; }
 
   .cell[data-state="1"] {
     background: var(--red);
@@ -135,8 +151,9 @@
     width: 6px; height: 6px; border-radius: 50%;
     background: #a0b8a0; transition: background 0.3s;
   }
-  .status-dot.ok { background: var(--accent); }
+  .status-dot.ok  { background: var(--accent); }
   .status-dot.err { background: var(--red); }
+  .status-dot.warn { background: #e8a020; }
 
   .btn-row { display: flex; gap: 10px; }
 
@@ -236,14 +253,15 @@ const sfxClear = new Audio('effect 1.mp3');
 function playClick() { sfxClick.currentTime = 0; sfxClick.play().catch(()=>{}); }
 function playClear() { sfxClear.currentTime = 0; sfxClear.play().catch(()=>{}); }
 
-// 0h h1은 짝수 크기만 가능
 const SIZES = [4, 6, 8, 10];
-let sizeIdx = 0; // 기본 4×4
+let sizeIdx = 0;
 let N = 4;
-let board = [];
+let board = [];    // 현재 보드 상태 (0=빈칸, 1=빨강, 2=파랑)
+let hints = [];    // 힌트(고정) 셀 여부
 const GAP = 6;
 const PAD = 14;
 
+// ─── Layout ───────────────────────────────────────────────
 function computeCellSize() {
   const vh = window.innerHeight;
   const vw = Math.min(window.innerWidth, 440);
@@ -258,25 +276,111 @@ function applyLayout() {
   const cs = computeCellSize();
   const boardPx = N * cs + (N-1) * GAP;
   const outerPx = boardPx + PAD * 2;
-
   const boardEl = document.getElementById('board');
   boardEl.style.gridTemplateColumns = `repeat(${N}, ${cs}px)`;
   boardEl.style.gap = GAP + 'px';
-
   const outer = document.getElementById('board-outer');
   outer.style.width = outerPx + 'px';
   outer.style.height = outerPx + 'px';
-
   document.querySelectorAll('.cell').forEach(c => {
     c.style.width = cs + 'px';
     c.style.height = cs + 'px';
   });
 }
 
+// ─── 퍼즐 생성 ────────────────────────────────────────────
+// Step 1: 규칙을 만족하는 완성 보드 생성 (백트래킹)
+function generateSolution(n) {
+  const sol = Array.from({length: n}, () => Array(n).fill(0));
+
+  function validSoFar(sol, r, c) {
+    const row = sol[r].slice(0, c + 1);
+    const reds  = row.filter(v => v === 1).length;
+    const blues = row.filter(v => v === 2).length;
+    if (reds  > n/2) return false;
+    if (blues > n/2) return false;
+    // 연속 3개 체크 (행)
+    if (c >= 2 && row[c] !== 0 && row[c] === row[c-1] && row[c] === row[c-2]) return false;
+    // 열 체크
+    const colVals = [];
+    for (let rr = 0; rr <= r; rr++) colVals.push(sol[rr][c]);
+    const cr = colVals.filter(v => v === 1).length;
+    const cb = colVals.filter(v => v === 2).length;
+    if (cr > n/2) return false;
+    if (cb > n/2) return false;
+    if (r >= 2 && colVals[r] !== 0 && colVals[r] === colVals[r-1] && colVals[r] === colVals[r-2]) return false;
+    return true;
+  }
+
+  function bt(pos) {
+    if (pos === n * n) {
+      // 중복 행/열 체크
+      const rowStrs = sol.map(r => r.join(''));
+      if (new Set(rowStrs).size !== n) return false;
+      const colStrs = Array.from({length: n}, (_, c) => sol.map(r => r[c]).join(''));
+      if (new Set(colStrs).size !== n) return false;
+      return true;
+    }
+    const r = Math.floor(pos / n), c = pos % n;
+    const vals = Math.random() < 0.5 ? [1, 2] : [2, 1]; // 랜덤 순서
+    for (const v of vals) {
+      sol[r][c] = v;
+      if (validSoFar(sol, r, c) && bt(pos + 1)) return true;
+      sol[r][c] = 0;
+    }
+    return false;
+  }
+
+  return bt(0) ? sol.map(r => [...r]) : null;
+}
+
+// Step 2: 완성 보드에서 일부 셀만 힌트로 남기기
+// 힌트 비율: 약 30~40%
+function generatePuzzle(n) {
+  // 완성 보드 생성 (최대 30회 시도)
+  let solution = null;
+  for (let i = 0; i < 30; i++) {
+    solution = generateSolution(n);
+    if (solution) break;
+  }
+  if (!solution) return null;
+
+  const hintRate = n <= 4 ? 0.40 : n <= 6 ? 0.35 : 0.30;
+  const totalCells = n * n;
+  const hintCount  = Math.round(totalCells * hintRate);
+
+  // 셀 인덱스를 랜덤하게 섞어 힌트로 선택
+  const indices = Array.from({length: totalCells}, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const hintSet = new Set(indices.slice(0, hintCount));
+
+  const puzzle = Array.from({length: n}, () => Array(n).fill(0));
+  const hintMap = Array.from({length: n}, () => Array(n).fill(false));
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (hintSet.has(r * n + c)) {
+        puzzle[r][c] = solution[r][c];
+        hintMap[r][c] = true;
+      }
+    }
+  }
+  return { puzzle, hintMap };
+}
+
+// ─── Board Build ──────────────────────────────────────────
 function newBoard() {
   closeToast();
   N = SIZES[sizeIdx];
-  board = Array.from({length: N}, () => Array(N).fill(0));
+
+  const result = generatePuzzle(N);
+  if (!result) { newBoard(); return; } // 실패 시 재시도
+  const { puzzle, hintMap } = result;
+
+  board = puzzle.map(r => [...r]);
+  hints = hintMap.map(r => [...r]);
 
   const boardEl = document.getElementById('board');
   boardEl.innerHTML = '';
@@ -285,14 +389,20 @@ function newBoard() {
     for (let c = 0; c < N; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.dataset.state = 0;
-      cell.addEventListener('pointerdown', e => {
-        e.preventDefault();
-        playClick();
-        board[r][c] = (board[r][c] + 1) % 3;
-        cell.dataset.state = board[r][c];
-        updateStatus();
-      });
+      cell.dataset.state = board[r][c];
+
+      if (hints[r][c]) {
+        cell.classList.add('hint');
+        // 힌트 셀: 클릭 불가
+      } else {
+        cell.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          playClick();
+          board[r][c] = (board[r][c] + 1) % 3;
+          cell.dataset.state = board[r][c];
+          updateStatus();
+        });
+      }
       boardEl.appendChild(cell);
     }
   }
@@ -302,49 +412,24 @@ function newBoard() {
   updateNavButtons();
 }
 
+// ─── Reset: 힌트 유지, 나머지만 클리어 ───────────────────
 function resetBoard() {
   closeToast();
-  board = Array.from({length: N}, () => Array(N).fill(0));
-  document.querySelectorAll('.cell').forEach(c => c.dataset.state = 0);
+  const cells = document.querySelectorAll('.cell');
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (!hints[r][c]) {
+        board[r][c] = 0;
+        cells[r * N + c].dataset.state = 0;
+      }
+    }
+  }
   updateStatus();
 }
 
-function updateStatus() {
-  const total = N * N;
-  const filled = board.flat().filter(v => v !== 0).length;
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-
-  // Live violation check
-  let hasViolation = false;
-  for (let i = 0; i < N; i++) {
-    const row = board[i];
-    const col = board.map(r => r[i]);
-    if (checkLineViolation(row) || checkLineViolation(col)) { hasViolation = true; break; }
-  }
-
-  if (hasViolation) {
-    dot.className = 'status-dot err';
-    txt.textContent = '규칙 위반이 있어요';
-  } else if (filled === total) {
-    dot.className = 'status-dot ok';
-    txt.textContent = '모든 칸이 채워졌어요!';
-  } else {
-    dot.className = 'status-dot';
-    txt.textContent = `${filled} / ${total} 칸 입력됨`;
-  }
-}
-
-// 실시간 위반 체크 (연속 3개 같은 색만 체크, 개수는 확인 버튼에서)
-function checkLineViolation(line) {
-  for (let i = 0; i < line.length - 2; i++) {
-    if (line[i] !== 0 && line[i] === line[i+1] && line[i] === line[i+2]) return true;
-  }
-  return false;
-}
-
+// ─── 검증 로직 (checkWin과 동일 기준) ─────────────────────
 function checkLine(line) {
-  const reds = line.filter(v => v === 1).length;
+  const reds  = line.filter(v => v === 1).length;
   const blues = line.filter(v => v === 2).length;
   if (reds !== N/2 || blues !== N/2) return false;
   for (let i = 0; i < line.length - 2; i++) {
@@ -353,6 +438,72 @@ function checkLine(line) {
   return true;
 }
 
+// 부분 완성 보드용: 채워진 셀 내에서의 위반만 체크
+function checkPartialLine(line) {
+  // 연속 3개 체크
+  for (let i = 0; i < line.length - 2; i++) {
+    if (line[i] !== 0 && line[i] === line[i+1] && line[i] === line[i+2]) return 'triple';
+  }
+  // 개수 초과 체크 (N/2 초과)
+  const reds  = line.filter(v => v === 1).length;
+  const blues = line.filter(v => v === 2).length;
+  if (reds  > N/2) return 'count';
+  if (blues > N/2) return 'count';
+  return null;
+}
+
+// ─── 실시간 상태 업데이트 (checkWin과 동일 기준) ──────────
+function updateStatus() {
+  const flat = board.flat();
+  const total  = N * N;
+  const filled = flat.filter(v => v !== 0).length;
+  const dot  = document.getElementById('status-dot');
+  const txt  = document.getElementById('status-text');
+
+  // 1. 연속 3개 / 개수 초과 위반 체크 (부분 완성 포함)
+  let violation = null;
+  for (let i = 0; i < N; i++) {
+    const row = board[i];
+    const col = board.map(r => r[i]);
+    const rv = checkPartialLine(row);
+    const cv = checkPartialLine(col);
+    if (rv || cv) { violation = rv || cv; break; }
+  }
+
+  if (violation === 'triple') {
+    dot.className = 'status-dot err';
+    txt.textContent = '같은 색 3개가 연속되어 있어요';
+    return;
+  }
+  if (violation === 'count') {
+    dot.className = 'status-dot err';
+    txt.textContent = '한 색이 너무 많아요';
+    return;
+  }
+
+  if (filled < total) {
+    dot.className = 'status-dot';
+    txt.textContent = `${filled} / ${total} 칸 입력됨`;
+    return;
+  }
+
+  // 모두 채워진 경우: 중복 행/열까지 체크
+  const rowStrings = board.map(r => r.join(''));
+  const colStrings = Array.from({length: N}, (_, c) => board.map(r => r[c]).join(''));
+  const hasDupRow = new Set(rowStrings).size !== N;
+  const hasDupCol = new Set(colStrings).size !== N;
+
+  if (hasDupRow || hasDupCol) {
+    dot.className = 'status-dot warn';
+    txt.textContent = hasDupRow ? '같은 패턴의 행이 있어요' : '같은 패턴의 열이 있어요';
+    return;
+  }
+
+  dot.className = 'status-dot ok';
+  txt.textContent = '모든 칸이 채워졌어요!';
+}
+
+// ─── 최종 승리 판정 ───────────────────────────────────────
 function checkWin() {
   if (board.flat().includes(0)) { shakeBoard(); return; }
 
@@ -364,7 +515,6 @@ function checkWin() {
     rowStrings.push(row.join(''));
     colStrings.push(col.join(''));
   }
-  // 중복 행/열 체크
   if (new Set(rowStrings).size !== N || new Set(colStrings).size !== N) { shakeBoard(); return; }
 
   playClear();
@@ -374,6 +524,7 @@ function checkWin() {
   }, 300);
 }
 
+// ─── Shake ────────────────────────────────────────────────
 function shakeBoard() {
   const outer = document.getElementById('board-outer');
   const frames = [0, -8, 8, -6, 6, -4, 4, 0];
@@ -381,6 +532,7 @@ function shakeBoard() {
   setTimeout(() => outer.style.transform = '', frames.length * 55);
 }
 
+// ─── Nav ──────────────────────────────────────────────────
 function changeSize(delta) {
   const newIdx = sizeIdx + delta;
   if (newIdx < 0 || newIdx >= SIZES.length) return;
