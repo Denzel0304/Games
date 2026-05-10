@@ -116,38 +116,20 @@
 
         #status { margin-bottom: 10px; margin-top: 8px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
 
-        .controls { display: flex; justify-content: center; gap: 14px; width: 85vw; max-width: 340px; margin-top: 6px; }
+        .controls { display: flex; justify-content: center; gap: 10px; width: 85vw; max-width: 340px; margin-top: 6px; }
 
         .action-btn {
-            flex: 1; padding: 18px 0; border: none; border-radius: 15px;
-            font-size: 1rem; font-weight: 700;
+            flex: 1; padding: 16px 0; border: none; border-radius: 15px;
+            font-size: 0.82rem; font-weight: 700;
             background: var(--bg-color); color: var(--text-color);
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             cursor: pointer; transition: transform 0.1s;
         }
 
         #restart-btn { background: linear-gradient(145deg, #ff9800, #f57c00); color: white; box-shadow: 4px 4px 10px rgba(245, 124, 0, 0.3); }
-        .action-btn:active { box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); transform: translateY(2px); }
-
-        /* 저장/이어하기 분할 버튼 */
-        .split-btn-wrapper {
-            flex: 1; display: flex; border-radius: 15px; overflow: hidden;
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
-        }
-        .split-btn-left {
-            flex: 1; padding: 18px 0; border: none;
-            font-size: 0.85rem; font-weight: 700;
-            background: linear-gradient(145deg, #5c9bd6, #3a7fc1); color: white;
-            cursor: pointer; transition: transform 0.1s;
-            border-right: 1px solid rgba(255,255,255,0.2);
-        }
-        .split-btn-right {
-            flex: 1; padding: 18px 0; border: none;
-            font-size: 0.85rem; font-weight: 700;
-            background: linear-gradient(145deg, #66bb6a, #43a047); color: white;
-            cursor: pointer; transition: transform 0.1s;
-        }
-        .split-btn-left:active, .split-btn-right:active { opacity: 0.8; transform: translateY(1px); }
+        #save-game-btn { background: linear-gradient(145deg, #5c9bd6, #3a7fc1); color: white; box-shadow: 4px 4px 10px rgba(58, 127, 193, 0.3); }
+        #load-game-btn { background: linear-gradient(145deg, #66bb6a, #43a047); color: white; box-shadow: 4px 4px 10px rgba(67, 160, 71, 0.3); }
+        .action-btn:active { opacity: 0.85; transform: translateY(2px); }
 
         /* 이어하기 슬롯 팝업 */
         #slot-overlay {
@@ -272,10 +254,8 @@
         <div id="status">2048 달성횟수 : 0</div>
         <div class="controls">
             <button id="restart-btn" class="action-btn" onclick="startGame()">새 게임</button>
-            <div class="split-btn-wrapper">
-                <button class="split-btn-left" onclick="saveGame()">💾 저장</button>
-                <button class="split-btn-right" onclick="openSlotPanel()">▶ 이어하기</button>
-            </div>
+            <button id="save-game-btn" class="action-btn" onclick="saveGame()">저장하기</button>
+            <button id="load-game-btn" class="action-btn" onclick="openSlotPanelWithHistory()">이어하기</button>
         </div>
     </div>
 
@@ -353,7 +333,7 @@
             const timeStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
             const entry = {
                 time: timeStr,
-                bestScore: bestScore,
+                savedScore: score,
                 board: board,
                 score: score,
                 achieved2048: achieved2048
@@ -379,7 +359,7 @@
                     const realIndex = slots.length - 1 - i;
                     const item = document.createElement('div');
                     item.className = 'slot-item';
-                    item.innerHTML = `<span class="slot-time">${slot.time}</span><span class="slot-best">최고 ${slot.bestScore}</span>`;
+                    item.innerHTML = `<span class="slot-time">${slot.time}</span><span class="slot-best">점수 ${slot.savedScore ?? slot.score ?? 0}</span>`;
                     item.onclick = () => loadSlot(realIndex);
                     list.appendChild(item);
                 });
@@ -413,6 +393,18 @@
 
         document.getElementById('slot-overlay').addEventListener('click', function(e) {
             if (e.target === this) closeSlotPanel();
+        });
+
+        // 뒤로가기 버튼으로 슬롯 팝업만 닫기
+        function openSlotPanelWithHistory() {
+            history.pushState({ slotOpen: true }, '');
+            openSlotPanel();
+        }
+        window.addEventListener('popstate', function(e) {
+            const overlay = document.getElementById('slot-overlay');
+            if (overlay.classList.contains('active')) {
+                closeSlotPanel();
+            }
         });
 
         function showToast(msg) {
