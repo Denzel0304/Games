@@ -22,6 +22,8 @@
             --tile-512-bg: #81d4fa; --tile-512-text: white;
             --tile-1024-bg: #29b6f6; --tile-1024-text: white;
             --tile-2048-bg: #66bb6a; --tile-2048-text: white;
+            --tile-4096-bg: #ab47bc; --tile-4096-text: white;
+            --tile-8192-bg: #7e57c2; --tile-8192-text: white;
         }
 
         html, body {
@@ -98,6 +100,8 @@
         .tile-512 { background-color: var(--tile-512-bg); color: var(--tile-512-text); font-size: 1.4rem; }
         .tile-1024 { background-color: var(--tile-1024-bg); color: var(--tile-1024-text); font-size: 1.1rem; }
         .tile-2048 { background-color: var(--tile-2048-bg); color: var(--tile-2048-text); font-size: 1.1rem; box-shadow: 0 0 15px rgba(102, 187, 106, 0.5); }
+        .tile-4096 { background-color: var(--tile-4096-bg); color: var(--tile-4096-text); font-size: 0.9rem; box-shadow: 0 0 15px rgba(171, 71, 188, 0.5); }
+        .tile-8192 { background-color: var(--tile-8192-bg); color: var(--tile-8192-text); font-size: 0.85rem; box-shadow: 0 0 15px rgba(126, 87, 194, 0.5); }
 
         @keyframes neumorphicPop {
             0% { opacity: 0; transform: scale(0.8) translate(var(--pos-x), var(--pos-y)); box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); }
@@ -226,6 +230,17 @@
             cursor: pointer;
         }
         #modal-continue-btn:active { transform: translateY(2px); }
+
+        /* 8192 클리어 모달 */
+        #clear-modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(163, 177, 198, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center; align-items: center;
+        }
+        #clear-modal-overlay.active { display: flex; }
     </style>
 </head>
 <body>
@@ -280,12 +295,23 @@
         </div>
     </div>
 
+    <!-- 8192 클리어 모달 -->
+    <div id="clear-modal-overlay">
+        <div id="modal-box">
+            <div class="modal-emoji">🏆</div>
+            <div class="modal-title">게임을 모두 클리어 하였습니다.^^</div>
+            <div class="modal-sub">8192을 달성하셨습니다! 새 게임을 시작합니다.</div>
+            <button id="modal-continue-btn" onclick="closeClearModal()">확인</button>
+        </div>
+    </div>
+
     <script>
         const gridContainer = document.getElementById('grid-container');
         const scoreElement = document.getElementById('score');
         const bestScoreElement = document.getElementById('best-score');
         const statusElement = document.getElementById('status');
         const modalOverlay = document.getElementById('modal-overlay');
+        const clearModalOverlay = document.getElementById('clear-modal-overlay');
 
         let board = [];
         let score = 0;
@@ -312,6 +338,11 @@
 
         function closeModal() {
             modalOverlay.classList.remove('active');
+        }
+
+        function closeClearModal() {
+            clearModalOverlay.classList.remove('active');
+            startGame();
         }
 
         // ── 저장 슬롯 시스템 (최대 5개, FIFO) ──
@@ -490,6 +521,16 @@
                         localStorage.setItem('achieveCount2048', achieveCount);
                         updateAchieveStatus();
                         setTimeout(openModal, 300);
+                    }
+
+                    // 8192 달성 체크 (게임 클리어)
+                    if (filteredRow[i] === 8192) {
+                        setTimeout(() => {
+                            clearModalOverlay.classList.add('active');
+                            const sound = document.getElementById('achieve-sound');
+                            sound.currentTime = 0;
+                            sound.play().catch(() => {});
+                        }, 300);
                     }
 
                     filteredRow[i + 1] = 0;
