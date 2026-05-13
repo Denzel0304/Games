@@ -150,8 +150,15 @@
             border-radius: 24px 24px 24px 24px;
             padding: 20px 16px 16px;
             width: 85vw; max-width: 340px;
+            max-height: 75vh;
+            display: flex; flex-direction: column;
             box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
             animation: modalPop 0.25s ease-out;
+        }
+        #slot-list {
+            overflow-y: auto;
+            flex: 1;
+            -webkit-overflow-scrolling: touch;
         }
         #slot-panel .slot-title {
             font-size: 0.8rem; font-weight: 700; color: #78909c;
@@ -356,7 +363,7 @@
 
         const SLOT_KEY = 'saveSlots2048';
         const SLOT_LOCK_KEY = 'saveSlotLocks2048';
-        const MAX_SLOTS = 8;
+        const MAX_SLOTS = 20;
 
         function getSaveSlots() {
             try { return JSON.parse(localStorage.getItem(SLOT_KEY)) || []; }
@@ -679,15 +686,27 @@
 
         let touchStartX, touchStartY;
         window.addEventListener('touchstart', e => {
+            // 슬롯 오버레이가 열려있으면 게임 터치 시작 무시
+            if (document.getElementById('slot-overlay').classList.contains('active')) return;
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         }, { passive: false });
 
         window.addEventListener('touchmove', e => {
+            // 슬롯 오버레이가 열려있으면 slot-list 내부 스크롤만 허용, 나머지 막기
+            if (document.getElementById('slot-overlay').classList.contains('active')) {
+                const slotList = document.getElementById('slot-list');
+                if (!slotList.contains(e.target)) e.preventDefault();
+                return;
+            }
             if (touchStartX && touchStartY) e.preventDefault();
         }, { passive: false });
 
         window.addEventListener('touchend', e => {
+            if (document.getElementById('slot-overlay').classList.contains('active')) {
+                touchStartX = null; touchStartY = null;
+                return;
+            }
             if (!touchStartX || !touchStartY) return;
             let dx = e.changedTouches[0].clientX - touchStartX;
             let dy = e.changedTouches[0].clientY - touchStartY;
