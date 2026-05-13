@@ -486,8 +486,10 @@
             const slots = getSaveSlots();
             slots.splice(realIndex, 1);
             putSaveSlots(slots);
-            openSlotPanel(); // 목록 새로고침
+            openSlotPanel();
         }
+
+        function closeSlotPanel() {
             document.getElementById('slot-overlay').classList.remove('active');
         }
 
