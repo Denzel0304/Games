@@ -118,7 +118,7 @@
             padding-bottom: 20px;
         }
 
-        #status { margin-bottom: 10px; margin-top: 8px; font-size: 0.9rem; color: #78909c; height: 1.2rem; font-weight: 500; }
+        #status { margin-bottom: 10px; margin-top: 8px; font-size: 0.75rem; color: #78909c; height: 1.2rem; font-weight: 500; white-space: nowrap; }
 
         .controls { display: flex; justify-content: center; gap: 10px; width: 85vw; max-width: 340px; margin-top: 6px; }
 
@@ -159,14 +159,19 @@
         }
         .slot-item {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; border-radius: 12px; margin-bottom: 8px;
+            padding: 8px 12px; border-radius: 12px; margin-bottom: 6px;
             background: var(--bg-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
             cursor: pointer; transition: transform 0.1s;
+            gap: 8px;
         }
         .slot-item:active { transform: scale(0.98); }
-        .slot-item .slot-time { font-size: 0.78rem; color: #78909c; }
-        .slot-item .slot-best { font-size: 0.9rem; font-weight: 700; color: var(--text-color); }
+        .slot-item .slot-time { font-size: 0.72rem; color: #78909c; margin-left: auto; white-space: nowrap; }
+        .slot-item .slot-best { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .slot-lock-cb {
+            width: 16px; height: 16px; flex-shrink: 0; cursor: pointer;
+            accent-color: #5c9bd6;
+        }
         .slot-empty {
             padding: 12px 16px; border-radius: 12px; margin-bottom: 8px;
             background: var(--bg-color); color: #b0bec5;
@@ -266,7 +271,7 @@
     </div>
 
     <div class="footer">
-        <div id="status">2048 달성횟수 : 0</div>
+        <div id="status">달성 횟수&nbsp; 2048 : 0&nbsp;&nbsp;4096 : 0&nbsp;&nbsp;8192 : 0</div>
         <div class="controls">
             <button id="restart-btn" class="action-btn" onclick="startGame()">새 게임</button>
             <button id="save-game-btn" class="action-btn" onclick="saveGame()">저장하기</button>
@@ -299,7 +304,7 @@
     <div id="clear-modal-overlay">
         <div id="modal-box">
             <div class="modal-emoji">🏆</div>
-            <div class="modal-title">게임을 모두 클리어 하였습니다.^^</div>
+            <div class="modal-title">게임 클리어 !!!</div>
             <div class="modal-sub">8192을 달성하셨습니다! 새 게임을 시작합니다.</div>
             <button id="modal-continue-btn" onclick="closeClearModal()">확인</button>
         </div>
@@ -318,14 +323,18 @@
         let bestScore = localStorage.getItem('bestScore2048') || 0;
         let isGameOver = false;
         let achieved2048 = false; // 현재 게임에서 이미 모달을 띄웠는지 여부
+        let achieved4096 = false;
+        let achieved8192 = false;
 
         let achieveCount = parseInt(localStorage.getItem('achieveCount2048') || '0');
+        let achieveCount4096 = parseInt(localStorage.getItem('achieveCount4096') || '0');
+        let achieveCount8192 = parseInt(localStorage.getItem('achieveCount8192') || '0');
 
         bestScoreElement.innerText = bestScore;
         updateAchieveStatus();
 
         function updateAchieveStatus() {
-            statusElement.innerText = `2048 달성횟수 : ${achieveCount}`;
+            statusElement.innerText = `달성 횟수\u00a0 2048 : ${achieveCount}\u00a0\u00a04096 : ${achieveCount4096}\u00a0\u00a08192 : ${achieveCount8192}`;
             statusElement.style.color = "#78909c";
         }
 
@@ -345,13 +354,33 @@
             startGame();
         }
 
-        // ── 저장 슬롯 시스템 (최대 5개, FIFO) ──
         const SLOT_KEY = 'saveSlots2048';
-        const MAX_SLOTS = 5;
+        const SLOT_LOCK_KEY = 'saveSlotLocks2048';
+        const MAX_SLOTS = 8;
 
         function getSaveSlots() {
             try { return JSON.parse(localStorage.getItem(SLOT_KEY)) || []; }
             catch(e) { return []; }
+        }
+
+        function getSlotLocks() {
+            try { return JSON.parse(localStorage.getItem(SLOT_LOCK_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+
+        function setSlotLock(slotIndex, locked) {
+            const locks = getSlotLocks();
+            const slots = getSaveSlots();
+            // slotIndex는 실제 배열 인덱스, 슬롯의 time을 키로 잠금 상태 저장
+            if (slots[slotIndex]) {
+                locks[slots[slotIndex].time] = locked;
+                localStorage.setItem(SLOT_LOCK_KEY, JSON.stringify(locks));
+            }
+        }
+
+        function isSlotLocked(slot) {
+            const locks = getSlotLocks();
+            return !!locks[slot.time];
         }
 
         function saveGame() {
@@ -367,11 +396,18 @@
                 savedScore: score,
                 board: board,
                 score: score,
-                achieved2048: achieved2048
+                achieved2048: achieved2048,
+                achieved4096: achieved4096,
+                achieved8192: achieved8192
             };
             let slots = getSaveSlots();
             slots.push(entry);
-            if (slots.length > MAX_SLOTS) slots = slots.slice(slots.length - MAX_SLOTS);
+            // 잠긴 슬롯은 보존하고, 잠기지 않은 오래된 것부터 제거
+            while (slots.length > MAX_SLOTS) {
+                const firstUnlocked = slots.findIndex(s => !isSlotLocked(s));
+                if (firstUnlocked === -1) break; // 모두 잠김이면 더 이상 제거 안 함
+                slots.splice(firstUnlocked, 1);
+            }
             localStorage.setItem(SLOT_KEY, JSON.stringify(slots));
             showToast('저장되었습니다 ✓');
         }
@@ -388,10 +424,40 @@
             } else {
                 [...slots].reverse().forEach((slot, i) => {
                     const realIndex = slots.length - 1 - i;
+                    const locked = isSlotLocked(slot);
+
                     const item = document.createElement('div');
                     item.className = 'slot-item';
-                    item.innerHTML = `<span class="slot-time">${slot.time}</span><span class="slot-best">점수 ${slot.savedScore ?? slot.score ?? 0}</span>`;
-                    item.onclick = () => loadSlot(realIndex);
+
+                    // 체크박스
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = locked;
+                    cb.className = 'slot-lock-cb';
+                    cb.title = '보존';
+                    cb.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                        setSlotLock(realIndex, cb.checked);
+                    });
+
+                    // 점수
+                    const scoreSpan = document.createElement('span');
+                    scoreSpan.className = 'slot-best';
+                    scoreSpan.innerText = `점수 ${slot.savedScore ?? slot.score ?? 0}`;
+
+                    // 날짜
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'slot-time';
+                    timeSpan.innerText = slot.time;
+
+                    item.appendChild(cb);
+                    item.appendChild(scoreSpan);
+                    item.appendChild(timeSpan);
+
+                    item.addEventListener('click', (e) => {
+                        if (e.target === cb) return;
+                        loadSlot(realIndex);
+                    });
                     list.appendChild(item);
                 });
             }
@@ -408,6 +474,8 @@
             if (!data || !data.board) return;
             board = data.board;
             achieved2048 = data.achieved2048 || false;
+            achieved4096 = data.achieved4096 || false;
+            achieved8192 = data.achieved8192 || false;
             isGameOver = false;
             closeModal();
             closeSlotPanelWithHistory();
@@ -461,6 +529,8 @@
             score = 0; updateScore(0);
             isGameOver = false;
             achieved2048 = false;
+            achieved4096 = false;
+            achieved8192 = false;
             closeModal();
             updateAchieveStatus();
             addRandomTile(); addRandomTile();
@@ -523,8 +593,22 @@
                         setTimeout(openModal, 300);
                     }
 
+                    // 4096 달성 체크 (이번 게임에서 처음일 때만)
+                    if (filteredRow[i] === 4096 && !achieved4096) {
+                        achieved4096 = true;
+                        achieveCount4096++;
+                        localStorage.setItem('achieveCount4096', achieveCount4096);
+                        updateAchieveStatus();
+                    }
+
                     // 8192 달성 체크 (게임 클리어)
                     if (filteredRow[i] === 8192) {
+                        if (!achieved8192) {
+                            achieved8192 = true;
+                            achieveCount8192++;
+                            localStorage.setItem('achieveCount8192', achieveCount8192);
+                            updateAchieveStatus();
+                        }
                         setTimeout(() => {
                             clearModalOverlay.classList.add('active');
                             const sound = document.getElementById('achieve-sound');
