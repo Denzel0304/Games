@@ -173,8 +173,16 @@
             gap: 8px;
         }
         .slot-item:active { transform: scale(0.98); }
-        .slot-item .slot-time { font-size: 0.72rem; color: #78909c; margin-left: auto; white-space: nowrap; }
+        .slot-item .slot-time { font-size: 0.72rem; color: #78909c; margin-left: auto; margin-right: 6px; white-space: nowrap; }
         .slot-item .slot-best { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .slot-delete-btn {
+            flex-shrink: 0; width: 22px; height: 22px; border: none; border-radius: 50%;
+            background: #ef9a9a; color: white; font-size: 0.75rem; font-weight: 700;
+            line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 2px 4px var(--shadow-dark);
+            padding: 0;
+        }
+        .slot-delete-btn:active { opacity: 0.7; }
         .slot-lock-cb {
             width: 16px; height: 16px; flex-shrink: 0; cursor: pointer;
             accent-color: #5c9bd6;
@@ -373,11 +381,12 @@
             localStorage.setItem(SLOT_KEY, JSON.stringify(slots));
         }
 
-        // locked 상태를 슬롯 객체 안에 직접 저장
-        function setSlotLock(realIndex, locked) {
+        // locked 상태를 슬롯 객체 안에 직접 저장 (id 기반으로 정확히 매칭)
+        function setSlotLock(slotId, locked) {
             const slots = getSaveSlots();
-            if (slots[realIndex] === undefined) return;
-            slots[realIndex].locked = locked;
+            const target = slots.find(s => s.id === slotId);
+            if (!target) return;
+            target.locked = locked;
             putSaveSlots(slots);
         }
 
@@ -390,6 +399,7 @@
             const pad = n => String(n).padStart(2,'0');
             const timeStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
             const entry = {
+                id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
                 time: timeStr,
                 savedScore: score,
                 board: board,
@@ -435,7 +445,7 @@
                     cb.title = '보존';
                     cb.addEventListener('change', (e) => {
                         e.stopPropagation();
-                        setSlotLock(realIndex, cb.checked);
+                        setSlotLock(slot.id, cb.checked);
                     });
 
                     // 점수
@@ -452,8 +462,18 @@
                     item.appendChild(scoreSpan);
                     item.appendChild(timeSpan);
 
+                    // X 삭제 버튼
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'slot-delete-btn';
+                    delBtn.innerText = '✕';
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteSlot(realIndex);
+                    });
+                    item.appendChild(delBtn);
+
                     item.addEventListener('click', (e) => {
-                        if (e.target === cb) return;
+                        if (e.target === cb || e.target === delBtn) return;
                         loadSlot(realIndex);
                     });
                     list.appendChild(item);
@@ -462,7 +482,12 @@
             document.getElementById('slot-overlay').classList.add('active');
         }
 
-        function closeSlotPanel() {
+        function deleteSlot(realIndex) {
+            const slots = getSaveSlots();
+            slots.splice(realIndex, 1);
+            putSaveSlots(slots);
+            openSlotPanel(); // 목록 새로고침
+        }
             document.getElementById('slot-overlay').classList.remove('active');
         }
 
