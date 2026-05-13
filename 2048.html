@@ -362,7 +362,6 @@
         }
 
         const SLOT_KEY = 'saveSlots2048';
-        const SLOT_LOCK_KEY = 'saveSlotLocks2048';
         const MAX_SLOTS = 20;
 
         function getSaveSlots() {
@@ -370,24 +369,16 @@
             catch(e) { return []; }
         }
 
-        function getSlotLocks() {
-            try { return JSON.parse(localStorage.getItem(SLOT_LOCK_KEY)) || {}; }
-            catch(e) { return {}; }
+        function putSaveSlots(slots) {
+            localStorage.setItem(SLOT_KEY, JSON.stringify(slots));
         }
 
-        function setSlotLock(slotIndex, locked) {
-            const locks = getSlotLocks();
+        // locked 상태를 슬롯 객체 안에 직접 저장
+        function setSlotLock(realIndex, locked) {
             const slots = getSaveSlots();
-            // slotIndex는 실제 배열 인덱스, 슬롯의 time을 키로 잠금 상태 저장
-            if (slots[slotIndex]) {
-                locks[slots[slotIndex].time] = locked;
-                localStorage.setItem(SLOT_LOCK_KEY, JSON.stringify(locks));
-            }
-        }
-
-        function isSlotLocked(slot) {
-            const locks = getSlotLocks();
-            return !!locks[slot.time];
+            if (slots[realIndex] === undefined) return;
+            slots[realIndex].locked = locked;
+            putSaveSlots(slots);
         }
 
         function saveGame() {
@@ -397,7 +388,7 @@
             }
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
-            const timeStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            const timeStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
             const entry = {
                 time: timeStr,
                 savedScore: score,
@@ -405,17 +396,18 @@
                 score: score,
                 achieved2048: achieved2048,
                 achieved4096: achieved4096,
-                achieved8192: achieved8192
+                achieved8192: achieved8192,
+                locked: false
             };
             let slots = getSaveSlots();
             slots.push(entry);
-            // 잠긴 슬롯은 보존하고, 잠기지 않은 오래된 것부터 제거
+            // 20개 초과 시, 잠기지 않은 가장 오래된 것(앞쪽)부터 제거
             while (slots.length > MAX_SLOTS) {
-                const firstUnlocked = slots.findIndex(s => !isSlotLocked(s));
-                if (firstUnlocked === -1) break; // 모두 잠김이면 더 이상 제거 안 함
+                const firstUnlocked = slots.findIndex(s => !s.locked);
+                if (firstUnlocked === -1) break; // 전부 잠김이면 추가 불가
                 slots.splice(firstUnlocked, 1);
             }
-            localStorage.setItem(SLOT_KEY, JSON.stringify(slots));
+            putSaveSlots(slots);
             showToast('저장되었습니다 ✓');
         }
 
@@ -431,15 +423,14 @@
             } else {
                 [...slots].reverse().forEach((slot, i) => {
                     const realIndex = slots.length - 1 - i;
-                    const locked = isSlotLocked(slot);
 
                     const item = document.createElement('div');
                     item.className = 'slot-item';
 
-                    // 체크박스
+                    // 체크박스 — slot.locked 를 직접 사용
                     const cb = document.createElement('input');
                     cb.type = 'checkbox';
-                    cb.checked = locked;
+                    cb.checked = !!slot.locked;
                     cb.className = 'slot-lock-cb';
                     cb.title = '보존';
                     cb.addEventListener('change', (e) => {
