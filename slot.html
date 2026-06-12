@@ -9,13 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --night-1:#2a1a3e;
-    --night-2:#43275f;
-    --gold:#ffd24a;
-    --gold-deep:#f5a623;
-    --cream:#fff6e6;
-    --cherry:#ff5470;
-    --mint:#4ecdc4;
+    --night-1:#2a1a3e; --night-2:#43275f;
+    --gold:#ffd24a; --gold-deep:#f5a623;
+    --cream:#fff6e6; --cherry:#ff5470; --mint:#4ecdc4;
     --cell-h: clamp(62px, 18vw, 88px);
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -76,9 +72,9 @@
   @keyframes pulse{ 50%{ transform:scale(1.09); } }
   .strip{ will-change:transform; }
   .reel.spinning .strip{ filter:blur(2px); }
-  .cell{ height:var(--cell-h); display:grid; place-items:center; font-size:clamp(30px,9vw,42px); line-height:1; }
+  .cell{ height:var(--cell-h); display:grid; place-items:center; }
+  .cell svg{ width:62%; height:62%; display:block; pointer-events:none; }
 
-  /* winning line overlay */
   .lines{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:visible; }
   .lines line{
     stroke-width:6; stroke-linecap:round; fill:none; opacity:.9;
@@ -155,17 +151,28 @@
 
 <script>
 (() => {
-  const SYMBOLS = ['🍒','🍋','🍊','🔔','⭐','💎','7️⃣'];
-  const COMMON  = ['🍒','🍋','🍊','🔔','⭐'];
-  const RARE    = ['💎','7️⃣'];
-  const TRIPLE  = { '7️⃣':300, '💎':200, '⭐':120, '🔔':80, '🍊':60, '🍋':60, '🍒':70 };
+  // ---------- self-drawn SVG symbols (no emoji → renders identically everywhere) ----------
+  const SVG = {
+    cherry:`<svg viewBox="0 0 100 100"><path d="M52 26 C60 36 72 38 78 50" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><path d="M52 26 C44 36 36 40 30 52" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><path d="M52 26 q6 -8 14 -7" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="66" r="17" fill="#e63950"/><circle cx="70" cy="66" r="17" fill="#ff5470"/><ellipse cx="24" cy="60" rx="5" ry="3" fill="#fff" opacity=".55"/><ellipse cx="64" cy="60" rx="5" ry="3" fill="#fff" opacity=".55"/></svg>`,
+    lemon:`<svg viewBox="0 0 100 100"><g transform="rotate(-20 50 52)"><ellipse cx="50" cy="52" rx="34" ry="23" fill="#ffd83d"/><path d="M84 52 q7 0 7 0" stroke="#e8b800" stroke-width="4" stroke-linecap="round"/><ellipse cx="40" cy="44" rx="11" ry="5" fill="#fff" opacity=".5"/></g><circle cx="16" cy="42" r="3" fill="#e8b800"/><circle cx="84" cy="62" r="3" fill="#e8b800"/></svg>`,
+    orange:`<svg viewBox="0 0 100 100"><circle cx="50" cy="58" r="29" fill="#ff9f1c"/><circle cx="40" cy="48" r="8" fill="#fff" opacity=".4"/><path d="M50 30 q9 -9 18 -6 q-3 9 -14 10 z" fill="#5a8f3a"/></svg>`,
+    bell:`<svg viewBox="0 0 100 100"><path d="M50 22 a25 25 0 0 1 25 25 v16 l6 9 h-62 l6 -9 v-16 a25 25 0 0 1 25 -25 z" fill="#ffd24a" stroke="#d99a18" stroke-width="3"/><circle cx="50" cy="84" r="7" fill="#d99a18"/><circle cx="50" cy="18" r="5" fill="#d99a18"/><path d="M42 40 a14 14 0 0 0 -8 12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".5"/></svg>`,
+    star:`<svg viewBox="0 0 100 100"><path d="M50 14 L61 40 L89 42 L67 60 L74 88 L50 72 L26 88 L33 60 L11 42 L39 40 Z" fill="#ffd24a" stroke="#d99a18" stroke-width="3" stroke-linejoin="round"/></svg>`,
+    diamond:`<svg viewBox="0 0 100 100"><path d="M30 30 H70 L86 48 L50 88 L14 48 Z" fill="#5fd0ff"/><path d="M30 30 L50 48 L70 30 Z" fill="#bff0ff"/><path d="M14 48 L50 48 L50 88 Z" fill="#3bb6ef"/><path d="M50 48 L70 30 L86 48 Z" fill="#7fdcff"/><path d="M14 48 L30 30 L50 48 Z" fill="#9fe6ff"/><path d="M50 48 L70 48 L50 88 Z" fill="#2a9ad0"/></svg>`,
+    seven:`<svg viewBox="0 0 100 100"><rect x="22" y="22" width="56" height="56" rx="11" fill="#1f6fd6" stroke="#0d3f80" stroke-width="4"/><text x="51" y="70" font-size="48" font-family="Fredoka, Arial, sans-serif" font-weight="700" fill="#fff" text-anchor="middle">7</text></svg>`,
+  };
+
+  const SYMBOLS = ['cherry','lemon','orange','bell','star','diamond','seven'];
+  const COMMON  = ['cherry','lemon','orange','bell','star'];
+  const RARE    = ['diamond','seven'];
+  const TRIPLE  = { seven:300, diamond:200, star:120, bell:80, orange:60, lemon:60, cherry:70 };
   const COST = 20;
 
-  // 3x3 grid index map:  0 1 2 / 3 4 5 / 6 7 8
+  // 3x3:  0 1 2 / 3 4 5 / 6 7 8
   const LINES = [
-    {cells:[0,1,2], diag:false}, {cells:[3,4,5], diag:false}, {cells:[6,7,8], diag:false}, // rows
-    {cells:[0,3,6], diag:false}, {cells:[1,4,7], diag:false}, {cells:[2,5,8], diag:false}, // cols
-    {cells:[0,4,8], diag:true},  {cells:[2,4,6], diag:true},                               // diagonals
+    {cells:[0,1,2], diag:false}, {cells:[3,4,5], diag:false}, {cells:[6,7,8], diag:false},
+    {cells:[0,3,6], diag:false}, {cells:[1,4,7], diag:false}, {cells:[2,5,8], diag:false},
+    {cells:[0,4,8], diag:true},  {cells:[2,4,6], diag:true},
   ];
 
   const reelsEl = document.getElementById('reels');
@@ -176,76 +183,69 @@
   const display = document.getElementById('display');
   const muteBtn = document.getElementById('muteBtn');
 
-  // build 9 reels
-  const reels = [], strips = [];
+  const reels=[], strips=[];
   for(let i=0;i<9;i++){
-    const r = document.createElement('div'); r.className='reel';
-    const s = document.createElement('div'); s.className='strip';
+    const r=document.createElement('div'); r.className='reel';
+    const s=document.createElement('div'); s.className='strip';
     r.appendChild(s); reelsEl.appendChild(r);
     reels.push(r); strips.push(s);
   }
 
-  let coins = 300, spinning = false, muted = false;
+  let coins=300, spinning=false, muted=false;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pick = a => a[Math.floor(Math.random()*a.length)];
 
   // ---------- audio ----------
-  let actx = null;
+  let actx=null;
   const audio = () => (actx ||= new (window.AudioContext||window.webkitAudioContext)());
-  function beep(freq, dur=0.08, type='square', vol=0.15){
+  function beep(freq,dur=0.08,type='square',vol=0.15){
     if(muted) return;
-    const ctx = audio(), o = ctx.createOscillator(), g = ctx.createGain();
+    const ctx=audio(), o=ctx.createOscillator(), g=ctx.createGain();
     o.type=type; o.frequency.value=freq;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dur);
+    g.gain.setValueAtTime(vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);
     o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+dur);
   }
-  const tick = () => beep(420,0.05,'square',0.10);
-  const clunk = () => { beep(180,0.07,'square',0.16); beep(120,0.09,'triangle',0.10); };
-  const jingle = ns => ns.forEach((f,i)=> setTimeout(()=>beep(f,0.14,'triangle',0.2), i*110));
-  const winTune = () => jingle([523,659,784,1046]);
-  const jackpotTune = () => jingle([523,659,784,1046,784,1046,1318]);
+  const tick=()=>beep(420,0.05,'square',0.10);
+  const clunk=()=>{ beep(180,0.07,'square',0.16); beep(120,0.09,'triangle',0.10); };
+  const jingle=ns=>ns.forEach((f,i)=>setTimeout(()=>beep(f,0.14,'triangle',0.2),i*110));
+  const winTune=()=>jingle([523,659,784,1046]);
+  const jackpotTune=()=>jingle([523,659,784,1046,784,1046,1318]);
 
   // ---------- reel mechanics ----------
-  const fillCells = (strip,list) => strip.innerHTML = list.map(s=>`<div class="cell">${s}</div>`).join('');
-  const cellHeight = strip => { const c=strip.querySelector('.cell'); return c? c.getBoundingClientRect().height : 80; };
+  const fillCells=(strip,list)=> strip.innerHTML=list.map(k=>`<div class="cell">${SVG[k]}</div>`).join('');
+  const cellHeight=strip=>{ const c=strip.querySelector('.cell'); return c? c.getBoundingClientRect().height : 80; };
 
   let whir=null;
-  const startWhir = () => { const step=()=>{ tick(); whir=setTimeout(step,60); }; step(); };
-  const stopWhir  = () => { if(whir){ clearTimeout(whir); whir=null; } };
+  const startWhir=()=>{ const step=()=>{ tick(); whir=setTimeout(step,60); }; step(); };
+  const stopWhir =()=>{ if(whir){ clearTimeout(whir); whir=null; } };
 
-  function spinReel(reelEl, strip, target, duration){
+  function spinReel(reelEl,strip,target,duration){
     const N=24, list=[];
     for(let i=0;i<N-1;i++) list.push(pick(SYMBOLS));
     list.push(target);
-    fillCells(strip, list);
+    fillCells(strip,list);
     strip.style.transition='none'; strip.style.transform='translateY(0)';
     reelEl.classList.add('spinning'); void strip.offsetHeight;
     const dist=(N-1)*cellHeight(strip);
     strip.style.transition=`transform ${duration}ms cubic-bezier(.16,.7,.18,1)`;
     strip.style.transform=`translateY(${-dist}px)`;
     return new Promise(res=>{
-      strip.addEventListener('transitionend', function te(){
-        strip.removeEventListener('transitionend', te);
+      strip.addEventListener('transitionend',function te(){
+        strip.removeEventListener('transitionend',te);
         reelEl.classList.remove('spinning'); clunk(); res();
-      }, {once:true});
+      },{once:true});
     });
   }
 
-  // ---------- result weighting (feel-good) ----------
+  // ---------- feel-good result weighting ----------
   function decideGrid(){
-    const g = Array.from({length:9}, ()=> pick(SYMBOLS));
-    const r = Math.random();
-    if(r < 0.04){                                   // jackpot: a line of 7
-      pick(LINES).cells.forEach(i=> g[i]='7️⃣');
-    } else if(r < 0.32){                            // one common line guaranteed
-      const s=pick(COMMON); pick(LINES).cells.forEach(i=> g[i]=s);
-    } else if(r < 0.48){                            // a tasty multi-line (two lines, same symbol)
-      const s=pick(COMMON);
-      pick(LINES).cells.forEach(i=> g[i]=s);
-      pick(LINES).cells.forEach(i=> g[i]=s);
-    }
-    return g; // else fully random (still can hit lines)
+    const g=Array.from({length:9},()=>pick(SYMBOLS));
+    const r=Math.random();
+    if(r<0.04){ pick(LINES).cells.forEach(i=>g[i]='seven'); }
+    else if(r<0.32){ const s=pick(COMMON); pick(LINES).cells.forEach(i=>g[i]=s); }
+    else if(r<0.48){ const s=pick(COMMON); pick(LINES).cells.forEach(i=>g[i]=s); pick(LINES).cells.forEach(i=>g[i]=s); }
+    return g;
   }
 
   // ---------- scoring ----------
@@ -254,33 +254,27 @@
     for(const L of LINES){
       const [a,b,c]=L.cells.map(i=>grid[i]);
       if(a===b && b===c){
-        const base=TRIPLE[a];
-        const pay=Math.round(base*(L.diag?1.5:1));
-        total+=pay; wins.push({...L, symbol:a, pay});
+        const pay=Math.round(TRIPLE[a]*(L.diag?1.5:1));
+        total+=pay; wins.push({...L,symbol:a,pay});
         L.cells.forEach(i=>hitCells.add(i));
       }
     }
-    const jackpot = wins.some(w=> w.symbol==='7️⃣');
-    return { total, wins, hitCells, jackpot };
+    return { total, wins, hitCells, jackpot: wins.some(w=>w.symbol==='seven') };
   }
 
-  // ---------- winning line overlay ----------
+  // ---------- winning-line overlay ----------
   const LINE_COLORS=['#ffd24a','#ff5470','#4ecdc4','#a06bff','#7ad36b'];
   function drawLines(wins){
     linesSvg.innerHTML='';
     if(!wins.length) return;
-    const W=reelsEl.clientWidth, H=reelsEl.clientHeight;
-    linesSvg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-    const center = i => {
-      const el=reels[i];
-      return { x: el.offsetLeft + el.offsetWidth/2, y: el.offsetTop + el.offsetHeight/2 };
-    };
+    linesSvg.setAttribute('viewBox',`0 0 ${reelsEl.clientWidth} ${reelsEl.clientHeight}`);
+    const center=i=>{ const el=reels[i]; return { x:el.offsetLeft+el.offsetWidth/2, y:el.offsetTop+el.offsetHeight/2 }; };
     wins.forEach((w,k)=>{
       const p1=center(w.cells[0]), p2=center(w.cells[2]);
       const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
       ln.setAttribute('x1',p1.x); ln.setAttribute('y1',p1.y);
       ln.setAttribute('x2',p2.x); ln.setAttribute('y2',p2.y);
-      ln.setAttribute('stroke', LINE_COLORS[k%LINE_COLORS.length]);
+      ln.setAttribute('stroke',LINE_COLORS[k%LINE_COLORS.length]);
       ln.style.animationDelay=(k*0.12)+'s';
       linesSvg.appendChild(ln);
     });
@@ -302,11 +296,11 @@
   const canvas=document.getElementById('confetti'), cx=canvas.getContext('2d');
   let parts=[];
   const resize=()=>{ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; };
-  resize(); addEventListener('resize', resize);
+  resize(); addEventListener('resize',resize);
   const COLORS=['#ffd24a','#ff5470','#4ecdc4','#fff6e6','#a06bff'];
   function confetti(n){
     if(reduceMotion) return;
-    const fresh = parts.length===0;
+    const fresh=parts.length===0;
     for(let i=0;i<n;i++) parts.push({
       x:Math.random()*canvas.width, y:-20*devicePixelRatio,
       vx:(Math.random()-0.5)*6*devicePixelRatio, vy:(Math.random()*4+3)*devicePixelRatio,
@@ -336,8 +330,7 @@
     if(res.wins.some(w=>w.diag)) return '대각선 적중! 보너스 1.5배 ✨';
     return pick(['한 줄 완성! 좋아요 😊','적중! 기분 좋다 🙌']);
   }
-  const NOWIN = ['아쉽다! 한 번 더 돌려봐요 🍀','다음 판이 진짜일지도 ✨','괜찮아요, 리듬 좋아요 🎵'];
-
+  const NOWIN=['아쉽다! 한 번 더 돌려봐요 🍀','다음 판이 진짜일지도 ✨','괜찮아요, 리듬 좋아요 🎵'];
   function flash(text,big){
     msgEl.style.opacity=0;
     setTimeout(()=>{ msgEl.textContent=text; msgEl.classList.toggle('big',!!big); msgEl.style.opacity=1; },130);
@@ -346,8 +339,7 @@
   // ---------- main spin ----------
   async function doSpin(){
     if(spinning) return;
-    if(coins < COST){ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨', false); return; }
-
+    if(coins<COST){ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨',false); return; }
     spinning=true; spinBtn.disabled=true;
     display.classList.remove('win','shake');
     reels.forEach(r=>r.classList.remove('hit'));
@@ -357,38 +349,36 @@
     msgEl.classList.remove('big'); msgEl.textContent='돌리는 중...';
     beep(660,0.06,'square',0.18); startWhir();
 
-    const grid = decideGrid();
-    // stop column by column, top→bottom: a satisfying cascade
-    const order=[0,3,6, 1,4,7, 2,5,8];
-    const promises = order.map((idx,k)=>{
+    const grid=decideGrid();
+    const order=[0,3,6, 1,4,7, 2,5,8]; // column by column, top→bottom
+    const promises=order.map((idx,k)=>{
       const col=Math.floor(k/3), row=k%3;
-      const dur = 1300 + col*350 + row*120;
-      return spinReel(reels[idx], strips[idx], grid[idx], dur);
+      return spinReel(reels[idx],strips[idx],grid[idx], 1300+col*350+row*120);
     });
     await Promise.all(promises);
     stopWhir();
 
-    const res = score(grid);
+    const res=score(grid);
     if(res.total>0){
-      setCoins(coins + res.total);
-      res.hitCells.forEach(i=> reels[i].classList.add('hit'));
+      setCoins(coins+res.total);
+      res.hitCells.forEach(i=>reels[i].classList.add('hit'));
       drawLines(res.wins);
-      flash(winMessage(res), res.jackpot || res.wins.length>=2);
+      flash(winMessage(res), res.jackpot||res.wins.length>=2);
       if(res.jackpot){ display.classList.add('win','shake'); confetti(200); jackpotTune(); }
-      else { display.classList.add('win'); confetti(50 + res.wins.length*40); winTune(); }
+      else { display.classList.add('win'); confetti(50+res.wins.length*40); winTune(); }
     } else {
-      flash(pick(NOWIN), false);
+      flash(pick(NOWIN),false);
     }
 
     spinning=false; spinBtn.disabled=false;
-    if(coins < COST) setTimeout(()=>{ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨', false); }, 900);
+    if(coins<COST) setTimeout(()=>{ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨',false); },900);
   }
 
   // ---------- init ----------
-  strips.forEach(s=> fillCells(s,[pick(COMMON)]));
-  spinBtn.addEventListener('click', doSpin);
-  muteBtn.addEventListener('click', ()=>{
-    muted=!muted; muteBtn.textContent= muted?'🔇':'🔊';
+  strips.forEach(s=>fillCells(s,[pick(COMMON)]));
+  spinBtn.addEventListener('click',doSpin);
+  muteBtn.addEventListener('click',()=>{
+    muted=!muted; muteBtn.textContent=muted?'🔇':'🔊';
     if(!muted) beep(523,0.08,'triangle',0.15);
   });
 })();
