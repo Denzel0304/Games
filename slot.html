@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>오늘의 행운 슬롯 · 3×3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-1:#2a1a3e;
+    --night-2:#43275f;
+    --gold:#ffd24a;
+    --gold-deep:#f5a623;
+    --cream:#fff6e6;
+    --cherry:#ff5470;
+    --mint:#4ecdc4;
+    --cell-h: clamp(62px, 18vw, 88px);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; }
+  body{
+    font-family:'Fredoka','Jua',system-ui,sans-serif;
+    background:radial-gradient(120% 90% at 50% -10%, var(--night-2) 0%, var(--night-1) 60%, #1b1029 100%);
+    color:var(--cream);
+    min-height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:16px; overflow-x:hidden; user-select:none;
+  }
+  .machine{ width:100%; max-width:400px; display:flex; flex-direction:column; gap:14px; }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; }
+  .title{
+    font-family:'Jua',sans-serif; font-size:clamp(20px,6.5vw,28px); line-height:1;
+    color:var(--gold); text-shadow:0 2px 0 #b9791a, 0 0 22px rgba(255,210,74,.35); letter-spacing:.5px;
+  }
+  .title small{ display:block; font-size:11px; color:#cbb6e8; letter-spacing:2px; margin-top:4px; }
+  .mute{
+    width:42px; height:42px; border-radius:50%; border:2px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06); color:var(--cream); font-size:18px; cursor:pointer;
+    display:grid; place-items:center; transition:transform .12s ease;
+  }
+  .mute:active{ transform:scale(.9); }
+
+  .coins{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.1));
+    border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:9px 16px;
+  }
+  .coins .label{ font-size:13px; color:#cbb6e8; letter-spacing:1px; }
+  .coins .amount{
+    font-size:25px; font-weight:700; color:var(--gold); font-variant-numeric:tabular-nums;
+    text-shadow:0 1px 0 #b9791a; min-width:70px; text-align:right;
+  }
+
+  .display{
+    position:relative; background:linear-gradient(180deg,#6b3fa0,#3d2456);
+    border-radius:22px; padding:14px;
+    box-shadow: inset 0 0 0 4px var(--gold-deep), inset 0 0 0 6px #7a4d12, 0 10px 30px rgba(0,0,0,.4);
+  }
+  .grid-wrap{ position:relative; }
+  .reels{
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    gap:8px; position:relative; z-index:2;
+  }
+  .reel{
+    height:var(--cell-h); overflow:hidden; border-radius:12px;
+    background:linear-gradient(180deg,var(--cream),#fbe9c4);
+    box-shadow: inset 0 5px 9px rgba(0,0,0,.18), inset 0 -5px 9px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.4);
+    transition:box-shadow .25s, transform .25s;
+  }
+  .reel.hit{
+    box-shadow: inset 0 0 0 3px var(--mint), 0 0 18px rgba(78,205,196,.7);
+    transform:scale(1.04); animation:pulse .6s ease 2;
+  }
+  @keyframes pulse{ 50%{ transform:scale(1.09); } }
+  .strip{ will-change:transform; }
+  .reel.spinning .strip{ filter:blur(2px); }
+  .cell{ height:var(--cell-h); display:grid; place-items:center; font-size:clamp(30px,9vw,42px); line-height:1; }
+
+  /* winning line overlay */
+  .lines{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:visible; }
+  .lines line{
+    stroke-width:6; stroke-linecap:round; fill:none; opacity:.9;
+    stroke-dasharray:400; stroke-dashoffset:400; animation:draw .5s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+
+  .display.win{ animation:winflash .5s ease 3; }
+  @keyframes winflash{
+    0%,100%{ box-shadow: inset 0 0 0 4px var(--gold-deep), inset 0 0 0 6px #7a4d12, 0 10px 30px rgba(0,0,0,.4); }
+    50%{ box-shadow: inset 0 0 0 4px var(--mint), inset 0 0 0 6px #fff, 0 0 40px rgba(78,205,196,.6); }
+  }
+  .display.shake{ animation:shake .4s ease; }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+  .message{ text-align:center; font-family:'Jua',sans-serif; font-size:18px; min-height:26px; transition:opacity .2s; }
+  .message.big{ color:var(--gold); font-size:22px; text-shadow:0 0 18px rgba(255,210,74,.5); }
+
+  .spin{
+    border:none; cursor:pointer; width:100%; padding:18px; border-radius:20px;
+    font-family:'Jua',sans-serif; font-size:23px; color:#5a2a00;
+    background:linear-gradient(180deg, #ffe27a, var(--gold) 45%, var(--gold-deep));
+    box-shadow: 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35);
+    transition:transform .08s ease, box-shadow .08s ease; letter-spacing:2px;
+  }
+  .spin:active{ transform:translateY(5px); box-shadow:0 1px 0 #b9791a, 0 6px 14px rgba(245,166,35,.3); }
+  .spin:disabled{ filter:saturate(.5) brightness(.92); cursor:default; }
+  .spin .cost{ display:block; font-size:12px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
+
+  .legend{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; font-size:11px; color:#cbb6e8; }
+  .legend b{ color:var(--cream); }
+  .footnote{ text-align:center; font-size:11px; color:#9c87bd; letter-spacing:.5px; }
+
+  #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+
+  @media (prefers-reduced-motion: reduce){
+    .display.win, .display.shake, .reel.hit, .lines line{ animation:none; stroke-dashoffset:0; }
+    .reel.spinning .strip{ filter:none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <main class="machine">
+    <div class="topbar">
+      <h1 class="title">오늘의 행운 슬롯<small>3 × 3 · 8 LINES</small></h1>
+      <button class="mute" id="muteBtn" aria-label="소리 켜고 끄기">🔊</button>
+    </div>
+
+    <div class="coins">
+      <span class="label">내 코인</span>
+      <span class="amount" id="coins">300</span>
+      <span style="font-size:22px">🪙</span>
+    </div>
+
+    <div class="display" id="display">
+      <div class="grid-wrap">
+        <div class="reels" id="reels"></div>
+        <svg class="lines" id="lines" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="message" id="message">버튼을 눌러 행운을 돌려보세요 ✨</div>
+
+    <button class="spin" id="spinBtn">
+      SPIN
+      <span class="cost">한 번 돌리기 · 20 🪙</span>
+    </button>
+
+    <div class="legend">가로·세로·<b>대각선(1.5배)</b> 8줄 동시 채점</div>
+    <p class="footnote">재미로 즐기는 게임이에요 · 실제 돈은 쓰지 않아요</p>
+  </main>
+
+<script>
+(() => {
+  const SYMBOLS = ['🍒','🍋','🍊','🔔','⭐','💎','7️⃣'];
+  const COMMON  = ['🍒','🍋','🍊','🔔','⭐'];
+  const RARE    = ['💎','7️⃣'];
+  const TRIPLE  = { '7️⃣':300, '💎':200, '⭐':120, '🔔':80, '🍊':60, '🍋':60, '🍒':70 };
+  const COST = 20;
+
+  // 3x3 grid index map:  0 1 2 / 3 4 5 / 6 7 8
+  const LINES = [
+    {cells:[0,1,2], diag:false}, {cells:[3,4,5], diag:false}, {cells:[6,7,8], diag:false}, // rows
+    {cells:[0,3,6], diag:false}, {cells:[1,4,7], diag:false}, {cells:[2,5,8], diag:false}, // cols
+    {cells:[0,4,8], diag:true},  {cells:[2,4,6], diag:true},                               // diagonals
+  ];
+
+  const reelsEl = document.getElementById('reels');
+  const linesSvg = document.getElementById('lines');
+  const coinsEl = document.getElementById('coins');
+  const msgEl   = document.getElementById('message');
+  const spinBtn = document.getElementById('spinBtn');
+  const display = document.getElementById('display');
+  const muteBtn = document.getElementById('muteBtn');
+
+  // build 9 reels
+  const reels = [], strips = [];
+  for(let i=0;i<9;i++){
+    const r = document.createElement('div'); r.className='reel';
+    const s = document.createElement('div'); s.className='strip';
+    r.appendChild(s); reelsEl.appendChild(r);
+    reels.push(r); strips.push(s);
+  }
+
+  let coins = 300, spinning = false, muted = false;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+
+  // ---------- audio ----------
+  let actx = null;
+  const audio = () => (actx ||= new (window.AudioContext||window.webkitAudioContext)());
+  function beep(freq, dur=0.08, type='square', vol=0.15){
+    if(muted) return;
+    const ctx = audio(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dur);
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+dur);
+  }
+  const tick = () => beep(420,0.05,'square',0.10);
+  const clunk = () => { beep(180,0.07,'square',0.16); beep(120,0.09,'triangle',0.10); };
+  const jingle = ns => ns.forEach((f,i)=> setTimeout(()=>beep(f,0.14,'triangle',0.2), i*110));
+  const winTune = () => jingle([523,659,784,1046]);
+  const jackpotTune = () => jingle([523,659,784,1046,784,1046,1318]);
+
+  // ---------- reel mechanics ----------
+  const fillCells = (strip,list) => strip.innerHTML = list.map(s=>`<div class="cell">${s}</div>`).join('');
+  const cellHeight = strip => { const c=strip.querySelector('.cell'); return c? c.getBoundingClientRect().height : 80; };
+
+  let whir=null;
+  const startWhir = () => { const step=()=>{ tick(); whir=setTimeout(step,60); }; step(); };
+  const stopWhir  = () => { if(whir){ clearTimeout(whir); whir=null; } };
+
+  function spinReel(reelEl, strip, target, duration){
+    const N=24, list=[];
+    for(let i=0;i<N-1;i++) list.push(pick(SYMBOLS));
+    list.push(target);
+    fillCells(strip, list);
+    strip.style.transition='none'; strip.style.transform='translateY(0)';
+    reelEl.classList.add('spinning'); void strip.offsetHeight;
+    const dist=(N-1)*cellHeight(strip);
+    strip.style.transition=`transform ${duration}ms cubic-bezier(.16,.7,.18,1)`;
+    strip.style.transform=`translateY(${-dist}px)`;
+    return new Promise(res=>{
+      strip.addEventListener('transitionend', function te(){
+        strip.removeEventListener('transitionend', te);
+        reelEl.classList.remove('spinning'); clunk(); res();
+      }, {once:true});
+    });
+  }
+
+  // ---------- result weighting (feel-good) ----------
+  function decideGrid(){
+    const g = Array.from({length:9}, ()=> pick(SYMBOLS));
+    const r = Math.random();
+    if(r < 0.04){                                   // jackpot: a line of 7
+      pick(LINES).cells.forEach(i=> g[i]='7️⃣');
+    } else if(r < 0.32){                            // one common line guaranteed
+      const s=pick(COMMON); pick(LINES).cells.forEach(i=> g[i]=s);
+    } else if(r < 0.48){                            // a tasty multi-line (two lines, same symbol)
+      const s=pick(COMMON);
+      pick(LINES).cells.forEach(i=> g[i]=s);
+      pick(LINES).cells.forEach(i=> g[i]=s);
+    }
+    return g; // else fully random (still can hit lines)
+  }
+
+  // ---------- scoring ----------
+  function score(grid){
+    let total=0; const wins=[]; const hitCells=new Set();
+    for(const L of LINES){
+      const [a,b,c]=L.cells.map(i=>grid[i]);
+      if(a===b && b===c){
+        const base=TRIPLE[a];
+        const pay=Math.round(base*(L.diag?1.5:1));
+        total+=pay; wins.push({...L, symbol:a, pay});
+        L.cells.forEach(i=>hitCells.add(i));
+      }
+    }
+    const jackpot = wins.some(w=> w.symbol==='7️⃣');
+    return { total, wins, hitCells, jackpot };
+  }
+
+  // ---------- winning line overlay ----------
+  const LINE_COLORS=['#ffd24a','#ff5470','#4ecdc4','#a06bff','#7ad36b'];
+  function drawLines(wins){
+    linesSvg.innerHTML='';
+    if(!wins.length) return;
+    const W=reelsEl.clientWidth, H=reelsEl.clientHeight;
+    linesSvg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    const center = i => {
+      const el=reels[i];
+      return { x: el.offsetLeft + el.offsetWidth/2, y: el.offsetTop + el.offsetHeight/2 };
+    };
+    wins.forEach((w,k)=>{
+      const p1=center(w.cells[0]), p2=center(w.cells[2]);
+      const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+      ln.setAttribute('x1',p1.x); ln.setAttribute('y1',p1.y);
+      ln.setAttribute('x2',p2.x); ln.setAttribute('y2',p2.y);
+      ln.setAttribute('stroke', LINE_COLORS[k%LINE_COLORS.length]);
+      ln.style.animationDelay=(k*0.12)+'s';
+      linesSvg.appendChild(ln);
+    });
+  }
+
+  // ---------- coin count-up ----------
+  function setCoins(target){
+    const start=coins, diff=target-start;
+    if(diff===0){ coinsEl.textContent=target; coins=target; return; }
+    const dur=550, t0=performance.now();
+    (function frame(now){
+      const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+      coinsEl.textContent=Math.round(start+diff*e);
+      if(p<1) requestAnimationFrame(frame); else { coinsEl.textContent=target; coins=target; }
+    })(performance.now());
+  }
+
+  // ---------- confetti ----------
+  const canvas=document.getElementById('confetti'), cx=canvas.getContext('2d');
+  let parts=[];
+  const resize=()=>{ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; };
+  resize(); addEventListener('resize', resize);
+  const COLORS=['#ffd24a','#ff5470','#4ecdc4','#fff6e6','#a06bff'];
+  function confetti(n){
+    if(reduceMotion) return;
+    const fresh = parts.length===0;
+    for(let i=0;i<n;i++) parts.push({
+      x:Math.random()*canvas.width, y:-20*devicePixelRatio,
+      vx:(Math.random()-0.5)*6*devicePixelRatio, vy:(Math.random()*4+3)*devicePixelRatio,
+      r:(Math.random()*6+4)*devicePixelRatio, color:pick(COLORS),
+      rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.3, life:1
+    });
+    if(fresh) requestAnimationFrame(draw);
+  }
+  function draw(){
+    cx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(p=>{
+      p.vy+=0.12*devicePixelRatio; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      if(p.y>canvas.height*0.85) p.life-=0.03;
+      cx.save(); cx.globalAlpha=Math.max(0,p.life); cx.translate(p.x,p.y); cx.rotate(p.rot);
+      cx.fillStyle=p.color; cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); cx.restore();
+    });
+    parts=parts.filter(p=> p.life>0 && p.y<canvas.height+40);
+    if(parts.length) requestAnimationFrame(draw); else cx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  // ---------- messages ----------
+  function winMessage(res){
+    if(res.jackpot) return pick(['🎉 777 잭팟!!! 대박이에요!','✨ 행운의 7! 오늘 최고의 날!']);
+    const n=res.wins.length;
+    if(n>=3) return `🎊 ${n}줄 동시 적중! 폭발이에요!`;
+    if(n===2) return '두 줄이나! 멋져요 😆';
+    if(res.wins.some(w=>w.diag)) return '대각선 적중! 보너스 1.5배 ✨';
+    return pick(['한 줄 완성! 좋아요 😊','적중! 기분 좋다 🙌']);
+  }
+  const NOWIN = ['아쉽다! 한 번 더 돌려봐요 🍀','다음 판이 진짜일지도 ✨','괜찮아요, 리듬 좋아요 🎵'];
+
+  function flash(text,big){
+    msgEl.style.opacity=0;
+    setTimeout(()=>{ msgEl.textContent=text; msgEl.classList.toggle('big',!!big); msgEl.style.opacity=1; },130);
+  }
+
+  // ---------- main spin ----------
+  async function doSpin(){
+    if(spinning) return;
+    if(coins < COST){ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨', false); return; }
+
+    spinning=true; spinBtn.disabled=true;
+    display.classList.remove('win','shake');
+    reels.forEach(r=>r.classList.remove('hit'));
+    linesSvg.innerHTML='';
+    audio().resume && audio().resume();
+    setCoins(coins-COST);
+    msgEl.classList.remove('big'); msgEl.textContent='돌리는 중...';
+    beep(660,0.06,'square',0.18); startWhir();
+
+    const grid = decideGrid();
+    // stop column by column, top→bottom: a satisfying cascade
+    const order=[0,3,6, 1,4,7, 2,5,8];
+    const promises = order.map((idx,k)=>{
+      const col=Math.floor(k/3), row=k%3;
+      const dur = 1300 + col*350 + row*120;
+      return spinReel(reels[idx], strips[idx], grid[idx], dur);
+    });
+    await Promise.all(promises);
+    stopWhir();
+
+    const res = score(grid);
+    if(res.total>0){
+      setCoins(coins + res.total);
+      res.hitCells.forEach(i=> reels[i].classList.add('hit'));
+      drawLines(res.wins);
+      flash(winMessage(res), res.jackpot || res.wins.length>=2);
+      if(res.jackpot){ display.classList.add('win','shake'); confetti(200); jackpotTune(); }
+      else { display.classList.add('win'); confetti(50 + res.wins.length*40); winTune(); }
+    } else {
+      flash(pick(NOWIN), false);
+    }
+
+    spinning=false; spinBtn.disabled=false;
+    if(coins < COST) setTimeout(()=>{ setCoins(80); flash('행운 충전! 코인을 채웠어요 ✨', false); }, 900);
+  }
+
+  // ---------- init ----------
+  strips.forEach(s=> fillCells(s,[pick(COMMON)]));
+  spinBtn.addEventListener('click', doSpin);
+  muteBtn.addEventListener('click', ()=>{
+    muted=!muted; muteBtn.textContent= muted?'🔇':'🔊';
+    if(!muted) beep(523,0.08,'triangle',0.15);
+  });
+})();
+</script>
+</body>
+</html>
