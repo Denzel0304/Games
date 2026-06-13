@@ -48,6 +48,11 @@
   .stage{ flex:1 1 auto; min-height:0; position:relative; border-radius:18px; overflow:hidden;
     box-shadow:inset 0 0 0 2px rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.35); }
   #field{ width:100%; height:100%; display:block; touch-action:none; }
+  .timer{ position:absolute; top:8px; right:12px; z-index:6; pointer-events:none; display:none;
+    font-family:'Jua',sans-serif; font-size:32px; line-height:1; color:#ff2b2b;
+    text-shadow:0 2px 4px rgba(0,0,0,.5), 0 0 12px rgba(255,40,40,.55); }
+  .timer.warn{ animation:tick .5s steps(1) infinite; }
+  @keyframes tick{ 50%{ opacity:.3; } }
 
   .result{ flex:0 0 auto; text-align:center; min-height:26px; font-family:'Jua',sans-serif; font-size:18px; transition:opacity .2s; }
   .result.big{ color:var(--gold); font-size:22px; text-shadow:0 0 18px rgba(255,210,74,.5); }
@@ -83,6 +88,7 @@
 
     <div class="stage">
       <canvas id="field" width="800" height="900"></canvas>
+      <div class="timer" id="timer"></div>
     </div>
 
     <div class="result" id="result">조준점이 멈출 때 쏘면 명중률이 올라가요</div>
@@ -104,6 +110,7 @@
   var resultEl = document.getElementById('result');
   var shootBtn = document.getElementById('shootBtn');
   var muteBtn = document.getElementById('muteBtn');
+  var timerEl = document.getElementById('timer');
 
   var W=800, H=900;                  // logical canvas units (scaled to device)
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -111,32 +118,43 @@
   // target center & ring radii (logical units)
   var TX=W/2, TY=H*0.30, R10=44;     // bullseye radius; rings scale from this
   var RINGS = [
-    {score:10, r:R10*1.0, color:'#ffe24a'},
-    {score:9,  r:R10*1.7, color:'#ffe24a'},
-    {score:8,  r:R10*2.4, color:'#ff6f6f'},
-    {score:7,  r:R10*3.1, color:'#ff6f6f'},
-    {score:6,  r:R10*3.8, color:'#7fc8ff'},
-    {score:5,  r:R10*4.5, color:'#7fc8ff'},
+    {score:9,  r:R10*1.0, color:'#ffe24a'},
+    {score:8,  r:R10*1.7, color:'#ffe24a'},
+    {score:7,  r:R10*2.4, color:'#ff6f6f'},
+    {score:6,  r:R10*3.1, color:'#ff6f6f'},
+    {score:5,  r:R10*3.8, color:'#7fc8ff'},
+    {score:4,  r:R10*4.5, color:'#7fc8ff'},
     {score:3,  r:R10*5.3, color:'#f3f3f3'},
-    {score:1,  r:R10*6.2, color:'#f3f3f3'}
+    {score:2,  r:R10*6.2, color:'#f3f3f3'}
   ];
   var TARGET_R = RINGS[RINGS.length-1].r;
   var GROUND = H*0.82;
 
   var arrows = 10, score = 0, busy=false, muted=false;
-  var wind = { dir:1, spd:0 };        // dir: -1 left / +1 right, spd 0..10
+  var wind = { dx:1, dy:0, spd:0 };   // dx,dy: unit direction (screen coords, y down), spd 0..10
   var t0 = performance.now();
-  var holes = [];                     // landed arrows {x,y}
+  var holes = [];                     // landed arrows {x,y,wob,ang}
   var flying = null;                  // current arrow in flight
+  var splits = [];                    // robin-hood split shard effects
+
+  // ---------- per-shot time limit ----------
+  var TIME_LIMIT = 7.0;               // seconds to take each shot
+  var shotDeadline = 0;
+  var timerActive = false;
+  function startTimer(){ shotDeadline = performance.now() + TIME_LIMIT*1000; timerActive = true; }
+  function stopTimer(){ timerActive = false; timerEl.style.display='none'; timerEl.classList.remove('warn'); }
 
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   function newWind(){
     wind.spd = Math.round(Math.random()*8 + (Math.random()<.3?2:0)); // 0..10, gentle
-    wind.dir = Math.random()<.5 ? -1 : 1;
+    var ang = Math.random()*Math.PI*2;                  // any direction (up/down/left/right)
+    wind.dx = Math.cos(ang);
+    wind.dy = Math.sin(ang);
     windSpd.textContent = wind.spd;
-    windArrow.style.transform = 'scaleX('+wind.dir+')';
+    windArrow.style.transform = 'rotate('+(ang*180/Math.PI)+'deg)';
     windArrow.textContent = '→';
     windArrow.style.opacity = wind.spd===0 ? .4 : 1;
+    startTimer();                                       // each available shot is time-limited
   }
 
   // ---------- aiming reticle: wobbles with breath + wind ----------
@@ -145,8 +163,9 @@
     var u = R10;                                 // scale wobble to bullseye size
     var breatheX = (Math.sin(t*1.7)*0.55 + Math.sin(t*0.6+1)*0.32)*u;
     var breatheY = (Math.cos(t*1.3)*0.50 + Math.sin(t*0.45)*0.30)*u;
-    var windBias = wind.dir * wind.spd * u * 0.10;   // wind nudges aim sideways
-    return { x: TX + breatheX + windBias, y: TY + breatheY };
+    var windBiasX = wind.dx * wind.spd * u * 0.09;   // wind nudges aim in its direction
+    var windBiasY = wind.dy * wind.spd * u * 0.09;
+    return { x: TX + breatheX + windBiasX, y: TY + breatheY + windBiasY };
   }
 
   // ---------- audio ----------
@@ -200,12 +219,14 @@
       ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.stroke();
     }
     ctx.beginPath(); ctx.arc(TX,TY,R10*0.45,0,Math.PI*2); ctx.fillStyle='#3a2a1a'; ctx.fill();
+    // dead-center red dot — perfect hit (10.1)
+    ctx.beginPath(); ctx.arc(TX,TY,R10*0.14,0,Math.PI*2); ctx.fillStyle='#ff2e2e'; ctx.fill();
   }
   function drawHole(h){
     // arrow shaft sticking out + fletching, with little wobble timer
     var wob = h.wob>0 ? Math.sin(h.wob*1.2)*h.wob*0.6 : 0;
     h.wob = h.wob>0 ? h.wob-0.6 : 0;
-    ctx.save(); ctx.translate(h.x,h.y); ctx.rotate((wob)*Math.PI/180); ctx.scale(R10/44, R10/44);
+    ctx.save(); ctx.translate(h.x,h.y); ctx.rotate((wob + (h.ang||0))*Math.PI/180); ctx.scale(R10/44, R10/44);
     ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(34,-44); ctx.stroke();
     // fletching
     ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(34,-44); ctx.lineTo(40,-34); ctx.lineTo(28,-38); ctx.closePath(); ctx.fill();
@@ -235,18 +256,66 @@
     ctx.restore();
   }
 
+  // ---------- robin-hood split shards ----------
+  function spawnSplit(x,y){
+    var frags=[];
+    for(var i=0;i<7;i++){
+      var a=Math.random()*Math.PI*2, sp=2+Math.random()*3.5;
+      frags.push({ x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.5,
+        rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.5, len:7+Math.random()*9, life:1 });
+    }
+    splits.push({ frags:frags });
+  }
+  function drawSplits(){
+    var s=R10/44;
+    for(var k=splits.length-1;k>=0;k--){
+      var sp=splits[k], alive=false;
+      for(var i=0;i<sp.frags.length;i++){
+        var f=sp.frags[i];
+        f.vy+=0.16; f.x+=f.vx; f.y+=f.vy; f.rot+=f.vr; f.life-=0.026;
+        if(f.life>0){
+          alive=true;
+          ctx.save(); ctx.globalAlpha=Math.max(0,f.life); ctx.translate(f.x,f.y); ctx.rotate(f.rot);
+          ctx.strokeStyle='#caa15a'; ctx.lineWidth=3*s; ctx.lineCap='round';
+          ctx.beginPath(); ctx.moveTo(-f.len*s,0); ctx.lineTo(f.len*s,0); ctx.stroke();
+          ctx.restore();
+        }
+      }
+      if(!alive) splits.splice(k,1);
+    }
+  }
+
   function render(now){
     ctx.clearRect(0,0,W,H);
     drawTarget();
     for(var i=0;i<holes.length;i++) drawHole(holes[i]);
+    drawSplits();
     if(flying){ drawFlying(flying); }
-    else if(!busy && arrows>0){ drawReticle(reticlePos(now)); }
+    else if(!busy && arrows>0){ drawReticle(reticlePos(now)); updateTimer(now); }
+    else { timerEl.style.display='none'; }
     requestAnimationFrame(render);
   }
 
+  function updateTimer(now){
+    if(!timerActive){ timerEl.style.display='none'; return; }
+    var remain=(shotDeadline-now)/1000;
+    if(remain<=0){
+      timerEl.textContent='0.0';
+      timerActive=false; timerEl.style.display='none'; timerEl.classList.remove('warn');
+      shoot();                       // time's up — auto-release wherever the reticle is now
+      return;
+    }
+    timerEl.style.display='block';
+    timerEl.textContent=remain.toFixed(1);
+    timerEl.classList.toggle('warn', remain<=3);
+  }
+
   // ---------- scoring ----------
+  function fmt(n){ return (Math.round(n*10)/10).toString(); }
   function scoreAt(x,y){
     var d=Math.hypot(x-TX, y-TY);
+    if(d<=R10*0.14) return 10.1;        // dead-center red dot — perfect
+    if(d<=R10*0.45) return 10;          // brown bullseye dot
     for(var i=0;i<RINGS.length;i++){ if(d<=RINGS[i].r) return RINGS[i].score; }
     return 0;
   }
@@ -254,7 +323,7 @@
   // ---------- shoot ----------
   function shoot(){
     if(busy || arrows<=0) return;
-    busy=true; shootBtn.disabled=true;
+    busy=true; shootBtn.disabled=true; stopTimer();
     try{ if(audio().resume) audio().resume(); }catch(e){}
 
     var aim = reticlePos(performance.now());   // reticle at release = exact impact point
@@ -286,18 +355,31 @@
     requestAnimationFrame(step);
   }
 
+  function findSplit(x,y){
+    for(var i=0;i<holes.length;i++){
+      if(Math.hypot(x-holes[i].x, y-holes[i].y) <= R10*0.16) return holes[i];
+    }
+    return null;
+  }
+
   function land(x,y){
-    // clamp landing roughly to board area for the stick-in look
     var pts = scoreAt(x,y);
-    holes.push({ x:x, y:y, wob:12 });           // wobble on impact
+    var hit = findSplit(x,y);                    // landed on a previous arrow's spot?
+    holes.push({ x:x, y:y, wob:12, ang:(Math.random()*70-35) });   // random stick angle
     thunkS();
 
-    if(pts>0){ score+=pts; scoreV.textContent=score; }
+    var bonus = 0;
+    if(hit){ bonus = 5; spawnSplit(hit.x, hit.y); }   // robin hood — arrow splits
 
-    if(pts===10){ flash('명중! 정중앙 10점!', true); confetti(200); bullsS(); }
-    else if(pts>=8){ flash(pts+'점! 아주 좋아요', true); confetti(70); goodS(); }
-    else if(pts>=5){ flash(pts+'점! 나이스', false); confetti(25); goodS(); }
-    else if(pts>0){ flash(pts+'점 획득!', false); beep(440,0.1,'triangle',0.16); }
+    var gain = pts + bonus;
+    if(gain>0){ score = Math.round((score+gain)*10)/10; scoreV.textContent = fmt(score); }
+
+    if(hit){ flash('로빈훗! 화살이 갈라졌다! '+fmt(pts)+'점 +'+bonus+' 보너스', true); confetti(170); bullsS(); }
+    else if(pts===10.1){ flash('퍼펙트! 정중앙 명중 10.1점!', true); confetti(220); bullsS(); }
+    else if(pts===10){ flash('명중! 정중앙 10점!', true); confetti(150); bullsS(); }
+    else if(pts>=8){ flash(fmt(pts)+'점! 아주 좋아요', true); confetti(70); goodS(); }
+    else if(pts>=5){ flash(fmt(pts)+'점! 나이스', false); confetti(25); goodS(); }
+    else if(pts>0){ flash(fmt(pts)+'점 획득!', false); beep(440,0.1,'triangle',0.16); }
     else { flash('아쉽다! 바람을 읽어봐요', false); beep(200,0.16,'sine',0.13); }
 
     setTimeout(function(){
@@ -308,14 +390,15 @@
   }
 
   function endRound(){
+    stopTimer();
     shootBtn.textContent='다시 도전';
     shootBtn.disabled=false; busy=false;
-    var msg = score>=70 ? '대단해요! 최종 '+score+'점 🏆' : '최종 '+score+'점! 한 판 더?';
+    var msg = score>=70 ? '대단해요! 최종 '+fmt(score)+'점 🏆' : '최종 '+fmt(score)+'점! 한 판 더?';
     flash(msg, score>=70);
     shootBtn.onclick = function(){ resetRound(); shootBtn.onclick=null; shootBtn.addEventListener('click',shoot); };
   }
   function resetRound(){
-    arrows=10; score=0; holes=[]; flying=null;
+    arrows=10; score=0; holes=[]; flying=null; splits=[];
     arrowsV.textContent=arrows; scoreV.textContent=score;
     shootBtn.innerHTML='발사<span class="sub">탭 · 화면을 눌러도 발사</span>';
     newWind(); flash('조준점이 멈출 때 쏘면 명중률이 올라가요', false);
