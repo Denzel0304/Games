@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>오늘의 행운 뽑기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-1:#2a1a3e; --night-2:#43275f;
+    --gold:#ffd24a; --gold-deep:#f5a623;
+    --cream:#fff6e6; --mint:#4ecdc4;
+    --common:#8bbf6a; --rare:#6ca8ff; --legendary:#ffd24a;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; overflow:hidden; }
+  body{
+    font-family:'Fredoka','Jua',system-ui,sans-serif;
+    background:radial-gradient(120% 90% at 50% -10%, var(--night-2) 0%, var(--night-1) 60%, #1b1029 100%);
+    color:var(--cream);
+    height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:14px 16px; user-select:none;
+  }
+  .app{ width:100%; max-width:400px; height:100%; display:flex; flex-direction:column; gap:8px; }
+
+  .topbar{ flex:0 0 auto; text-align:center; }
+  .title{
+    font-family:'Jua',sans-serif; font-size:clamp(22px,7vw,30px); line-height:1; margin:0;
+    color:var(--gold); text-shadow:0 2px 0 #b9791a, 0 0 22px rgba(255,210,74,.35); letter-spacing:.5px;
+  }
+  .dex-count{ margin-top:6px; font-size:13px; color:#cbb6e8; letter-spacing:1px; }
+  .dex-count b{ color:var(--cream); }
+
+  /* ----- hero stage ----- */
+  .stage{ flex:1 1 auto; min-height:0; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+
+  .emblem{ width:clamp(56px,16vw,78px); height:auto; opacity:.95; flex:0 0 auto; }
+
+  .capsule-wrap{
+    position:relative; width:clamp(118px,38vw,188px); aspect-ratio:1; flex:0 0 auto;
+  }
+  .capsule{ position:absolute; inset:0; }
+  .cap-top, .cap-bottom{ position:absolute; left:0; width:100%; height:50%; }
+  .cap-top{
+    top:0; border-radius:999px 999px 0 0;
+    background:linear-gradient(160deg, #ff8fae, #ff5470);
+    box-shadow:inset 0 6px 10px rgba(255,255,255,.4), inset 0 -4px 8px rgba(0,0,0,.12);
+    transform-origin:center bottom;
+    transition:transform .5s cubic-bezier(.2,.8,.3,1), opacity .5s;
+    z-index:3;
+  }
+  .cap-bottom{
+    bottom:0; border-radius:0 0 999px 999px;
+    background:linear-gradient(20deg, #e7d9b6, #fff6e6);
+    box-shadow:inset 0 -6px 10px rgba(0,0,0,.12), inset 0 4px 8px rgba(255,255,255,.5);
+    z-index:1;
+  }
+  .cap-band{
+    position:absolute; left:0; top:calc(50% - 6px); width:100%; height:12px;
+    background:rgba(0,0,0,.16); border-radius:6px; z-index:2;
+    transition:opacity .4s; box-shadow:inset 0 1px 2px rgba(255,255,255,.3);
+  }
+  .cap-shine{ position:absolute; left:22%; top:14%; width:24%; height:30%; background:#fff; opacity:.45; border-radius:50%; filter:blur(1px); z-index:4; pointer-events:none; }
+
+  .prize{
+    position:absolute; inset:0; display:grid; place-items:center; z-index:2;
+    transform:scale(0); opacity:0;
+    transition:transform .5s cubic-bezier(.2,1.4,.4,1), opacity .3s;
+  }
+  .prize svg{ width:72%; height:72%; filter:drop-shadow(0 6px 10px rgba(0,0,0,.3)); }
+
+  /* opened state */
+  .capsule-wrap.open .cap-top{ transform:translateY(-62%) rotate(-16deg); opacity:0; }
+  .capsule-wrap.open .cap-band{ opacity:0; }
+  .capsule-wrap.open .cap-bottom{ opacity:.35; }
+  .capsule-wrap.open .cap-shine{ opacity:0; }
+  .capsule-wrap.open .prize{ transform:scale(1) translateY(-8%); opacity:1; }
+
+  /* anticipation wiggle */
+  .capsule-wrap.wiggle .capsule{ animation:wiggle .5s ease; }
+  @keyframes wiggle{
+    0%,100%{ transform:rotate(0) translateY(0); }
+    20%{ transform:rotate(-7deg); } 40%{ transform:rotate(7deg); }
+    60%{ transform:rotate(-5deg) translateY(-3px); } 80%{ transform:rotate(4deg); }
+  }
+
+  .legend-ring{ position:absolute; inset:-8%; border-radius:50%; z-index:0; opacity:0;
+    background:radial-gradient(circle, rgba(255,210,74,.55), transparent 65%); }
+  .capsule-wrap.open.is-legendary .legend-ring{ opacity:1; animation:glow 1.2s ease infinite alternate; }
+  @keyframes glow{ from{ transform:scale(.92); opacity:.5; } to{ transform:scale(1.08); opacity:.9; } }
+
+  .result{ flex:0 0 auto; text-align:center; min-height:48px; }
+  .rarity-pill{
+    display:inline-block; font-family:'Jua',sans-serif; font-size:12px; letter-spacing:1px;
+    padding:3px 12px; border-radius:999px; color:#23304a; margin-bottom:4px; opacity:0; transition:opacity .3s;
+  }
+  .rarity-pill.show{ opacity:1; }
+  .rarity-common{ background:var(--common); }
+  .rarity-rare{ background:var(--rare); }
+  .rarity-legendary{ background:var(--legendary); }
+  .item-name{ font-family:'Jua',sans-serif; font-size:19px; color:var(--cream); min-height:24px; }
+  .new-badge{ display:inline-block; margin-left:6px; font-size:11px; color:#fff; background:#ff3b6b;
+    padding:2px 8px; border-radius:999px; vertical-align:middle; }
+
+  /* ----- 도감 grid ----- */
+  .dex{
+    flex:0 0 auto;
+    display:grid; grid-template-columns:repeat(7,1fr); gap:5px;
+    background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.07);
+    border-radius:14px; padding:8px;
+  }
+  .slot{
+    aspect-ratio:1; border-radius:9px; background:rgba(255,255,255,.05);
+    display:grid; place-items:center; position:relative; overflow:hidden;
+  }
+  .slot.filled{ background:rgba(255,255,255,.92); }
+  .slot svg{ width:78%; height:78%; }
+  .slot .q{ color:#6b5a86; font-family:'Jua',sans-serif; font-size:14px; }
+  .slot .cnt{ position:absolute; right:2px; bottom:1px; font-size:9px; color:#7a6a55; font-weight:700; }
+  .slot.pop{ animation:slotpop .5s ease; }
+  @keyframes slotpop{ 0%{ transform:scale(.6); } 60%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+
+  /* ----- button ----- */
+  .pull{
+    flex:0 0 auto;
+    border:none; cursor:pointer; width:100%; padding:17px; border-radius:20px;
+    font-family:'Jua',sans-serif; font-size:22px; color:#5a2a00; letter-spacing:2px;
+    background:linear-gradient(180deg, #ffe27a, var(--gold) 45%, var(--gold-deep));
+    box-shadow: 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .pull:active{ transform:translateY(5px); box-shadow:0 1px 0 #b9791a, 0 6px 14px rgba(245,166,35,.3); }
+  .pull:disabled{ filter:saturate(.55) brightness(.93); cursor:default; }
+  .pull .sub{ display:block; font-size:11px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
+
+  .mute{ position:absolute; right:0; top:0; width:38px; height:38px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); cursor:pointer;
+    display:grid; place-items:center; }
+  .mute svg{ width:18px; height:18px; }
+
+  #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+
+  @media (prefers-reduced-motion: reduce){
+    .capsule-wrap.wiggle .capsule, .capsule-wrap.open.is-legendary .legend-ring, .slot.pop{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <main class="app">
+    <div class="topbar" style="position:relative;">
+      <button class="mute" id="muteBtn" aria-label="소리"></button>
+      <h1 class="title">오늘의 행운 뽑기</h1>
+      <div class="dex-count">도감 <b id="dexNow">0</b> / <span id="dexTotal">13</span></div>
+    </div>
+
+    <div class="stage">
+      <svg class="emblem" viewBox="0 0 120 150" aria-hidden="true">
+        <rect x="22" y="132" width="76" height="12" rx="5" fill="#7a4d12"/>
+        <rect x="26" y="60" width="68" height="76" rx="14" fill="#e53935"/>
+        <rect x="26" y="60" width="68" height="76" rx="14" fill="#000" opacity=".08"/>
+        <rect x="30" y="54" width="60" height="12" rx="6" fill="#c62828"/>
+        <circle cx="60" cy="36" r="34" fill="#bfe9ff" opacity=".9"/>
+        <circle cx="48" cy="30" r="7" fill="#ff7eb6"/><circle cx="68" cy="26" r="7" fill="#ffd24a"/>
+        <circle cx="70" cy="44" r="7" fill="#7ad36b"/><circle cx="50" cy="46" r="7" fill="#6ca8ff"/>
+        <circle cx="60" cy="34" r="6" fill="#ff5470"/>
+        <ellipse cx="48" cy="22" rx="8" ry="11" fill="#fff" opacity=".5"/>
+        <circle cx="60" cy="92" r="13" fill="#fff"/><rect x="56" y="82" width="8" height="20" rx="4" fill="#c62828"/>
+        <rect x="42" y="112" width="36" height="20" rx="6" fill="#7a1f1f"/>
+      </svg>
+
+      <div class="capsule-wrap" id="capWrap">
+        <div class="legend-ring"></div>
+        <div class="prize" id="prize"></div>
+        <div class="capsule">
+          <div class="cap-bottom"></div>
+          <div class="cap-top" id="capTop"></div>
+          <div class="cap-band"></div>
+          <div class="cap-shine"></div>
+        </div>
+      </div>
+
+      <div class="result">
+        <div class="rarity-pill" id="rarityPill"></div>
+        <div class="item-name" id="itemName">뽑기 버튼을 눌러보세요</div>
+      </div>
+    </div>
+
+    <div class="dex" id="dex"></div>
+
+    <button class="pull" id="pullBtn">
+      뽑기
+      <span class="sub">무료 · 모으는 재미</span>
+    </button>
+  </main>
+
+<script>
+(function(){
+  // ---------- items (all self-drawn SVG) ----------
+  var ITEMS = [
+    { key:'clover',  name:'네잎클로버', rarity:'common', svg:'<svg viewBox="0 0 100 100"><g fill="#4caf50"><circle cx="38" cy="38" r="16"/><circle cx="62" cy="38" r="16"/><circle cx="38" cy="62" r="16"/><circle cx="62" cy="62" r="16"/></g><circle cx="50" cy="50" r="6" fill="#2e7d32"/><path d="M50 56 q5 18 -6 32" stroke="#2e7d32" stroke-width="4" fill="none" stroke-linecap="round"/></svg>' },
+    { key:'acorn',   name:'도토리', rarity:'common', svg:'<svg viewBox="0 0 100 100"><path d="M30 46 q20 -16 40 0 q-6 36 -20 40 q-14 -4 -20 -40z" fill="#c98a3a"/><path d="M28 44 q22 -22 44 0 q2 8 -22 10 q-24 -2 -22 -10z" fill="#7a4a1e"/><rect x="46" y="18" width="8" height="16" rx="4" fill="#5a3411"/></svg>' },
+    { key:'mushroom',name:'버섯', rarity:'common', svg:'<svg viewBox="0 0 100 100"><rect x="41" y="52" width="18" height="30" rx="9" fill="#f5e6c8"/><path d="M22 56 a28 24 0 0 1 56 0 z" fill="#e53935"/><circle cx="38" cy="44" r="5" fill="#fff"/><circle cx="58" cy="40" r="6" fill="#fff"/><circle cx="50" cy="52" r="4" fill="#fff"/></svg>' },
+    { key:'candy',   name:'별사탕', rarity:'common', svg:'<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="#ff8fab"/><circle cx="50" cy="50" r="20" fill="none" stroke="#fff" stroke-width="3" opacity=".6"/><path d="M30 50 L10 38 L14 50 L10 62z" fill="#f48fb1"/><path d="M70 50 L90 38 L86 50 L90 62z" fill="#f48fb1"/><circle cx="44" cy="44" r="4" fill="#fff" opacity=".75"/></svg>' },
+    { key:'egg',     name:'행운의 알', rarity:'common', svg:'<svg viewBox="0 0 100 100"><ellipse cx="50" cy="54" rx="26" ry="32" fill="#fff6e6" stroke="#e9d9b8" stroke-width="3"/><ellipse cx="42" cy="42" rx="7" ry="10" fill="#fff" opacity=".7"/></svg>' },
+    { key:'crystal', name:'보라 수정', rarity:'rare', svg:'<svg viewBox="0 0 100 100"><path d="M50 14 L78 44 L50 86 L22 44 Z" fill="#ab6cff"/><path d="M50 14 L78 44 L50 44 Z" fill="#c89bff"/><path d="M50 14 L22 44 L50 44 Z" fill="#9a52f0"/><path d="M22 44 L50 86 L50 44 Z" fill="#7e3fd6"/><path d="M78 44 L50 86 L50 44 Z" fill="#b87bff"/></svg>' },
+    { key:'flower',  name:'분홍 꽃', rarity:'rare', svg:'<svg viewBox="0 0 100 100"><g fill="#ff7eb6"><g transform="rotate(0 50 50)"><ellipse cx="50" cy="28" rx="11" ry="17"/></g><g transform="rotate(72 50 50)"><ellipse cx="50" cy="28" rx="11" ry="17"/></g><g transform="rotate(144 50 50)"><ellipse cx="50" cy="28" rx="11" ry="17"/></g><g transform="rotate(216 50 50)"><ellipse cx="50" cy="28" rx="11" ry="17"/></g><g transform="rotate(288 50 50)"><ellipse cx="50" cy="28" rx="11" ry="17"/></g></g><circle cx="50" cy="50" r="13" fill="#ffd24a"/></svg>' },
+    { key:'butterfly',name:'나비', rarity:'rare', svg:'<svg viewBox="0 0 100 100"><ellipse cx="34" cy="38" rx="18" ry="16" fill="#4ea8ff"/><ellipse cx="66" cy="38" rx="18" ry="16" fill="#4ea8ff"/><ellipse cx="36" cy="64" rx="14" ry="13" fill="#7cc4ff"/><ellipse cx="64" cy="64" rx="14" ry="13" fill="#7cc4ff"/><rect x="48" y="30" width="4" height="44" rx="2" fill="#2c3e66"/><circle cx="50" cy="28" r="4" fill="#2c3e66"/><path d="M50 26 l-6 -10 M50 26 l6 -10" stroke="#2c3e66" stroke-width="2.5" stroke-linecap="round"/></svg>' },
+    { key:'moon',    name:'초승달', rarity:'rare', svg:'<svg viewBox="0 0 100 100"><path d="M64 18 a34 34 0 1 0 0 64 a26 26 0 1 1 0 -64 z" fill="#ffd24a"/><circle cx="40" cy="30" r="3" fill="#fff" opacity=".85"/></svg>' },
+    { key:'balloon', name:'풍선', rarity:'rare', svg:'<svg viewBox="0 0 100 100"><ellipse cx="50" cy="40" rx="24" ry="28" fill="#ff5470"/><ellipse cx="42" cy="32" rx="6" ry="9" fill="#fff" opacity=".5"/><path d="M46 68 h8 l-4 6z" fill="#d63a55"/><path d="M50 74 l-4 6 4 4 -4 4" stroke="#caa" stroke-width="2" fill="none"/></svg>' },
+    { key:'crown',   name:'황금 왕관', rarity:'legendary', svg:'<svg viewBox="0 0 100 100"><path d="M18 70 L24 36 L40 54 L50 28 L60 54 L76 36 L82 70 Z" fill="#ffd24a" stroke="#e0a020" stroke-width="3" stroke-linejoin="round"/><rect x="18" y="70" width="64" height="10" rx="3" fill="#e0a020"/><circle cx="24" cy="36" r="5" fill="#ff5470"/><circle cx="50" cy="28" r="5" fill="#4ecdc4"/><circle cx="76" cy="36" r="5" fill="#ff5470"/></svg>' },
+    { key:'rainbow', name:'무지개', rarity:'legendary', svg:'<svg viewBox="0 0 100 100"><g fill="none" stroke-width="8"><path d="M14 78 a36 36 0 0 1 72 0" stroke="#ff5470"/><path d="M24 78 a26 26 0 0 1 52 0" stroke="#ffd24a"/><path d="M34 78 a16 16 0 0 1 32 0" stroke="#4ecdc4"/></g><circle cx="18" cy="82" r="7" fill="#fff"/><circle cx="82" cy="82" r="7" fill="#fff"/></svg>' },
+    { key:'goldstar',name:'전설의 별', rarity:'legendary', svg:'<svg viewBox="0 0 100 100"><path d="M50 12 L62 40 L92 42 L68 62 L76 92 L50 74 L24 92 L32 62 L8 42 L38 40 Z" fill="#ffd24a" stroke="#e0a020" stroke-width="3" stroke-linejoin="round"/><path d="M44 36 l6 -12 6 12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".75"/></svg>' }
+  ];
+  var RARITY_KR = { common:'흔함', rare:'희귀', legendary:'전설' };
+  var CAP_COLORS = [
+    'linear-gradient(160deg,#ff8fae,#ff5470)', 'linear-gradient(160deg,#7ec8ff,#3f86e8)',
+    'linear-gradient(160deg,#9be29b,#4caf50)', 'linear-gradient(160deg,#ffd98a,#f5a623)',
+    'linear-gradient(160deg,#c79bff,#9a52f0)', 'linear-gradient(160deg,#7be0d6,#27b3a6)'
+  ];
+
+  var capWrap = document.getElementById('capWrap');
+  var capTop  = document.getElementById('capTop');
+  var prizeEl = document.getElementById('prize');
+  var pullBtn = document.getElementById('pullBtn');
+  var rarityPill = document.getElementById('rarityPill');
+  var itemName = document.getElementById('itemName');
+  var dexEl = document.getElementById('dex');
+  var dexNow = document.getElementById('dexNow');
+  var muteBtn = document.getElementById('muteBtn');
+  document.getElementById('dexTotal').textContent = ITEMS.length;
+
+  var busy=false, muted=false;
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  // ---------- collection state (persists on a real site; safe if storage unavailable) ----------
+  var counts = {};
+  try{ counts = JSON.parse(localStorage.getItem('pick_counts')||'{}') || {}; }catch(e){ counts={}; }
+  function save(){ try{ localStorage.setItem('pick_counts', JSON.stringify(counts)); }catch(e){} }
+
+  // ---------- audio ----------
+  var actx=null;
+  function audio(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+  function beep(freq,dur,type,vol){
+    if(muted) return; dur=dur||0.08; type=type||'square'; vol=vol||0.15;
+    try{ var ctx=audio(),o=ctx.createOscillator(),g=ctx.createGain();
+      o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);
+      o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur);
+    }catch(e){}
+  }
+  function clickS(){ beep(300,0.06,'square',0.16); }
+  function crackS(){ beep(160,0.05,'square',0.18); setTimeout(function(){ beep(520,0.07,'triangle',0.16); },40); }
+  function jingle(ns){ ns.forEach(function(f,i){ setTimeout(function(){ beep(f,0.14,'triangle',0.2); }, i*100); }); }
+  function commonS(){ jingle([523,660]); }
+  function rareS(){ jingle([523,659,784]); }
+  function legendaryS(){ jingle([523,659,784,1046,1318]); }
+
+  // ---------- 도감 grid ----------
+  function buildDex(){
+    dexEl.innerHTML = ITEMS.map(function(it){
+      var got = counts[it.key]>0;
+      return '<div class="slot'+(got?' filled':'')+'" data-key="'+it.key+'">'
+        + (got ? it.svg + '<span class="cnt">'+counts[it.key]+'</span>' : '<span class="q">?</span>')
+        + '</div>';
+    }).join('');
+    var have = ITEMS.filter(function(it){ return counts[it.key]>0; }).length;
+    dexNow.textContent = have;
+  }
+
+  // ---------- confetti ----------
+  var canvas=document.getElementById('confetti'), cx=canvas.getContext('2d'); var parts=[];
+  function rs(){ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; }
+  rs(); addEventListener('resize',rs);
+  var COLORS=['#ffd24a','#ff5470','#4ecdc4','#fff6e6','#a06bff'];
+  function confetti(n){
+    if(reduceMotion) return; var fresh=parts.length===0;
+    for(var i=0;i<n;i++) parts.push({x:Math.random()*canvas.width,y:-20*devicePixelRatio,
+      vx:(Math.random()-0.5)*6*devicePixelRatio,vy:(Math.random()*4+3)*devicePixelRatio,
+      r:(Math.random()*6+4)*devicePixelRatio,color:pick(COLORS),rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.3,life:1});
+    if(fresh) requestAnimationFrame(drawC);
+  }
+  function drawC(){
+    cx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(function(p){ p.vy+=0.12*devicePixelRatio;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+      if(p.y>canvas.height*0.85)p.life-=0.03;
+      cx.save();cx.globalAlpha=Math.max(0,p.life);cx.translate(p.x,p.y);cx.rotate(p.rot);
+      cx.fillStyle=p.color;cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);cx.restore(); });
+    parts=parts.filter(function(p){ return p.life>0 && p.y<canvas.height+40; });
+    if(parts.length) requestAnimationFrame(drawC); else cx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  // ---------- pick result (feel-good odds) ----------
+  function pickResult(){
+    var r=Math.random();
+    var rarity = r<0.07 ? 'legendary' : (r<0.34 ? 'rare' : 'common');
+    var pool = ITEMS.filter(function(it){ return it.rarity===rarity; });
+    return pick(pool);
+  }
+
+  // ---------- main pull ----------
+  function pull(){
+    if(busy) return; busy=true; pullBtn.disabled=true;
+    try{ if(audio().resume) audio().resume(); }catch(e){}
+
+    var item = pickResult();
+
+    // reset capsule to closed
+    capWrap.classList.remove('open','is-legendary');
+    prizeEl.innerHTML='';
+    capTop.style.background = pick(CAP_COLORS);
+    rarityPill.className='rarity-pill';
+    itemName.textContent='두근두근...';
+    void capWrap.offsetWidth;
+
+    clickS();
+    capWrap.classList.add('wiggle');
+
+    setTimeout(function(){
+      capWrap.classList.remove('wiggle');
+      // reveal
+      prizeEl.innerHTML = item.svg;
+      if(item.rarity==='legendary') capWrap.classList.add('is-legendary');
+      capWrap.classList.add('open');
+      crackS();
+      if(item.rarity==='legendary'){ confetti(200); legendaryS(); }
+      else if(item.rarity==='rare'){ confetti(70); rareS(); }
+      else { confetti(20); commonS(); }
+
+      // record
+      var isNew = !(counts[item.key]>0);
+      counts[item.key] = (counts[item.key]||0)+1;
+      save();
+      buildDex();
+
+      // pop the just-collected slot
+      var slot = dexEl.querySelector('[data-key="'+item.key+'"]');
+      if(slot) slot.classList.add('pop');
+
+      // result label
+      rarityPill.textContent = RARITY_KR[item.rarity];
+      rarityPill.classList.add('rarity-'+item.rarity, 'show');
+      itemName.innerHTML = item.name + (isNew ? ' <span class="new-badge">NEW!</span>' : '');
+
+      busy=false; pullBtn.disabled=false;
+    }, reduceMotion ? 60 : 520);
+  }
+
+  // ---------- mute icons ----------
+  var SPK_ON='<svg viewBox="0 0 100 100" fill="#fff6e6"><path d="M20 38 H38 L58 20 V80 L38 62 H20 Z"/><path d="M68 36 a20 20 0 0 1 0 28" fill="none" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/><path d="M76 28 a32 32 0 0 1 0 44" fill="none" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/></svg>';
+  var SPK_OFF='<svg viewBox="0 0 100 100" fill="#fff6e6"><path d="M20 38 H38 L58 20 V80 L38 62 H20 Z"/><path d="M66 38 L86 62 M86 38 L66 62" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/></svg>';
+
+  // ---------- init ----------
+  buildDex();
+  muteBtn.innerHTML=SPK_ON;
+  pullBtn.addEventListener('click', pull);
+  muteBtn.addEventListener('click', function(){ muted=!muted; muteBtn.innerHTML=muted?SPK_OFF:SPK_ON; if(!muted) beep(523,0.08,'triangle',0.15); });
+})();
+</script>
+</body>
+</html>
