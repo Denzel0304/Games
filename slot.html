@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>오늘의 행운 슬롯 · 3×3</title>
+<title>오늘의 행운 슬롯</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
@@ -12,34 +12,37 @@
     --night-1:#2a1a3e; --night-2:#43275f;
     --gold:#ffd24a; --gold-deep:#f5a623;
     --cream:#fff6e6; --cherry:#ff5470; --mint:#4ecdc4;
-    --cell-h: clamp(62px, 18vw, 88px);
+    --cell-h: clamp(70px, 24vw, 150px); /* JS overrides to fit screen exactly */
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; margin:0; }
+  html,body{ height:100%; margin:0; overflow:hidden; }
   body{
     font-family:'Fredoka','Jua',system-ui,sans-serif;
     background:radial-gradient(120% 90% at 50% -10%, var(--night-2) 0%, var(--night-1) 60%, #1b1029 100%);
     color:var(--cream);
-    min-height:100dvh; display:flex; align-items:center; justify-content:center;
-    padding:16px; overflow-x:hidden; user-select:none;
+    height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:14px 16px; user-select:none;
   }
-  .machine{ width:100%; max-width:400px; display:flex; flex-direction:column; gap:14px; }
+  .machine{ width:100%; max-width:400px; height:100%; display:flex; flex-direction:column; gap:10px; }
 
-  .topbar{ display:flex; align-items:center; justify-content:space-between; }
+  /* ----- header: centered title + mute on the right ----- */
+  .topbar{ position:relative; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
   .title{
-    font-family:'Jua',sans-serif; font-size:clamp(20px,6.5vw,28px); line-height:1;
+    font-family:'Jua',sans-serif; font-size:clamp(22px,7vw,30px); line-height:1; text-align:center;
     color:var(--gold); text-shadow:0 2px 0 #b9791a, 0 0 22px rgba(255,210,74,.35); letter-spacing:.5px;
+    margin:0;
   }
-  .title small{ display:block; font-size:11px; color:#cbb6e8; letter-spacing:2px; margin-top:4px; }
   .mute{
+    position:absolute; right:0; top:50%; transform:translateY(-50%);
     width:42px; height:42px; border-radius:50%; border:2px solid rgba(255,255,255,.18);
     background:rgba(255,255,255,.06); cursor:pointer; display:grid; place-items:center;
     transition:transform .12s ease;
   }
-  .mute:active{ transform:scale(.9); }
+  .mute:active{ transform:translateY(-50%) scale(.9); }
   .mute svg{ width:20px; height:20px; }
 
   .coins{
+    flex:0 0 auto;
     display:flex; align-items:center; justify-content:center; gap:10px;
     background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.1));
     border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:9px 16px;
@@ -51,19 +54,21 @@
   }
   .coins .coinicon{ width:24px; height:24px; }
 
+  /* ----- board fills remaining vertical space ----- */
   .display{
-    position:relative; background:linear-gradient(180deg,#6b3fa0,#3d2456);
+    position:relative; flex:1 1 auto; min-height:0;
+    display:flex; flex-direction:column;
+    background:linear-gradient(180deg,#6b3fa0,#3d2456);
     border-radius:22px; padding:14px;
     box-shadow: inset 0 0 0 4px var(--gold-deep), inset 0 0 0 6px #7a4d12, 0 10px 30px rgba(0,0,0,.4);
   }
-  .grid-wrap{ position:relative; }
+  .grid-wrap{ position:relative; flex:1 1 auto; min-height:0; }
   .reels{
-    display:grid; grid-template-columns:repeat(3,1fr);
-    grid-template-rows:var(--cell-h) var(--cell-h) var(--cell-h);
-    gap:8px; position:relative; z-index:2;
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    gap:8px; position:relative; z-index:2; height:100%;
   }
   .reel{
-    height:var(--cell-h); overflow:hidden; border-radius:12px;
+    overflow:hidden; border-radius:12px;
     background:linear-gradient(180deg,var(--cream),#fbe9c4);
     box-shadow: inset 0 5px 9px rgba(0,0,0,.18), inset 0 -5px 9px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.4);
     transition:box-shadow .25s, transform .25s;
@@ -76,7 +81,7 @@
   .strip{ will-change:transform; }
   .reel.spinning .strip{ filter:blur(2px); }
   .cell{ height:var(--cell-h); display:grid; place-items:center; }
-  .cell svg{ width:62%; height:62%; display:block; pointer-events:none; }
+  .cell svg{ width:60%; height:60%; display:block; pointer-events:none; }
 
   .lines{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:visible; }
   .lines line{
@@ -93,10 +98,11 @@
   .display.shake{ animation:shake .4s ease; }
   @keyframes shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 
-  .message{ text-align:center; font-family:'Jua',sans-serif; font-size:18px; min-height:26px; transition:opacity .2s; }
+  .message{ flex:0 0 auto; text-align:center; font-family:'Jua',sans-serif; font-size:18px; min-height:26px; transition:opacity .2s; }
   .message.big{ color:var(--gold); font-size:22px; text-shadow:0 0 18px rgba(255,210,74,.5); }
 
   .spin{
+    flex:0 0 auto;
     border:none; cursor:pointer; width:100%; padding:18px; border-radius:20px;
     font-family:'Jua',sans-serif; font-size:23px; color:#5a2a00;
     background:linear-gradient(180deg, #ffe27a, var(--gold) 45%, var(--gold-deep));
@@ -106,10 +112,6 @@
   .spin:active{ transform:translateY(5px); box-shadow:0 1px 0 #b9791a, 0 6px 14px rgba(245,166,35,.3); }
   .spin:disabled{ filter:saturate(.5) brightness(.92); cursor:default; }
   .spin .cost{ display:block; font-size:12px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
-
-  .legend{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; font-size:11px; color:#cbb6e8; }
-  .legend b{ color:var(--cream); }
-  .footnote{ text-align:center; font-size:11px; color:#9c87bd; letter-spacing:.5px; }
 
   #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
 
@@ -124,7 +126,7 @@
 
   <main class="machine">
     <div class="topbar">
-      <h1 class="title">오늘의 행운 슬롯<small>3 × 3 · 8 LINES</small></h1>
+      <h1 class="title">오늘의 행운 슬롯</h1>
       <button class="mute" id="muteBtn" aria-label="소리 켜고 끄기"></button>
     </div>
 
@@ -147,14 +149,10 @@
       SPIN
       <span class="cost">한 번 돌리기 · 20코인</span>
     </button>
-
-    <div class="legend">가로 · 세로 · <b>대각선(1.5배)</b> 8줄 동시 채점</div>
-    <p class="footnote">재미로 즐기는 게임이에요 · 실제 돈은 쓰지 않아요</p>
   </main>
 
 <script>
 (function(){
-  // ---------- self-drawn SVG symbols ----------
   var SVG = {
     cherry:'<svg viewBox="0 0 100 100"><path d="M52 26 C60 36 72 38 78 50" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><path d="M52 26 C44 36 36 40 30 52" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><path d="M52 26 q6 -8 14 -7" fill="none" stroke="#5a8f3a" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="66" r="17" fill="#e63950"/><circle cx="70" cy="66" r="17" fill="#ff5470"/><ellipse cx="24" cy="60" rx="5" ry="3" fill="#fff" opacity=".55"/><ellipse cx="64" cy="60" rx="5" ry="3" fill="#fff" opacity=".55"/></svg>',
     lemon:'<svg viewBox="0 0 100 100"><g transform="rotate(-20 50 52)"><ellipse cx="50" cy="52" rx="34" ry="23" fill="#ffd83d"/><ellipse cx="40" cy="44" rx="11" ry="5" fill="#fff" opacity=".5"/></g><circle cx="16" cy="42" r="3" fill="#e8b800"/><circle cx="84" cy="62" r="3" fill="#e8b800"/></svg>',
@@ -198,6 +196,12 @@
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
+  // ---------- fit board to one screen: set cell height = actual reel height ----------
+  function fitBoard(){
+    var h = reels[0].getBoundingClientRect().height;
+    if(h>0) document.documentElement.style.setProperty('--cell-h', h+'px');
+  }
+
   // ---------- audio ----------
   var actx=null;
   function audio(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); return actx; }
@@ -231,7 +235,6 @@
   function startWhir(){ var step=function(){ tick(); whir=setTimeout(step,60); }; step(); }
   function stopWhir(){ if(whir){ clearTimeout(whir); whir=null; } }
 
-  // animate for flair, then SNAP to the exact result → blank-proof
   function spinReel(reelEl,strip,target,duration){
     var N=24, list=[];
     for(var i=0;i<N-1;i++) list.push(pick(SYMBOLS));
@@ -249,7 +252,6 @@
       var done=false;
       function finish(){
         if(done) return; done=true;
-        // deterministic final state — the visible cell is ALWAYS the result
         strip.style.transition='none';
         fillCells(strip,[target]);
         strip.style.transform='translateY(0)';
@@ -257,11 +259,10 @@
         clunk(); res();
       }
       strip.addEventListener('transitionend', finish);
-      setTimeout(finish, duration+400); // safety net if transitionend never fires
+      setTimeout(finish, duration+400);
     });
   }
 
-  // ---------- feel-good result weighting ----------
   function decideGrid(){
     var g=[]; for(var i=0;i<9;i++) g.push(pick(SYMBOLS));
     var r=Math.random();
@@ -271,7 +272,6 @@
     return g;
   }
 
-  // ---------- scoring ----------
   function score(grid){
     var total=0, wins=[], hitCells={};
     LINES.forEach(function(L){
@@ -286,7 +286,6 @@
     return { total:total, wins:wins, hitCells:Object.keys(hitCells).map(Number), jackpot:jackpot };
   }
 
-  // ---------- winning-line overlay ----------
   var LINE_COLORS=['#ffd24a','#ff5470','#4ecdc4','#a06bff','#7ad36b'];
   function drawLines(wins){
     linesSvg.innerHTML='';
@@ -304,7 +303,6 @@
     });
   }
 
-  // ---------- coin count-up ----------
   function setCoins(target){
     var start=coins, diff=target-start;
     if(diff===0){ coinsEl.textContent=target; coins=target; return; }
@@ -316,11 +314,10 @@
     })(performance.now());
   }
 
-  // ---------- confetti ----------
   var canvas=document.getElementById('confetti'), cx=canvas.getContext('2d');
   var parts=[];
   function resize(){ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; }
-  resize(); addEventListener('resize',resize);
+  resize();
   var COLORS=['#ffd24a','#ff5470','#4ecdc4','#fff6e6','#a06bff'];
   function confetti(n){
     if(reduceMotion) return;
@@ -345,7 +342,6 @@
     if(parts.length) requestAnimationFrame(drawC); else cx.clearRect(0,0,canvas.width,canvas.height);
   }
 
-  // ---------- messages (no emoji) ----------
   function winMessage(res){
     if(res.jackpot) return pick(['777 잭팟! 대박이에요!','행운의 7! 오늘 최고의 날!']);
     var n=res.wins.length;
@@ -360,7 +356,6 @@
     setTimeout(function(){ msgEl.textContent=text; msgEl.classList.toggle('big',!!big); msgEl.style.opacity=1; },130);
   }
 
-  // ---------- main spin ----------
   function doSpin(){
     if(spinning) return;
     if(coins<COST){ setCoins(80); flash('행운 충전! 코인을 채웠어요',false); return; }
@@ -406,6 +401,14 @@
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
     if(!muted) beep(523,0.08,'triangle',0.15);
   });
+
+  function refit(){ resize(); fitBoard(); }
+  refit();
+  requestAnimationFrame(refit);
+  setTimeout(refit,120);
+  window.addEventListener('load', refit);
+  window.addEventListener('resize', refit);
+  window.addEventListener('orientationchange', function(){ setTimeout(refit,200); });
 })();
 </script>
 </body>
