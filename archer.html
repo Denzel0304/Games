@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>오늘의 행운 양궁</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-1:#22304a; --night-2:#33507a;
+    --gold:#ffd24a; --gold-deep:#f5a623;
+    --cream:#fff6e6; --mint:#4ecdc4; --sky-1:#bfe3ff; --sky-2:#7fb8e8;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; overflow:hidden; }
+  body{
+    font-family:'Fredoka','Jua',system-ui,sans-serif;
+    background:radial-gradient(120% 90% at 50% -10%, var(--night-2) 0%, var(--night-1) 70%, #16203a 100%);
+    color:var(--cream);
+    height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:12px 14px; user-select:none;
+  }
+  .app{ width:100%; max-width:420px; height:100%; display:flex; flex-direction:column; gap:8px; }
+
+  .topbar{ flex:0 0 auto; text-align:center; position:relative; }
+  .title{
+    font-family:'Jua',sans-serif; font-size:clamp(20px,6.5vw,28px); line-height:1; margin:0;
+    color:var(--gold); text-shadow:0 2px 0 #b9791a, 0 0 22px rgba(255,210,74,.35); letter-spacing:.5px;
+  }
+  .mute{ position:absolute; right:0; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); cursor:pointer; display:grid; place-items:center; }
+  .mute svg{ width:18px; height:18px; }
+
+  .hud{
+    flex:0 0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;
+  }
+  .chip{
+    background:linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.08));
+    border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:7px 6px; text-align:center;
+  }
+  .chip .k{ font-size:11px; color:#bcd0ec; letter-spacing:1px; }
+  .chip .v{ font-family:'Jua',sans-serif; font-size:18px; color:var(--cream); }
+  .chip .v.gold{ color:var(--gold); }
+  .wind-arrow{ display:inline-block; transition:transform .3s; }
+
+  .stage{ flex:1 1 auto; min-height:0; position:relative; border-radius:18px; overflow:hidden;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.35); }
+  #field{ width:100%; height:100%; display:block; touch-action:none; }
+
+  .result{ flex:0 0 auto; text-align:center; min-height:26px; font-family:'Jua',sans-serif; font-size:18px; transition:opacity .2s; }
+  .result.big{ color:var(--gold); font-size:22px; text-shadow:0 0 18px rgba(255,210,74,.5); }
+
+  .shoot{
+    flex:0 0 auto; border:none; cursor:pointer; width:100%; padding:16px; border-radius:18px;
+    font-family:'Jua',sans-serif; font-size:21px; color:#5a2a00; letter-spacing:2px;
+    background:linear-gradient(180deg, #ffe27a, var(--gold) 45%, var(--gold-deep));
+    box-shadow: 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .shoot:active{ transform:translateY(5px); box-shadow:0 1px 0 #b9791a, 0 6px 14px rgba(245,166,35,.3); }
+  .shoot:disabled{ filter:saturate(.55) brightness(.93); cursor:default; }
+  .shoot .sub{ display:block; font-size:11px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
+
+  #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+</style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <main class="app">
+    <div class="topbar">
+      <button class="mute" id="muteBtn" aria-label="소리"></button>
+      <h1 class="title">오늘의 행운 양궁</h1>
+    </div>
+
+    <div class="hud">
+      <div class="chip"><div class="k">바람</div><div class="v" id="windV"><span class="wind-arrow" id="windArrow">→</span> <span id="windSpd">0</span></div></div>
+      <div class="chip"><div class="k">남은 화살</div><div class="v" id="arrowsV">10</div></div>
+      <div class="chip"><div class="k">점수</div><div class="v gold" id="scoreV">0</div></div>
+    </div>
+
+    <div class="stage">
+      <canvas id="field" width="800" height="900"></canvas>
+    </div>
+
+    <div class="result" id="result">조준점이 멈출 때 쏘면 명중률이 올라가요</div>
+
+    <button class="shoot" id="shootBtn">
+      발사
+      <span class="sub">탭 · 화면을 눌러도 발사</span>
+    </button>
+  </main>
+
+<script>
+(function(){
+  var field = document.getElementById('field');
+  var ctx = field.getContext('2d');
+  var windArrow = document.getElementById('windArrow');
+  var windSpd = document.getElementById('windSpd');
+  var arrowsV = document.getElementById('arrowsV');
+  var scoreV = document.getElementById('scoreV');
+  var resultEl = document.getElementById('result');
+  var shootBtn = document.getElementById('shootBtn');
+  var muteBtn = document.getElementById('muteBtn');
+
+  var W=800, H=900;                  // logical canvas units (scaled to device)
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // target center & ring radii (logical units)
+  var TX=W/2, TY=H*0.30, R10=44;     // bullseye radius; rings scale from this
+  var RINGS = [
+    {score:10, r:R10*1.0, color:'#ffe24a'},
+    {score:9,  r:R10*1.7, color:'#ffe24a'},
+    {score:8,  r:R10*2.4, color:'#ff6f6f'},
+    {score:7,  r:R10*3.1, color:'#ff6f6f'},
+    {score:6,  r:R10*3.8, color:'#7fc8ff'},
+    {score:5,  r:R10*4.5, color:'#7fc8ff'},
+    {score:3,  r:R10*5.3, color:'#f3f3f3'},
+    {score:1,  r:R10*6.2, color:'#f3f3f3'}
+  ];
+  var TARGET_R = RINGS[RINGS.length-1].r;
+
+  var arrows = 10, score = 0, busy=false, muted=false;
+  var wind = { dir:1, spd:0 };        // dir: -1 left / +1 right, spd 0..10
+  var t0 = performance.now();
+  var holes = [];                     // landed arrows {x,y}
+  var flying = null;                  // current arrow in flight
+
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function newWind(){
+    wind.spd = Math.round(Math.random()*8 + (Math.random()<.3?2:0)); // 0..10, gentle
+    wind.dir = Math.random()<.5 ? -1 : 1;
+    windSpd.textContent = wind.spd;
+    windArrow.style.transform = 'scaleX('+wind.dir+')';
+    windArrow.textContent = '→';
+    windArrow.style.opacity = wind.spd===0 ? .4 : 1;
+  }
+
+  // ---------- aiming reticle: wobbles with breath + wind ----------
+  function reticlePos(now){
+    var t=(now - t0)/1000;
+    // base hovers near center, gentle breathing sine + slow drift + wind bias
+    var breatheX = Math.sin(t*1.7)*16 + Math.sin(t*0.6+1)*10;
+    var breatheY = Math.cos(t*1.3)*14 + Math.sin(t*0.45)*9;
+    var windBias = wind.dir * wind.spd * 2.2;   // wind nudges aim sideways
+    return { x: TX + breatheX + windBias, y: TY + breatheY };
+  }
+
+  // ---------- audio ----------
+  var actx=null;
+  function audio(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+  function beep(freq,dur,type,vol){ if(muted) return; dur=dur||0.06; type=type||'square'; vol=vol||0.14;
+    try{ var c=audio(),o=c.createOscillator(),g=c.createGain(); o.type=type;o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+      o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur);}catch(e){} }
+  function twangS(){ beep(330,0.10,'sawtooth',0.16); setTimeout(function(){beep(180,0.12,'sine',0.12);},20); }
+  function thunkS(){ beep(120,0.10,'square',0.20); setTimeout(function(){beep(80,0.12,'sine',0.14);},30); }
+  function jingle(ns){ ns.forEach(function(f,i){ setTimeout(function(){ beep(f,0.14,'triangle',0.2); }, i*100); }); }
+  function bullsS(){ jingle([523,659,784,1046,1318]); }
+  function goodS(){ jingle([523,659,784]); }
+
+  // ---------- confetti ----------
+  var cc=document.getElementById('confetti'), cx=cc.getContext('2d'); var parts=[];
+  function rs(){ cc.width=innerWidth*devicePixelRatio; cc.height=innerHeight*devicePixelRatio; }
+  rs(); addEventListener('resize', function(){ rs(); fit(); });
+  var COLORS=['#ffd24a','#ff5470','#4ecdc4','#fff6e6','#a06bff'];
+  function confetti(n){ if(reduceMotion) return; var fresh=parts.length===0;
+    for(var i=0;i<n;i++) parts.push({x:Math.random()*cc.width,y:-20*devicePixelRatio,
+      vx:(Math.random()-0.5)*6*devicePixelRatio,vy:(Math.random()*4+3)*devicePixelRatio,
+      r:(Math.random()*6+4)*devicePixelRatio,color:pick(COLORS),rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.3,life:1});
+    if(fresh) requestAnimationFrame(drawC); }
+  function drawC(){ cx.clearRect(0,0,cc.width,cc.height);
+    parts.forEach(function(p){ p.vy+=0.12*devicePixelRatio;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr; if(p.y>cc.height*0.85)p.life-=0.03;
+      cx.save();cx.globalAlpha=Math.max(0,p.life);cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.color;cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);cx.restore();});
+    parts=parts.filter(function(p){return p.life>0&&p.y<cc.height+40;});
+    if(parts.length) requestAnimationFrame(drawC); else cx.clearRect(0,0,cc.width,cc.height); }
+
+  function flash(txt,big){ resultEl.style.opacity=0;
+    setTimeout(function(){ resultEl.textContent=txt; resultEl.classList.toggle('big',!!big); resultEl.style.opacity=1; },110); }
+
+  // ---------- drawing ----------
+  function drawTarget(){
+    // backboard
+    ctx.fillStyle='#9fd9a0';
+    ctx.fillRect(0,0,W,H*0.62);
+    ctx.fillStyle='#7cc47e';
+    ctx.fillRect(0,H*0.62,W,H*0.04);
+    ctx.fillStyle='#a98b5a';                 // ground
+    ctx.fillRect(0,H*0.66,W,H*0.34);
+    // stand pole
+    ctx.fillStyle='#6b4a2a';
+    ctx.fillRect(TX-7, TY, 14, H*0.66-TY);
+    // rings (outer to inner)
+    for(var i=RINGS.length-1;i>=0;i--){
+      ctx.beginPath(); ctx.arc(TX,TY,RINGS[i].r,0,Math.PI*2);
+      ctx.fillStyle=RINGS[i].color; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(TX,TY,R10*0.45,0,Math.PI*2); ctx.fillStyle='#3a2a1a'; ctx.fill();
+  }
+  function drawHole(h){
+    // arrow shaft sticking out + fletching, with little wobble timer
+    var wob = h.wob>0 ? Math.sin(h.wob*1.2)*h.wob*0.6 : 0;
+    h.wob = h.wob>0 ? h.wob-0.6 : 0;
+    ctx.save(); ctx.translate(h.x,h.y); ctx.rotate((wob)*Math.PI/180);
+    ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(34,-44); ctx.stroke();
+    // fletching
+    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(34,-44); ctx.lineTo(40,-34); ctx.lineTo(28,-38); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(31,-49); ctx.lineTo(41,-46); ctx.lineTo(32,-40); ctx.closePath(); ctx.fill();
+    // tip dot
+    ctx.fillStyle='#3a2a1a'; ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawReticle(p){
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-28,0); ctx.lineTo(-12,0); ctx.moveTo(12,0); ctx.lineTo(28,0);
+    ctx.moveTo(0,-28); ctx.lineTo(0,-12); ctx.moveTo(0,12); ctx.lineTo(0,28); ctx.stroke();
+    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  function drawFlying(a){
+    ctx.save(); ctx.translate(a.x,a.y);
+    var ang=Math.atan2(a.vy,a.vx);
+    ctx.rotate(ang);
+    ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(-26,0); ctx.lineTo(10,0); ctx.stroke();
+    ctx.fillStyle='#3a2a1a'; ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(2,-4); ctx.lineTo(2,4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(-26,0); ctx.lineTo(-20,-6); ctx.lineTo(-16,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(-26,0); ctx.lineTo(-20,6); ctx.lineTo(-16,0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function render(now){
+    ctx.clearRect(0,0,W,H);
+    drawTarget();
+    for(var i=0;i<holes.length;i++) drawHole(holes[i]);
+    if(flying){ drawFlying(flying); }
+    else if(!busy && arrows>0){ drawReticle(reticlePos(now)); }
+    requestAnimationFrame(render);
+  }
+
+  // ---------- scoring ----------
+  function scoreAt(x,y){
+    var d=Math.hypot(x-TX, y-TY);
+    for(var i=0;i<RINGS.length;i++){ if(d<=RINGS[i].r) return RINGS[i].score; }
+    return 0;
+  }
+
+  // ---------- shoot ----------
+  function shoot(){
+    if(busy || arrows<=0) return;
+    busy=true; shootBtn.disabled=true;
+    try{ if(audio().resume) audio().resume(); }catch(e){}
+
+    var aim = reticlePos(performance.now());   // where the reticle is at release = the shot
+    arrows--; arrowsV.textContent=arrows;
+    twangS();
+    flash('슈웅...', false);
+
+    // arrow starts from bottom center, flies toward aim; wind curves it during flight
+    var start={ x:W/2, y:H*0.92 };
+    var dx=aim.x-start.x, dy=aim.y-start.y;
+    var steps = reduceMotion?6:46;
+    var i=0;
+    var windAcc = wind.dir*wind.spd*0.10;       // sideways acceleration from wind
+    var vx=dx/steps, vy=dy/steps;
+    flying={ x:start.x, y:start.y, vx:vx, vy:vy };
+
+    var landX, landY;
+    function step(){
+      i++;
+      vx += windAcc;                            // wind bends the path
+      flying.vx=vx; flying.vy=vy;
+      flying.x += vx; flying.y += vy;
+      if(i>=steps){
+        landX = flying.x; landY = flying.y;
+        flying=null;
+        land(landX, landY);
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function land(x,y){
+    // clamp landing roughly to board area for the stick-in look
+    var pts = scoreAt(x,y);
+    holes.push({ x:x, y:y, wob:12 });           // wobble on impact
+    thunkS();
+
+    if(pts>0){ score+=pts; scoreV.textContent=score; }
+
+    if(pts===10){ flash('명중! 정중앙 10점!', true); confetti(200); bullsS(); }
+    else if(pts>=8){ flash(pts+'점! 아주 좋아요', true); confetti(70); goodS(); }
+    else if(pts>=5){ flash(pts+'점! 나이스', false); confetti(25); goodS(); }
+    else if(pts>0){ flash(pts+'점 획득!', false); beep(440,0.1,'triangle',0.16); }
+    else { flash('아쉽다! 바람을 읽어봐요', false); beep(200,0.16,'sine',0.13); }
+
+    setTimeout(function(){
+      busy=false;
+      if(arrows>0){ newWind(); shootBtn.disabled=false; }
+      else { endRound(); }
+    }, 650);
+  }
+
+  function endRound(){
+    shootBtn.textContent='다시 도전';
+    shootBtn.disabled=false; busy=false;
+    var msg = score>=70 ? '대단해요! 최종 '+score+'점 🏆' : '최종 '+score+'점! 한 판 더?';
+    flash(msg, score>=70);
+    shootBtn.onclick = function(){ resetRound(); shootBtn.onclick=null; shootBtn.addEventListener('click',shoot); };
+  }
+  function resetRound(){
+    arrows=10; score=0; holes=[]; flying=null;
+    arrowsV.textContent=arrows; scoreV.textContent=score;
+    shootBtn.innerHTML='발사<span class="sub">탭 · 화면을 눌러도 발사</span>';
+    newWind(); flash('조준점이 멈출 때 쏘면 명중률이 올라가요', false);
+  }
+
+  // ---------- fit canvas to displayed size (crisp, keep logical W/H aspect by letterbox-free scaling) ----------
+  function fit(){
+    var box=field.getBoundingClientRect();
+    var w=Math.max(1,Math.round(box.width*devicePixelRatio));
+    var h=Math.max(1,Math.round(box.height*devicePixelRatio));
+    if(w!==field.width || h!==field.height){
+      field.width=w; field.height=h;
+      // recompute logical scale: we keep drawing in logical W,H by scaling context
+    }
+    // map logical 800x900 onto actual pixels via setTransform each render? simpler: redefine W,H to actual and recompute layout
+    W=field.width; H=field.height;
+    TX=W/2; TY=H*0.30; R10=Math.min(W,H)*0.052;
+    RINGS[0].r=R10*1.0; RINGS[1].r=R10*1.7; RINGS[2].r=R10*2.4; RINGS[3].r=R10*3.1;
+    RINGS[4].r=R10*3.8; RINGS[5].r=R10*4.5; RINGS[6].r=R10*5.3; RINGS[7].r=R10*6.2;
+    TARGET_R=RINGS[7].r;
+  }
+
+  // ---------- mute ----------
+  var SPK_ON='<svg viewBox="0 0 100 100" fill="#fff6e6"><path d="M20 38 H38 L58 20 V80 L38 62 H20 Z"/><path d="M68 36 a20 20 0 0 1 0 28" fill="none" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/><path d="M76 28 a32 32 0 0 1 0 44" fill="none" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/></svg>';
+  var SPK_OFF='<svg viewBox="0 0 100 100" fill="#fff6e6"><path d="M20 38 H38 L58 20 V80 L38 62 H20 Z"/><path d="M66 38 L86 62 M86 38 L66 62" stroke="#fff6e6" stroke-width="6" stroke-linecap="round"/></svg>';
+
+  // ---------- init ----------
+  muteBtn.innerHTML=SPK_ON;
+  shootBtn.addEventListener('click', shoot);
+  field.addEventListener('pointerdown', function(e){ e.preventDefault(); shoot(); });
+  muteBtn.addEventListener('click', function(){ muted=!muted; muteBtn.innerHTML=muted?SPK_OFF:SPK_ON; if(!muted) beep(523,0.08,'triangle',0.15); });
+
+  fit(); newWind();
+  requestAnimationFrame(render);
+  requestAnimationFrame(fit);
+  setTimeout(fit,150);
+  window.addEventListener('load', fit);
+  window.addEventListener('orientationchange', function(){ setTimeout(fit,200); });
+})();
+</script>
+</body>
+</html>
