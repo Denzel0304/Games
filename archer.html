@@ -70,12 +70,12 @@
   .result.big{ color:var(--gold); text-shadow:0 0 18px rgba(255,210,74,.5); }
 
   .shoot{
-    flex:0 0 auto; border:none; cursor:pointer; width:100%; padding:16px; border-radius:18px;
+    flex:0 0 72px; border:none; cursor:pointer; width:100%; padding:0 16px; border-radius:18px;
     font-family:'Jua',sans-serif; font-size:21px; color:#5a2a00; letter-spacing:2px;
     background:linear-gradient(180deg, #ffe27a, var(--gold) 45%, var(--gold-deep));
     box-shadow: 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35);
     transition:transform .08s ease, box-shadow .08s ease;
-    min-height:72px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   }
   .shoot:active{ transform:translateY(5px); box-shadow:0 1px 0 #b9791a, 0 6px 14px rgba(245,166,35,.3); }
   .shoot:disabled{ filter:saturate(.55) brightness(.93); cursor:default; }
@@ -444,7 +444,7 @@
 
   function endRound(){
     stopTimer();
-    shootBtn.textContent='다시 도전';
+    shootBtn.innerHTML='다시 도전<span class="sub">&nbsp;</span>';
     shootBtn.disabled=false; busy=false;
     var isNewBest = score > bestScore;
     if(isNewBest){ bestScore = score; bestV.textContent = fmt(bestScore); }
