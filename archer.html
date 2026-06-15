@@ -43,7 +43,17 @@
   .chip .k{ font-size:11px; color:#bcd0ec; letter-spacing:1px; }
   .chip .v{ font-family:'Jua',sans-serif; font-size:18px; color:var(--cream); }
   .chip .v.gold{ color:var(--gold); }
+  .chip .v.best{ color:#4ecdc4; font-size:18px; }
   .wind-arrow{ display:inline-block; transition:transform .3s; }
+
+  .wind-hud{
+    position:absolute; top:8px; left:10px; z-index:6; pointer-events:none;
+    background:rgba(0,0,0,.35); border-radius:10px; padding:3px 8px;
+    font-family:'Jua',sans-serif; font-size:13px; color:#bfe3ff;
+    display:flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  .wind-hud .wind-hud-arrow{ display:inline-block; transition:transform .3s; font-size:14px; }
+  .wind-hud .wind-hud-spd{ color:var(--gold); font-size:14px; font-family:'Jua',sans-serif; }
 
   .stage{ flex:1 1 auto; min-height:0; position:relative; border-radius:18px; overflow:hidden;
     box-shadow:inset 0 0 0 2px rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.35); }
@@ -54,9 +64,10 @@
   .timer.warn{ animation:tick .5s steps(1) infinite; }
   @keyframes tick{ 50%{ opacity:.3; } }
 
-  .result{ flex:0 0 auto; text-align:center; height:26px; line-height:26px; overflow:hidden; white-space:nowrap;
-    padding:0 8px; font-family:'Jua',sans-serif; font-size:18px; transition:opacity .2s; }
-  .result.big{ color:var(--gold); font-size:22px; text-shadow:0 0 18px rgba(255,210,74,.5); }
+  .result{ flex:0 0 26px; height:26px; line-height:26px; overflow:hidden; white-space:nowrap;
+    text-align:center; padding:0 8px; font-family:'Jua',sans-serif; font-size:17px;
+    transition:opacity .2s; text-overflow:ellipsis; }
+  .result.big{ color:var(--gold); text-shadow:0 0 18px rgba(255,210,74,.5); }
 
   .shoot{
     flex:0 0 auto; border:none; cursor:pointer; width:100%; padding:16px; border-radius:18px;
@@ -82,13 +93,18 @@
     </div>
 
     <div class="hud">
-      <div class="chip"><div class="k">바람</div><div class="v" id="windV"><span class="wind-arrow" id="windArrow">→</span> <span id="windSpd">0</span></div></div>
       <div class="chip"><div class="k">남은 화살</div><div class="v" id="arrowsV">10</div></div>
       <div class="chip"><div class="k">점수</div><div class="v gold" id="scoreV">0</div></div>
+      <div class="chip"><div class="k">최고 점수</div><div class="v best" id="bestV">0</div></div>
     </div>
 
     <div class="stage">
       <canvas id="field" width="800" height="900"></canvas>
+      <div class="wind-hud" id="windHud">
+        <span>바람</span>
+        <span class="wind-hud-arrow" id="windArrow">→</span>
+        <span class="wind-hud-spd" id="windSpd">0</span>
+      </div>
       <div class="timer" id="timer"></div>
     </div>
 
@@ -108,6 +124,7 @@
   var windSpd = document.getElementById('windSpd');
   var arrowsV = document.getElementById('arrowsV');
   var scoreV = document.getElementById('scoreV');
+  var bestV = document.getElementById('bestV');
   var resultEl = document.getElementById('result');
   var shootBtn = document.getElementById('shootBtn');
   var muteBtn = document.getElementById('muteBtn');
@@ -132,6 +149,7 @@
   var GROUND = H*0.82;
 
   var arrows = 10, score = 0, busy=false, muted=false;
+  var bestScore = 0;
   var wind = { dx:1, dy:0, spd:0 };   // dx,dy: unit direction (screen coords, y down), spd 0..10
   var t0 = performance.now();
   var holes = [];                     // landed arrows {x,y,wob,ang}
@@ -240,12 +258,12 @@
   }
   function drawReticle(p){
     ctx.save(); ctx.translate(p.x,p.y); ctx.scale(R10/44, R10/44);
-    ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2.5;
+    ctx.strokeStyle='rgba(0,0,0,.85)'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke();
     ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-28,0); ctx.lineTo(-12,0); ctx.moveTo(12,0); ctx.lineTo(28,0);
     ctx.moveTo(0,-28); ctx.lineTo(0,-12); ctx.moveTo(0,12); ctx.lineTo(0,28); ctx.stroke();
-    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ff2e2e'; ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
   function drawFlying(a){
@@ -427,8 +445,11 @@
     stopTimer();
     shootBtn.textContent='다시 도전';
     shootBtn.disabled=false; busy=false;
-    var msg = score>=70 ? '대단해요! 최종 '+fmt(score)+'점 🏆' : '최종 '+fmt(score)+'점! 한 판 더?';
-    flash(msg, score>=70);
+    var isNewBest = score > bestScore;
+    if(isNewBest){ bestScore = score; bestV.textContent = fmt(bestScore); }
+    var baseMsg = score>=70 ? '대단해요! 최종 '+fmt(score)+'점 🏆' : '최종 '+fmt(score)+'점! 한 판 더?';
+    var msg = isNewBest ? '🏅 최고 점수 갱신! '+fmt(score)+'점' : baseMsg;
+    flash(msg, score>=70 || isNewBest);
     shootBtn.onclick = function(){ resetRound(); shootBtn.onclick=null; shootBtn.addEventListener('click',shoot); };
   }
   function resetRound(){
