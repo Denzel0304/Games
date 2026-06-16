@@ -150,7 +150,8 @@
   var GROUND = H*0.82;
 
   var arrows = 10, score = 0, busy=false, muted=false;
-  var bestScore = 0;
+  var bestScore = parseFloat(localStorage.getItem('archerBest') || '0');
+  bestV.textContent = fmt(bestScore);
   var wind = { dx:1, dy:0, spd:0 };   // dx,dy: unit direction (screen coords, y down), spd 0..10
   var t0 = performance.now();
   var holes = [];                     // landed arrows {x,y,wob,ang}
@@ -447,7 +448,7 @@
     shootBtn.innerHTML='다시 도전<span class="sub">&nbsp;</span>';
     shootBtn.disabled=false; busy=false;
     var isNewBest = score > bestScore;
-    if(isNewBest){ bestScore = score; bestV.textContent = fmt(bestScore); }
+    if(isNewBest){ bestScore = score; bestV.textContent = fmt(bestScore); localStorage.setItem('archerBest', bestScore); }
     var baseMsg = score>=70 ? '대단해요! 최종 '+fmt(score)+'점 🏆' : '최종 '+fmt(score)+'점! 한 판 더?';
     var msg = isNewBest ? '🏅 최고 점수 갱신! '+fmt(score)+'점' : baseMsg;
     flash(msg, score>=70 || isNewBest);
