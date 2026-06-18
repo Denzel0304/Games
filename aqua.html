@@ -73,12 +73,16 @@ class Fish {
 
 
         // 물고기마다 성격
-        this.baseSpeed = 0.4 + Math.random() * 2.6;
+        this.baseSpeed = 0.2 + Math.random() * 0.7;  // 전체 속도 낮춤
         this.speed = this.baseSpeed;
 
-        this.turnSpeed = 0.015 + Math.random() * 0.07;
+        this.turnSpeed = 0.015 + Math.random() * 0.04;
 
-        this.tailSpeed = 80 + Math.random() * 180;
+        this.tailSpeed = 150 + Math.random() * 250;  // 꼬리도 느리게
+
+        // 속도 변화 타이머
+        this.speedChangeTimer = Math.random() * 300;
+        this.speedChangePeriod = 150 + Math.random() * 300;
 
 
         this.color =
@@ -87,6 +91,14 @@ class Fish {
 
 
     update() {
+
+        // 주기적으로 유영 속도를 랜덤하게 변화
+        this.speedChangeTimer++;
+        if(this.speedChangeTimer >= this.speedChangePeriod){
+            this.baseSpeed = 0.15 + Math.random() * 0.75;
+            this.speedChangeTimer = 0;
+            this.speedChangePeriod = 150 + Math.random() * 300;
+        }
 
         let target = null;
         let shortest = Infinity;
