@@ -235,31 +235,110 @@
   function startWhir(){ var step=function(){ tick(); whir=setTimeout(step,60); }; step(); }
   function stopWhir(){ if(whir){ clearTimeout(whir); whir=null; } }
 
-  function spinReel(reelEl,strip,target,duration){
-    var N=24, list=[];
-    for(var i=0;i<N-1;i++) list.push(pick(SYMBOLS));
-    list.push(target);
-    fillCells(strip,list);
-    strip.style.transition='none';
-    strip.style.transform='translateY(0)';
-    reelEl.classList.add('spinning');
-    void strip.offsetHeight;
-    var dist=(N-1)*cellHeight(strip);
-    strip.style.transition='transform '+duration+'ms cubic-bezier(.16,.7,.18,1)';
-    strip.style.transform='translateY(-'+dist+'px)';
+  function spinReel(reelEl, strip, target, startDelay){
+    var MAX_SPEED = 32;
+    var ACCEL_MS  = 300;
+    var FAST_MS   = 500;
+
+    // 감속 프로파일 [속도px/frame, 프레임수]
+    var DECEL = [
+      [30, 8],
+      [26, 9],
+      [22, 10],
+      [18, 11],
+      [14, 12],
+      [10, 13],
+      [7,  13],
+      [4,  14],
+      [2,  15],
+      [1,  10],
+    ];
+    var decelDist = DECEL.reduce(function(s,d){ return s+d[0]*d[1]; }, 0);
 
     return new Promise(function(res){
-      var done=false;
-      function finish(){
-        if(done) return; done=true;
-        strip.style.transition='none';
-        fillCells(strip,[target]);
-        strip.style.transform='translateY(0)';
-        reelEl.classList.remove('spinning');
-        clunk(); res();
-      }
-      strip.addEventListener('transitionend', finish);
-      setTimeout(finish, duration+400);
+      setTimeout(function(){
+        var ch = cellHeight(strip);
+
+        // ── 역방향 설계 ──────────────────────────────────────────
+        // 1) target은 항상 strip의 맨 끝 셀 (인덱스 = TOTAL-1)
+        // 2) snapPos = TOTAL * ch  (target 셀 상단이 뷰포트 상단에 오는 위치)
+        //    → 이것만 정확하면 snap 시 그림 안 바뀜
+        // 3) decelStart = snapPos - decelDist
+        //    → 여기서부터 감속 시작하면 decelDist 이동 후 정확히 snapPos 도달
+        // 4) FAST_POOL: decelStart 이전에서만 순환
+
+        var PAD       = Math.ceil(decelDist / ch) + 2; // 감속 구간 셀 수 (여유 포함)
+        var FAST_POOL = 20;
+        var TOTAL     = FAST_POOL + PAD; // target 인덱스 = TOTAL
+
+        // strip 구성: 랜덤 TOTAL개 + target 1개
+        var list = [];
+        for(var i = 0; i < TOTAL; i++) list.push(pick(SYMBOLS));
+        list.push(target);
+        fillCells(strip, list);
+        strip.style.transition = 'none';
+        strip.style.transform  = 'translateY(0)';
+        reelEl.classList.add('spinning');
+        void strip.offsetHeight;
+
+        var snapPos    = TOTAL * ch;          // target 셀 상단 위치 (ch의 배수, 정확)
+        var decelStart = snapPos - decelDist; // 감속 시작 위치
+        var loopCeil   = decelStart - ch * 3; // 고속 순환 상한
+
+        var pos     = 0;
+        var startT  = null;
+        var inDecel = false;
+        var dIdx = 0, dFrame = 0;
+
+        function frame(now){
+          if(!startT) startT = now;
+          var elapsed = now - startT;
+
+          if(!inDecel){
+            var speed = elapsed < ACCEL_MS
+              ? MAX_SPEED * (elapsed / ACCEL_MS)
+              : MAX_SPEED;
+
+            pos += speed;
+
+            // loopCeil 넘으면 앞으로 되감기 (감속 구간 절대 침범 안 함)
+            if(pos >= loopCeil) pos = pos % loopCeil;
+
+            // 최소 고속시간 경과 → 감속 돌입
+            if(elapsed >= ACCEL_MS + FAST_MS){
+              inDecel = true;
+              pos = decelStart; // 정확히 감속 시작점으로 고정
+              reelEl.classList.remove('spinning');
+              strip.style.transform = 'translateY(-' + pos + 'px)';
+              requestAnimationFrame(frame);
+              return;
+            }
+
+            strip.style.transform = 'translateY(-' + pos + 'px)';
+            requestAnimationFrame(frame);
+            return;
+          }
+
+          // 감속
+          var spd = DECEL[dIdx][0];
+          dFrame++;
+          if(dFrame >= DECEL[dIdx][1]){ dIdx++; dFrame = 0; }
+
+          // snapPos 도달 or 단계 소진 → target 위치에 정확히 snap
+          if(dIdx >= DECEL.length || pos + spd >= snapPos){
+            strip.style.transform = 'translateY(-' + snapPos + 'px)';
+            clunk();
+            res();
+            return;
+          }
+
+          pos += spd;
+          strip.style.transform = 'translateY(-' + pos + 'px)';
+          requestAnimationFrame(frame);
+        }
+
+        requestAnimationFrame(frame);
+      }, startDelay);
     });
   }
 
@@ -371,8 +450,9 @@
     var grid=decideGrid();
     var order=[0,3,6, 1,4,7, 2,5,8];
     var promises=order.map(function(idx,k){
-      var col=Math.floor(k/3), row=k%3;
-      return spinReel(reels[idx],strips[idx],grid[idx], 1300+col*350+row*120);
+      var col=Math.floor(k/3);
+      // 열(col)마다 0 / 400 / 800ms 지연으로 순차 정착
+      return spinReel(reels[idx],strips[idx],grid[idx], col*400);
     });
 
     Promise.all(promises).then(function(){
