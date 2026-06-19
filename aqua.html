@@ -131,9 +131,9 @@ class Fish {
                 if(idx !== -1){
                     foods.splice(idx,1);
                     this.foodEaten++;
-                    // 10개마다 크기 증가, 최대 100개(3배)
+                    // 10개마다 크기 증가, 최대 100개(1.5배)
                     let stage = Math.min(Math.floor(this.foodEaten / 10), 10);
-                    let growFactor = 1 + (stage / 10) * 2; // 1배~3배
+                    let growFactor = 1 + (stage / 10) * 0.5; // 1배~1.5배
                     this.size = this.baseSize * growFactor;
                 }
             }
