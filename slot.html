@@ -257,8 +257,6 @@
 
     return new Promise(function(res){
       setTimeout(function(){
-        var ch = cellHeight(strip);
-
         // ── 역방향 설계 ──────────────────────────────────────────
         // 1) target은 항상 strip의 맨 끝 셀 (인덱스 = TOTAL-1)
         // 2) snapPos = TOTAL * ch  (target 셀 상단이 뷰포트 상단에 오는 위치)
@@ -266,6 +264,15 @@
         // 3) decelStart = snapPos - decelDist
         //    → 여기서부터 감속 시작하면 decelDist 이동 후 정확히 snapPos 도달
         // 4) FAST_POOL: decelStart 이전에서만 순환
+
+        // ch = reel 컨테이너의 실제 렌더 높이 (가장 신뢰도 높음)
+        // reel 1칸 = 셀 1개이므로 컨테이너 높이 = 셀 높이
+        var ch = reelEl.getBoundingClientRect().height;
+
+        // 그래도 0이면 CSS 변수 → 최종 fallback 80
+        if(!ch || ch <= 0){
+          ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-h')) || 80;
+        }
 
         var PAD       = Math.ceil(decelDist / ch) + 2; // 감속 구간 셀 수 (여유 포함)
         var FAST_POOL = 20;
@@ -281,9 +288,13 @@
         reelEl.classList.add('spinning');
         void strip.offsetHeight;
 
-        var snapPos    = TOTAL * ch;          // target 셀 상단 위치 (ch의 배수, 정확)
+        // snapPos: 실제 마지막 셀(target)의 offsetTop을 직접 읽어 소수점 누적 오차 차단
+        var cells = strip.querySelectorAll('.cell');
+        var lastCell = cells[cells.length - 1];
+        var snapPos = lastCell ? lastCell.offsetTop : TOTAL * ch;
+
         var decelStart = snapPos - decelDist; // 감속 시작 위치
-        var loopCeil   = decelStart - ch * 3; // 고속 순환 상한
+        var loopCeil   = Math.max(ch, decelStart - ch * 3); // 고속 순환 상한 (최소 ch 보장)
 
         var pos     = 0;
         var startT  = null;
