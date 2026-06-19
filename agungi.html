@@ -193,25 +193,26 @@
     opacity:1;
   }
 
+  /* 불꽃 깜빡임 — 훨씬 느리게 */
   @keyframes flicker-a{
     0%,100%{ transform:scaleY(1) scaleX(1) skewX(0deg) translateY(0); }
-    20%{ transform:scaleY(1.06) scaleX(0.97) skewX(1.5deg) translateY(-1px); }
-    45%{ transform:scaleY(0.94) scaleX(1.03) skewX(-1deg) translateY(0px); }
-    70%{ transform:scaleY(1.08) scaleX(0.95) skewX(2deg) translateY(-2px); }
-    85%{ transform:scaleY(0.97) scaleX(1.02) skewX(-1.5deg) translateY(0); }
+    20%{ transform:scaleY(1.04) scaleX(0.98) skewX(1deg) translateY(-1px); }
+    45%{ transform:scaleY(0.97) scaleX(1.02) skewX(-0.8deg) translateY(0px); }
+    70%{ transform:scaleY(1.06) scaleX(0.97) skewX(1.5deg) translateY(-2px); }
+    85%{ transform:scaleY(0.98) scaleX(1.01) skewX(-1deg) translateY(0); }
   }
   @keyframes flicker-b{
     0%,100%{ transform:scaleY(1) skewX(0deg); opacity:0.95; }
-    30%{ transform:scaleY(1.12) skewX(-2deg); opacity:1; }
-    60%{ transform:scaleY(0.9) skewX(2.5deg); opacity:0.85; }
+    30%{ transform:scaleY(1.08) skewX(-1.5deg); opacity:1; }
+    60%{ transform:scaleY(0.94) skewX(1.8deg); opacity:0.88; }
   }
   @keyframes flicker-c{
     0%,100%{ transform:scaleY(1) skewX(0deg) translateX(0); opacity:0.9;}
-    40%{ transform:scaleY(1.15) skewX(-3deg) translateX(2px); opacity:1;}
-    75%{ transform:scaleY(0.92) skewX(1.5deg) translateX(-1px); opacity:0.8;}
+    40%{ transform:scaleY(1.10) skewX(-2deg) translateX(1.5px); opacity:1;}
+    75%{ transform:scaleY(0.95) skewX(1deg) translateX(-1px); opacity:0.82;}
   }
   @keyframes glow-pulse{
-    0%,100%{ opacity:0.85; }
+    0%,100%{ opacity:0.7; }
     50%{ opacity:1; }
   }
   @keyframes rise-fade{
@@ -223,12 +224,17 @@
     60%{ transform:translateY(2px); opacity:1; }
     100%{ transform:translateY(0); opacity:1; }
   }
+  @keyframes ember-surface{
+    0%,100%{ opacity:0.55; }
+    50%{ opacity:1; }
+  }
 
-  .flame-outer{ animation:flicker-a 2.1s ease-in-out infinite; transform-origin:50% 100%; }
-  .flame-mid{ animation:flicker-b 1.5s ease-in-out infinite; transform-origin:50% 100%; }
-  .flame-inner{ animation:flicker-c 1.1s ease-in-out infinite; transform-origin:50% 100%; }
-  .ember-glow{ animation:glow-pulse 1.8s ease-in-out infinite; }
-  .log-enter{ animation:log-drop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+  /* 불꽃 애니메이션 — 훨씬 느린 속도 */
+  .flame-outer{ animation:flicker-a 4.2s ease-in-out infinite; transform-origin:50% 100%; }
+  .flame-mid{ animation:flicker-b 3.1s ease-in-out infinite; transform-origin:50% 100%; }
+  .flame-inner{ animation:flicker-c 2.3s ease-in-out infinite; transform-origin:50% 100%; }
+  .ember-glow{ animation:glow-pulse 3.6s ease-in-out infinite; }
+  .log-enter{ animation:log-drop 0.55s cubic-bezier(0.34,1.56,0.64,1) both; }
 
   @media (prefers-reduced-motion: reduce){
     .flame-outer,.flame-mid,.flame-inner,.ember-glow{ animation:none !important; }
@@ -267,6 +273,23 @@
           <clipPath id="chamberClip">
             <path d="M48 360 L48 175 Q48 105 160 95 Q272 105 272 175 L272 360 Z"/>
           </clipPath>
+          <!-- 불씨 표면 그라디언트 -->
+          <radialGradient id="emberGrad1" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffcc44" stop-opacity="1"/>
+            <stop offset="40%" stop-color="#ff6600" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#cc2200" stop-opacity="0.3"/>
+          </radialGradient>
+          <radialGradient id="emberGrad2" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ff8800" stop-opacity="1"/>
+            <stop offset="50%" stop-color="#cc3300" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#880000" stop-opacity="0.2"/>
+          </radialGradient>
+          <filter id="emberBlur">
+            <feGaussianBlur stdDeviation="1.2"/>
+          </filter>
+          <filter id="flameSoftBlur">
+            <feGaussianBlur stdDeviation="2.5"/>
+          </filter>
         </defs>
 
         <!-- outer stone hearth body -->
@@ -333,15 +356,15 @@
 (function(){
   "use strict";
 
-  // ---------- state ----------
-  // each log: {id, row, col, axis:'h'|'v', state:'fresh'|'burning'|'ash', progress, bornAt}
   var logs = [];
   var totalAdded = 0;
   var nextId = 1;
-  var maxLogsVisible = 14; // chamber capacity before we start retiring oldest ash
-  var rowHeight = 30;      // vertical spacing per stacked layer
-  var baseY = 345;         // y of bottom-most log center in svg coords
-  var burnDurationRange = [9000, 14000]; // ms fresh->ash per log, randomized
+  var maxLogsVisible = 14;
+  var rowHeight = 30;
+  var baseY = 345;
+
+  // ★ 1. 훨씬 긴 연소 시간 — 불멍답게 천천히
+  var burnDurationRange = [90000, 150000]; // 1.5분~2.5분
 
   var logLayer = document.getElementById('log-layer');
   var flameLayer = document.getElementById('flame-layer');
@@ -371,43 +394,110 @@
     }, 250);
   }
 
-  // ---------- layout helpers ----------
-  // Logs stack like a 우물정자 (#) crib: alternating layers of parallel logs,
-  // each layer rotated 90deg from the one below, with slight random jitter.
   function layerForIndex(idx){
-    return Math.floor(idx / 2); // 2 logs per layer (left/right of center)
+    return Math.floor(idx / 2);
   }
 
+  // ★ 2. 자연스러운 장작 배치 — 사선, 랜덤 각도, 길이 변형
   function computeLogTransform(log){
     var layer = layerForIndex(log.slot);
-    var axis = (layer % 2 === 0) ? 'h' : 'v';
     var y = baseY - layer * rowHeight;
-    var sideSign = (log.slot % 2 === 0) ? -1 : 1;
-    var jitterX = log.jitter.x;
-    var jitterY = log.jitter.y;
-    var jitterRot = log.jitter.rot;
+    var jx = log.jitter.x;
+    var jy = log.jitter.y;
 
-    if (axis === 'h'){
-      var cx = 160 + sideSign * 14 + jitterX;
-      return { x: cx, y: y + jitterY, rot: jitterRot, axis: 'h' };
-    } else {
-      var cy = y + jitterY;
-      var cx2 = 160 + sideSign * 30 + jitterX * 0.6;
-      return { x: cx2, y: cy, rot: 90 + jitterRot, axis: 'v' };
-    }
+    // 짝수/홀수 슬롯에 따라 기본 방향 결정하되, 완전히 자유로운 각도 추가
+    var baseRot = log.jitter.baseRot; // 미리 계산된 랜덤 기본 각도
+    var cx = 160 + log.jitter.cx_offset;
+    return { x: cx, y: y + jy, rot: baseRot, length: log.jitter.logLength };
   }
 
   function woodColorFor(state, progress){
     if (state === 'fresh') return { fill: 'var(--wood-fresh)', end:'var(--wood-fresh-end)' };
     if (state === 'ash') return { fill: 'var(--wood-ash)', end:'var(--wood-ash-end)' };
-    // burning: interpolate fresh -> charred via mid
     if (progress < 0.5) return { fill: 'var(--wood-mid)', end:'var(--wood-mid-end)' };
     return { fill: 'var(--wood-charred)', end:'#190f0a' };
   }
 
+  // ★ 3+4. 장작 표면에 불씨가 자연스럽게 번짐 — 빨간 면적으로
+  function drawEmberSurface(g, log, length, thickness){
+    if (log.state !== 'burning') return;
+    var progress = log.progress;
+
+    // 불이 서서히 번지는 영역 (progress 0.1부터 시작, 전체로 퍼짐)
+    var coverRatio = Math.max(0, Math.min(1, (progress - 0.08) / 0.7));
+    if (coverRatio <= 0) return;
+
+    var halfLen = length / 2;
+    var coverLen = halfLen * 2 * coverRatio;
+    var startX = -halfLen + (halfLen * 2 - coverLen) * 0.5 + log.jitter.emberSeed * 10 - 5;
+
+    // 불씨 바닥 글로우 (번진 영역을 붉게)
+    var glowRect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    glowRect.setAttribute('x', startX);
+    glowRect.setAttribute('y', -thickness/2 + 1);
+    glowRect.setAttribute('width', Math.min(coverLen, length - 2));
+    glowRect.setAttribute('height', thickness - 3);
+    glowRect.setAttribute('rx', (thickness-3)/2);
+
+    // 연소 단계별 색상
+    var alpha, fillColor;
+    if (progress < 0.35){
+      alpha = 0.45 + coverRatio * 0.3;
+      fillColor = 'rgba(200,60,10,' + alpha + ')';
+    } else if (progress < 0.65){
+      alpha = 0.55 + (progress - 0.35) * 0.6;
+      fillColor = 'rgba(180,40,0,' + alpha + ')';
+    } else {
+      alpha = 0.4 + (1 - progress) * 0.4;
+      fillColor = 'rgba(140,30,0,' + alpha + ')';
+    }
+    glowRect.setAttribute('fill', fillColor);
+    glowRect.setAttribute('filter', 'url(#emberBlur)');
+    g.appendChild(glowRect);
+
+    // 불씨 반짝이는 핫스팟들 (장작 여러 곳에 분산)
+    var numHotspots = Math.floor(3 + coverRatio * 5);
+    var seed = log.jitter.emberSeed;
+    for (var i = 0; i < numHotspots; i++){
+      // 결정론적 랜덤 (jitter seed 기반)
+      var frac = (seed * 13.7 + i * 7.3 + i * i * 0.9) % 1;
+      var frac2 = (seed * 5.1 + i * 11.2 + 0.3) % 1;
+      if (frac < 0) frac += 1;
+      if (frac2 < 0) frac2 += 1;
+
+      var hx = -halfLen * 0.85 + frac * (length * 0.85);
+      // 불씨 영역 내에 배치
+      if (hx < startX - 4 || hx > startX + coverLen + 4) continue;
+
+      var hy = (frac2 - 0.5) * (thickness * 0.55);
+      var hr = 2.5 + frac * 3.5;
+
+      var brightGlow = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+      brightGlow.setAttribute('cx', hx);
+      brightGlow.setAttribute('cy', hy);
+      brightGlow.setAttribute('rx', hr);
+      brightGlow.setAttribute('ry', hr * 0.7);
+
+      var hAlpha;
+      if (progress < 0.5) hAlpha = 0.6 + frac * 0.35;
+      else hAlpha = Math.max(0.2, 0.8 - (progress - 0.5) * 1.2) + frac * 0.2;
+
+      // 중심은 밝고 가장자리는 붉게
+      var hColor = progress < 0.4
+        ? 'rgba(255,' + Math.floor(140 + frac*80) + ',20,' + hAlpha + ')'
+        : 'rgba(220,' + Math.floor(60 + frac*50) + ',0,' + hAlpha + ')';
+
+      brightGlow.setAttribute('fill', hColor);
+      brightGlow.classList.add('ember-glow');
+      brightGlow.style.animationDuration = (2.5 + frac * 2) + 's';
+      brightGlow.style.animationDelay = (frac2 * 2) + 's';
+      g.appendChild(brightGlow);
+    }
+  }
+
   function logSvgGroup(log){
     var t = computeLogTransform(log);
-    var length = 92;
+    var length = t.length || 92;
     var thickness = 17;
     var colors = woodColorFor(log.state, log.progress);
 
@@ -416,6 +506,7 @@
     g.setAttribute('transform', 'translate(' + t.x + ',' + t.y + ') rotate(' + t.rot + ')');
     if (log.isNew){ g.classList.add('log-enter'); }
 
+    // 장작 몸체
     var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
     rect.setAttribute('x', -length/2);
     rect.setAttribute('y', -thickness/2);
@@ -425,7 +516,20 @@
     rect.setAttribute('fill', colors.fill);
     g.appendChild(rect);
 
-    // end cap (cut face) - lighter ring to suggest cross-section
+    // 껍질 질감
+    var bark1 = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bark1.setAttribute('x', -length/2 + 4);
+    bark1.setAttribute('y', -thickness/2 + 2);
+    bark1.setAttribute('width', length - 8);
+    bark1.setAttribute('height', thickness - 4);
+    bark1.setAttribute('rx', (thickness-4)/2);
+    bark1.setAttribute('fill', 'rgba(0,0,0,0.12)');
+    g.appendChild(bark1);
+
+    // ★ 3. 불씨 표면 (빨갛게 번지는 영역)
+    drawEmberSurface(g, log, length, thickness);
+
+    // 단면 캡
     var cap = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
     cap.setAttribute('cx', length/2 - 3);
     cap.setAttribute('cy', 0);
@@ -435,36 +539,41 @@
     cap.setAttribute('opacity', '0.85');
     g.appendChild(cap);
 
-    // bark texture lines
+    // 나이테 선 (단면)
+    var ringOuter = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    ringOuter.setAttribute('cx', length/2 - 3);
+    ringOuter.setAttribute('cy', 0);
+    ringOuter.setAttribute('rx', 2);
+    ringOuter.setAttribute('ry', thickness/2 - 3);
+    ringOuter.setAttribute('fill', 'none');
+    ringOuter.setAttribute('stroke', 'rgba(255,255,255,0.07)');
+    ringOuter.setAttribute('stroke-width', '1');
+    g.appendChild(ringOuter);
+
+    // 나무결 선
     var line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1', -length/2 + 6);
-    line.setAttribute('y1', -2);
+    line.setAttribute('y1', -2.5);
     line.setAttribute('x2', length/2 - 8);
-    line.setAttribute('y2', -2);
-    line.setAttribute('stroke', 'rgba(0,0,0,0.18)');
-    line.setAttribute('stroke-width', '1.4');
+    line.setAttribute('y2', -2.5);
+    line.setAttribute('stroke', 'rgba(0,0,0,0.15)');
+    line.setAttribute('stroke-width', '1.2');
     g.appendChild(line);
+    var line2 = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line2.setAttribute('x1', -length/2 + 8);
+    line2.setAttribute('y1', 2);
+    line2.setAttribute('x2', length/2 - 10);
+    line2.setAttribute('y2', 2);
+    line2.setAttribute('stroke', 'rgba(0,0,0,0.10)');
+    line2.setAttribute('stroke-width', '0.8');
+    g.appendChild(line2);
 
-    // embers on charred/ash surface
-    if (log.state === 'burning' && log.progress > 0.35){
-      var glowOpacity = Math.min(1, (log.progress - 0.35) * 1.6);
-      for (var i=0;i<3;i++){
-        var ec = document.createElementNS('http://www.w3.org/2000/svg','circle');
-        var ex = -length/2 + 14 + i * (length-28)/2 + (log.jitter.emberOffsets ? log.jitter.emberOffsets[i] : 0);
-        ec.setAttribute('cx', ex);
-        ec.setAttribute('cy', (i%2===0)? -3 : 3);
-        ec.setAttribute('r', 2.2);
-        ec.setAttribute('fill', 'var(--ember)');
-        ec.setAttribute('opacity', (0.5 + 0.5*glowOpacity).toFixed(2));
-        ec.classList.add('ember-glow');
-        g.appendChild(ec);
-      }
-    }
+    // 재 상태의 어두운 점들
     if (log.state === 'ash'){
-      for (var j=0;j<4;j++){
+      for (var j=0;j<5;j++){
         var dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
-        dot.setAttribute('cx', -length/2 + 10 + j * (length-20)/3);
-        dot.setAttribute('cy', (j%2===0? -3.5 : 3.5));
+        dot.setAttribute('cx', -length/2 + 10 + j * (length-20)/4);
+        dot.setAttribute('cy', (j%2===0? -3 : 3));
         dot.setAttribute('r', 1.4);
         dot.setAttribute('fill', '#1c1a18');
         dot.setAttribute('opacity', '0.5');
@@ -477,8 +586,6 @@
 
   // ---------- render ----------
   function render(){
-    // sort: ash first (bottom-most, less relevant) then burning then fresh,
-    // but actual stacking order should follow slot index for visual crib structure.
     var sorted = logs.slice().sort(function(a,b){ return a.slot - b.slot; });
 
     logLayer.innerHTML = '';
@@ -505,7 +612,6 @@
     statBurning.textContent = burningCount;
     statTotal.textContent = totalAdded;
 
-    // firelight intensity follows burning count
     var intensity = Math.min(1, burningCount / 4);
     firelight.style.opacity = (0.35 + intensity * 0.85).toFixed(2);
     firelight.style.transform = 'translate(-50%,-50%) scale(' + (0.85 + intensity*0.35).toFixed(2) + ')';
@@ -513,32 +619,59 @@
     updateButtonState();
   }
 
+  // ★ 4. 불꽃이 장작 여러 곳에서 자연스럽게 피어오름
   function renderFlames(burningCount, sortedLogs){
     if (burningCount === 0) return;
 
-    // flame base sits at the height of the highest burning log layer
     var burningSlots = sortedLogs.filter(function(l){ return l.state==='burning'; });
     var maxLayer = 0;
     burningSlots.forEach(function(l){ maxLayer = Math.max(maxLayer, layerForIndex(l.slot)); });
     var baseFlameY = baseY - maxLayer * rowHeight - 6;
 
-    var scale = Math.min(1.5, 0.7 + burningCount * 0.18);
-    var cx = 160;
+    var scale = Math.min(1.5, 0.5 + burningCount * 0.14);
 
-    var outer = flamePath(cx, baseFlameY, scale * 1.15, 'var(--flame-out)');
+    // 메인 불꽃 (중앙)
+    var cx = 160;
+    var outer = flamePath(cx, baseFlameY, scale * 1.1, 'var(--flame-out)', 0);
     outer.classList.add('flame-outer');
     flameLayer.appendChild(outer);
 
-    var mid = flamePath(cx - 4, baseFlameY, scale * 0.82, 'var(--flame-mid)');
+    var mid = flamePath(cx - 3, baseFlameY, scale * 0.78, 'var(--flame-mid)', 0.3);
     mid.classList.add('flame-mid');
     flameLayer.appendChild(mid);
 
-    var inner = flamePath(cx + 3, baseFlameY, scale * 0.5, 'var(--flame-in)');
+    var inner = flamePath(cx + 2, baseFlameY, scale * 0.48, 'var(--flame-in)', 0.6);
     inner.classList.add('flame-inner');
     flameLayer.appendChild(inner);
+
+    // ★ 장작 위 여러 위치에서 작은 불꽃들 (jitter 기반으로 분산)
+    burningSlots.forEach(function(log, idx){
+      var t = computeLogTransform(log);
+      // 불꽃 위치: 장작 위에 2~3개
+      var offsets = log.jitter.flameOffsets;
+      offsets.forEach(function(off, fi){
+        // 연소 진행도에 따라 불꽃 세기 결정
+        var flameProgress = log.progress;
+        var flameIntensity;
+        if (flameProgress < 0.2) flameIntensity = flameProgress / 0.2; // 서서히 살아남
+        else if (flameProgress > 0.75) flameIntensity = (1 - flameProgress) / 0.25; // 서서히 꺼짐
+        else flameIntensity = 0.8 + Math.sin(flameProgress * Math.PI) * 0.2;
+
+        if (flameIntensity < 0.05) return;
+
+        var flameX = t.x + off.dx;
+        var flameY = t.y + off.dy - 4;
+        var flameScale = (0.18 + off.sz * 0.22) * scale * flameIntensity;
+
+        var sf = smallFlamePath(flameX, flameY, flameScale, off.color);
+        sf.style.animationDuration = (2.0 + off.sz * 2.5) + 's';
+        sf.style.animationDelay = (off.delay) + 's';
+        flameLayer.appendChild(sf);
+      });
+    });
   }
 
-  function flamePath(cx, baseY, scale, color){
+  function flamePath(cx, baseY, scale, color, delay){
     var path = document.createElementNS('http://www.w3.org/2000/svg','path');
     var h = 95 * scale;
     var w = 38 * scale;
@@ -548,6 +681,24 @@
     path.setAttribute('d', d);
     path.setAttribute('fill', color);
     path.setAttribute('transform-origin', cx + 'px ' + baseY + 'px');
+    if (delay) path.style.animationDelay = delay + 's';
+    return path;
+  }
+
+  function smallFlamePath(cx, baseY, scale, colorIdx){
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    var h = 95 * scale;
+    var w = 30 * scale;
+    var d = 'M ' + cx + ' ' + baseY + ' ' +
+      'C ' + (cx - w*0.55) + ' ' + (baseY - h*0.35) + ', ' + (cx - w*0.25) + ' ' + (baseY - h*0.65) + ', ' + cx + ' ' + (baseY - h) + ' ' +
+      'C ' + (cx + w*0.3) + ' ' + (baseY - h*0.65) + ', ' + (cx + w*0.6) + ' ' + (baseY - h*0.3) + ', ' + cx + ' ' + baseY + ' Z';
+    path.setAttribute('d', d);
+    var colors = ['var(--flame-out)','var(--flame-mid)','var(--flame-in)'];
+    path.setAttribute('fill', colors[colorIdx % 3]);
+    path.setAttribute('transform-origin', cx + 'px ' + baseY + 'px');
+    path.setAttribute('opacity', '0.72');
+    var anims = ['flicker-a','flicker-b','flicker-c'];
+    path.classList.add(anims[colorIdx % 3]);
     return path;
   }
 
@@ -568,7 +719,7 @@
     }
   }
 
-  // ---------- particles (sparks/smoke rising) ----------
+  // ---------- particles ----------
   function spawnParticle(){
     var anyBurning = logs.some(function(l){ return l.state === 'burning'; });
     if (!anyBurning) return;
@@ -580,26 +731,60 @@
 
     var el = document.createElement('div');
     el.className = 'particle';
-    var isSpark = Math.random() < 0.6;
-    var size = isSpark ? (2 + Math.random()*2) : (3 + Math.random()*4);
+    var isSpark = Math.random() < 0.5;
+    var size = isSpark ? (1.5 + Math.random()*2) : (3 + Math.random()*4);
     el.style.width = size + 'px';
     el.style.height = size + 'px';
-    el.style.background = isSpark ? '#f5933a' : 'rgba(180,170,160,0.35)';
-    el.style.left = (44 + Math.random()*22) + '%';
+    el.style.background = isSpark ? '#f5933a' : 'rgba(180,170,160,0.30)';
+    // ★ 파티클도 가운데만 아니라 넓게 분산
+    el.style.left = (38 + Math.random()*34) + '%';
     el.style.top = approxYpct + '%';
-    var duration = 1.6 + Math.random()*1.4;
+    // ★ 더 느리게 올라감
+    var duration = 3.0 + Math.random()*3.5;
     el.style.animation = 'rise-fade ' + duration + 's ease-out forwards';
     particlesEl.appendChild(el);
     setTimeout(function(){ el.remove(); }, duration*1000 + 100);
   }
 
-  // ---------- log lifecycle ----------
+  // ★ 2. randomJitter — 자연스러운 장작 배치
   function randomJitter(){
+    // 기본 각도: 가로 놓인 장작 (±15도 내외) 혹은 사선 (30~60도)
+    var rotVariants = [
+      (Math.random()-0.5) * 22,           // 거의 수평
+      (Math.random()-0.5) * 22,           // 거의 수평
+      30 + (Math.random()-0.5) * 20,      // 오른쪽 사선
+      -30 + (Math.random()-0.5) * 20,     // 왼쪽 사선
+      15 + (Math.random()-0.5) * 12,      // 약간 사선
+      -15 + (Math.random()-0.5) * 12,
+    ];
+    var baseRot = rotVariants[Math.floor(Math.random() * rotVariants.length)];
+    var cx_offset = (Math.random()-0.5) * 70; // 가로 위치 넓게 분산
+    var logLength = 75 + Math.random() * 40;  // 75~115 사이 길이
+    var emberSeed = Math.random();
+
+    // 장작 위에 불꽃 여러 곳 분산 위치
+    var flameOffsets = [];
+    var numFlames = 2 + Math.floor(Math.random() * 3);
+    for (var f = 0; f < numFlames; f++){
+      flameOffsets.push({
+        dx: (Math.random()-0.5) * (logLength * 0.7),
+        dy: -(Math.random() * 8 + 2),
+        sz: Math.random(),
+        color: Math.floor(Math.random() * 3),
+        delay: Math.random() * 2.5
+      });
+    }
+
     return {
-      x: (Math.random()-0.5) * 6,
-      y: (Math.random()-0.5) * 4,
-      rot: (Math.random()-0.5) * 7,
-      emberOffsets: [(Math.random()-0.5)*6, (Math.random()-0.5)*6, (Math.random()-0.5)*6]
+      x: (Math.random()-0.5) * 10,
+      y: (Math.random()-0.5) * 5,
+      rot: (Math.random()-0.5) * 8,
+      baseRot: baseRot,
+      cx_offset: cx_offset,
+      logLength: logLength,
+      emberSeed: emberSeed,
+      flameOffsets: flameOffsets,
+      emberOffsets: [(Math.random()-0.5)*8, (Math.random()-0.5)*8, (Math.random()-0.5)*8]
     };
   }
 
@@ -607,7 +792,7 @@
     var activeLayers = logs.filter(function(l){ return l.state !== 'ash'; }).length;
     if (activeLayers >= maxLogsVisible) return;
 
-    var slot = logs.length; // simple incremental slot; ash logs keep their slot until cleared
+    var slot = logs.length;
     var log = {
       id: nextId++,
       slot: slot,
@@ -621,7 +806,8 @@
     logs.push(log);
     totalAdded++;
 
-    // fresh -> burning shortly after being placed (catches fire from neighbors)
+    // ★ 5. 불붙는 시간도 천천히 — 5~12초 뒤에 불 붙음
+    var igniteDelay = 5000 + Math.random() * 7000;
     setTimeout(function(){
       if (log.state === 'fresh'){
         log.state = 'burning';
@@ -629,7 +815,7 @@
         log.burnStart = Date.now();
         render();
       }
-    }, 550 + Math.random()*400);
+    }, igniteDelay);
 
     render();
     setSubtitle(subtitles[Math.floor(Math.random()*subtitles.length)]);
@@ -650,7 +836,6 @@
     });
     if (changed) render();
 
-    // retire oldest ash if capacity pressure
     var ashLogs = logs.filter(function(l){ return l.state === 'ash'; });
     if (ashLogs.length > 6){
       var oldest = ashLogs.sort(function(a,b){return a.slot-b.slot;})[0];
@@ -663,14 +848,12 @@
     var hadAsh = logs.some(function(l){ return l.state==='ash'; });
     if (!hadAsh) return;
     logs = logs.filter(function(l){ return l.state !== 'ash'; });
-    // re-pack slots so remaining logs sit at the bottom of the crib again
     logs.sort(function(a,b){ return a.slot - b.slot; });
     logs.forEach(function(l, i){ l.slot = i; });
     render();
     setSubtitle('재를 깨끗이 정리했어요');
   }
 
-  // ---------- events ----------
   addBtn.addEventListener('click', function(e){
     e.preventDefault();
     addLog();
@@ -680,13 +863,14 @@
     clearAsh();
   });
 
-  setInterval(tick, 400);
-  setInterval(spawnParticle, 420);
+  // ★ tick을 더 자주 돌려서 불씨 표면이 부드럽게 갱신됨
+  setInterval(tick, 600);
+  // ★ 파티클 더 적게, 더 천천히
+  setInterval(spawnParticle, 800);
 
-  // seed with one log already gently smoldering for visual interest on load
   setTimeout(function(){
     addLog();
-  }, 400);
+  }, 600);
 
   render();
 })();
