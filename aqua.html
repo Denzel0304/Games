@@ -32,6 +32,7 @@ html, body {
 <body>
 
 <canvas id="aqua"></canvas>
+<audio id="bgm" src="aquabubble.mp3" loop autoplay></audio>
 
 <script>
 
@@ -608,6 +609,15 @@ for(let i=0;i<3;i++){
 
 
 // ================= 먹이 =================
+
+const bgm = document.getElementById("bgm");
+function ensureBgmPlay(){
+    if(bgm && bgm.paused){
+        bgm.play().catch(()=>{});
+    }
+}
+document.addEventListener("click", ensureBgmPlay);
+document.addEventListener("touchstart", ensureBgmPlay, { passive:true });
 
 let lastClickTime = 0;
 canvas.addEventListener("click", e=>{
