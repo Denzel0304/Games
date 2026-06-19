@@ -18,6 +18,11 @@ body {
 
 canvas {
     display: block;
+    touch-action: none;
+}
+
+html, body {
+    touch-action: none;
 }
 
 
@@ -34,7 +39,10 @@ const canvas = document.getElementById("aqua");
 const ctx = canvas.getContext("2d");
 
 // 더블클릭 화면 확대/축소 완전 차단
-document.addEventListener("dblclick", function(e){ e.preventDefault(); }, { passive: false });
+document.addEventListener("dblclick", function(e){ e.preventDefault(); e.stopPropagation(); }, { passive: false });
+document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { passive: false });
+document.addEventListener("gesturechange", function(e){ e.preventDefault(); }, { passive: false });
+document.addEventListener("gestureend", function(e){ e.preventDefault(); }, { passive: false });
 document.body.style.userSelect = "none";
 document.body.style.webkitUserSelect = "none";
 
