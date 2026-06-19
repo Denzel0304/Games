@@ -394,20 +394,29 @@
     }, 250);
   }
 
+  var logsPerLayer = 3;
   function layerForIndex(idx){
-    return Math.floor(idx / 2);
+    return Math.floor(idx / logsPerLayer);
   }
 
-  // ★ 2. 자연스러운 장작 배치 — 사선, 랜덤 각도, 길이 변형
+  // ★ 2. 자연스러운 장작 배치 — 가로로 가득, 사선, 랜덤 각도, 길이 변형
   function computeLogTransform(log){
     var layer = layerForIndex(log.slot);
+    var posInLayer = log.slot % logsPerLayer;
     var y = baseY - layer * rowHeight;
-    var jx = log.jitter.x;
     var jy = log.jitter.y;
 
-    // 짝수/홀수 슬롯에 따라 기본 방향 결정하되, 완전히 자유로운 각도 추가
+    // 아궁이 입구가 위로 갈수록 좁아지므로, 층이 높을수록 가로 폭을 줄여 벽 밖으로 안 나가게 함
+    var layerNarrow = Math.min(1, layer * 0.05);
+    var maxSpread = 58 * (1 - layerNarrow * 0.6);
+
+    // 같은 층 안에서 좌/중/우로 고르게 분산시키고, 그 안에서 랜덤 지터를 더함
+    var slotCenters = [-maxSpread, 0, maxSpread];
+    var slotBase = slotCenters[posInLayer] || 0;
+    var cx_offset = slotBase + log.jitter.cx_offset * (1 - layerNarrow * 0.5);
+
     var baseRot = log.jitter.baseRot; // 미리 계산된 랜덤 기본 각도
-    var cx = 160 + log.jitter.cx_offset;
+    var cx = 160 + cx_offset;
     return { x: cx, y: y + jy, rot: baseRot, length: log.jitter.logLength };
   }
 
@@ -661,7 +670,7 @@
 
         var flameX = t.x + off.dx;
         var flameY = t.y + off.dy - 4;
-        var flameScale = (0.18 + off.sz * 0.22) * scale * flameIntensity;
+        var flameScale = (0.32 + off.sz * 0.34) * scale * flameIntensity;
 
         var sf = smallFlamePath(flameX, flameY, flameScale, off.color);
         sf.style.animationDuration = (2.0 + off.sz * 2.5) + 's';
@@ -758,17 +767,17 @@
       -15 + (Math.random()-0.5) * 12,
     ];
     var baseRot = rotVariants[Math.floor(Math.random() * rotVariants.length)];
-    var cx_offset = (Math.random()-0.5) * 70; // 가로 위치 넓게 분산
-    var logLength = 75 + Math.random() * 40;  // 75~115 사이 길이
+    var cx_offset = (Math.random()-0.5) * 22; // 슬롯 내 추가 지터(좌/중/우 배치는 별도 처리)
+    var logLength = 70 + Math.random() * 32;  // 70~102 사이 길이
     var emberSeed = Math.random();
 
-    // 장작 위에 불꽃 여러 곳 분산 위치
+    // 장작 위에 불꽃 1~2곳만 분산 위치 (너무 많지 않게, 크게)
     var flameOffsets = [];
-    var numFlames = 2 + Math.floor(Math.random() * 3);
+    var numFlames = 1 + Math.floor(Math.random() * 2); // 1~2개
     for (var f = 0; f < numFlames; f++){
       flameOffsets.push({
-        dx: (Math.random()-0.5) * (logLength * 0.7),
-        dy: -(Math.random() * 8 + 2),
+        dx: (Math.random()-0.5) * (logLength * 0.55),
+        dy: -(Math.random() * 6 + 2),
         sz: Math.random(),
         color: Math.floor(Math.random() * 3),
         delay: Math.random() * 2.5
