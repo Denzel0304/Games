@@ -357,10 +357,14 @@
         }
 
         function getCardUnderPoint(x, y) {
-            const elements = document.elementsFromPoint(x, y);
-            for (const el of elements) {
-                const card = el.closest ? el.closest('.menu-card') : null;
-                if (card && card !== dragCard && container.contains(card)) return card;
+            // elementsFromPoint는 fixed로 떠 있는 dragCard 자신이 항상 최상단에 잡혀
+            // 안정적이지 않으므로, 각 카드의 bounding rect를 직접 좌표와 비교한다.
+            for (const card of cards) {
+                if (card === dragCard) continue;
+                const r = card.getBoundingClientRect();
+                if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                    return card;
+                }
             }
             return null;
         }
@@ -427,24 +431,31 @@
             updateDragPosition(dragCard, e.clientX, e.clientY);
 
             const overCard = getCardUnderPoint(e.clientX, e.clientY);
-            if (dragOverCard && dragOverCard !== overCard) {
-                dragOverCard.classList.remove('drag-over');
-            }
-            if (overCard && overCard !== dragCard) {
-                overCard.classList.add('drag-over');
-                dragOverCard = overCard;
 
-                // 실시간으로 순서 배열 갱신 + 나머지 카드 DOM 재배치
-                // (dragCard는 fixed 포지션이라 화면상 위치에 영향 없음)
-                const overIndex = cards.indexOf(overCard);
+            if (overCard && overCard !== dragCard) {
+                if (dragOverCard !== overCard) {
+                    if (dragOverCard) dragOverCard.classList.remove('drag-over');
+                    overCard.classList.add('drag-over');
+                    dragOverCard = overCard;
+                }
+
                 const dragIndex = cards.indexOf(dragCard);
-                if (overIndex !== dragIndex) {
+                const overIndex = cards.indexOf(overCard);
+
+                if (dragIndex !== -1 && overIndex !== -1 && dragIndex !== overIndex) {
+                    // 배열 순서 갱신
                     cards.splice(dragIndex, 1);
                     cards.splice(overIndex, 0, dragCard);
-                    cards.forEach(c => {
-                        if (c !== dragCard) container.appendChild(c);
-                    });
+
+                    // 실제 DOM 순서를 cards 배열과 동일하게 재구성
+                    // (dragCard는 position:fixed라 DOM 위치가 바뀌어도 화면상 보이는 위치엔 영향 없음)
+                    const frag = document.createDocumentFragment();
+                    cards.forEach(c => frag.appendChild(c));
+                    container.appendChild(frag);
                 }
+            } else if (dragOverCard) {
+                dragOverCard.classList.remove('drag-over');
+                dragOverCard = null;
             }
         }
 
@@ -466,9 +477,11 @@
                     dragOverCard = null;
                 }
 
-                // 최종 DOM 순서대로 cards 배열 동기화 및 실제 위치에 삽입
-                container.appendChild(card);
-                cards = Array.from(container.querySelectorAll('.menu-card'));
+                // cards 배열에 이미 최종 순서가 들어있으므로, 그 순서대로 DOM을 재구성한다.
+                // (container.appendChild(card)만 호출하면 dragCard가 맨 끝으로 가버리는 버그가 있었음)
+                const frag = document.createDocumentFragment();
+                cards.forEach(c => frag.appendChild(c));
+                container.appendChild(frag);
                 saveOrder();
 
                 e.preventDefault();
