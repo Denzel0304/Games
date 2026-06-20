@@ -8,10 +8,15 @@
   :root{
     --bg-deep:#120d0a;
     --bg-room:#1c140f;
-    --stone-1:#3a2f28;
-    --stone-2:#2a221c;
-    --stone-3:#171210;
+    --stone-1:#7a7872;
+    --stone-2:#5c5a56;
+    --stone-3:#3e3d3a;
+    --stone-4:#4a4845;
+    --stone-5:#6a6864;
     --mouth-dark:#0a0706;
+    --iron-1:#2a2a2a;
+    --iron-2:#1a1a1a;
+    --iron-3:#383838;
     --wood-fresh:#7a5230;
     --wood-fresh-end:#5c3e22;
     --wood-mid:#5c3a1f;
@@ -243,6 +248,8 @@
 </head>
 <body>
 
+<audio id="bgm" src="/agungi.mp3" loop preload="auto"></audio>
+
 <div id="stage">
 
   <div id="header">
@@ -264,14 +271,15 @@
   <div id="scene">
     <div id="firelight"></div>
     <div id="hearth">
-      <svg id="hearth-svg" viewBox="0 0 320 380" preserveAspectRatio="xMidYMax meet">
+      <svg id="hearth-svg" viewBox="0 0 320 420" preserveAspectRatio="xMidYMax meet">
         <defs>
-          <radialGradient id="mouthGlow" cx="50%" cy="55%" r="60%">
+          <radialGradient id="mouthGlow" cx="50%" cy="60%" r="60%">
             <stop offset="0%" stop-color="#3a1c08" stop-opacity="0.9"/>
             <stop offset="100%" stop-color="#0a0706" stop-opacity="1"/>
           </radialGradient>
+          <!-- 아궁이 내부 클립 영역 (직사각형) -->
           <clipPath id="chamberClip">
-            <path d="M48 360 L48 175 Q48 105 160 95 Q272 105 272 175 L272 360 Z"/>
+            <rect x="62" y="170" width="196" height="190"/>
           </clipPath>
           <!-- 불씨 표면 그라디언트 -->
           <radialGradient id="emberGrad1" cx="50%" cy="40%" r="60%">
@@ -290,49 +298,124 @@
           <filter id="flameSoftBlur">
             <feGaussianBlur stdDeviation="2.5"/>
           </filter>
+          <!-- 솥 그라디언트 -->
+          <radialGradient id="potGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#484848" stop-opacity="1"/>
+            <stop offset="60%" stop-color="#222222" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#111111" stop-opacity="1"/>
+          </radialGradient>
+          <radialGradient id="potSheen" cx="30%" cy="25%" r="50%">
+            <stop offset="0%" stop-color="#666" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#111" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="stoneBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3e3d3a"/>
+            <stop offset="30%" stop-color="#5c5a56"/>
+            <stop offset="70%" stop-color="#5c5a56"/>
+            <stop offset="100%" stop-color="#3e3d3a"/>
+          </linearGradient>
+          <linearGradient id="stoneFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#6a6864"/>
+            <stop offset="100%" stop-color="#4a4845"/>
+          </linearGradient>
         </defs>
 
-        <!-- outer stone hearth body -->
-        <path d="M10 380
-                 L10 220
-                 Q10 70 160 55
-                 Q310 70 310 220
-                 L310 380 Z"
-              fill="var(--stone-2)"/>
-        <path d="M10 380 L10 220 Q10 70 160 55 Q310 70 310 220 L310 380"
-              fill="none" stroke="var(--stone-1)" stroke-width="3" opacity="0.5"/>
+        <!-- ===== 아궁이 몸체 (한국 전통 직사각형) ===== -->
 
-        <!-- inner mouth opening (dark chamber) -->
-        <path d="M48 360 L48 175 Q48 105 160 95 Q272 105 272 175 L272 360 Z"
-              fill="url(#mouthGlow)"/>
+        <!-- 뒷벽 / 몸체 전체 직사각형 (회색 돌) -->
+        <rect x="20" y="130" width="280" height="260" rx="4" fill="url(#stoneBodyGrad)"/>
 
-        <!-- chamber contents, clipped -->
+        <!-- 돌 질감 — 수평 줄눈 -->
+        <g stroke="#3a3937" stroke-width="1.5" fill="none" opacity="0.7">
+          <line x1="20" y1="175" x2="300" y2="175"/>
+          <line x1="20" y1="220" x2="300" y2="220"/>
+          <line x1="20" y1="265" x2="300" y2="265"/>
+          <line x1="20" y1="310" x2="300" y2="310"/>
+          <line x1="20" y1="355" x2="300" y2="355"/>
+        </g>
+        <!-- 수직 줄눈 (벽돌 패턴) -->
+        <g stroke="#3a3937" stroke-width="1" fill="none" opacity="0.5">
+          <line x1="80" y1="130" x2="80" y2="175"/>
+          <line x1="160" y1="130" x2="160" y2="175"/>
+          <line x1="240" y1="130" x2="240" y2="175"/>
+          <line x1="50" y1="175" x2="50" y2="220"/>
+          <line x1="120" y1="175" x2="120" y2="220"/>
+          <line x1="200" y1="175" x2="200" y2="220"/>
+          <line x1="270" y1="175" x2="270" y2="220"/>
+          <line x1="80" y1="265" x2="80" y2="310"/>
+          <line x1="200" y1="265" x2="200" y2="310"/>
+          <line x1="50" y1="310" x2="50" y2="355"/>
+          <line x1="160" y1="310" x2="160" y2="355"/>
+          <line x1="270" y1="310" x2="270" y2="355"/>
+        </g>
+
+        <!-- 아궁이 입구 — 직사각형 구멍 -->
+        <rect x="62" y="170" width="196" height="190" fill="url(#mouthGlow)"/>
+
+        <!-- 아궁이 내부 내용물 (클립) -->
         <g clip-path="url(#chamberClip)">
           <g id="ash-layer"></g>
           <g id="log-layer"></g>
           <g id="flame-layer"></g>
         </g>
 
-        <!-- mouth rim, in front of chamber contents for depth -->
-        <path d="M48 360 L48 175 Q48 105 160 95 Q272 105 272 175 L272 360"
-              fill="none" stroke="var(--mouth-dark)" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+        <!-- 입구 테두리 (두꺼운 돌 테 — 전통 아궁이 느낌) -->
+        <!-- 위 가로 테 -->
+        <rect x="55" y="158" width="210" height="18" rx="2" fill="url(#stoneFaceGrad)"/>
+        <rect x="55" y="158" width="210" height="4" fill="#7a7872" opacity="0.5"/>
+        <!-- 왼쪽 세로 테 -->
+        <rect x="48" y="158" width="18" height="202" rx="2" fill="url(#stoneFaceGrad)"/>
+        <rect x="48" y="158" width="4" height="202" fill="#7a7872" opacity="0.4"/>
+        <!-- 오른쪽 세로 테 -->
+        <rect x="254" y="158" width="18" height="202" rx="2" fill="url(#stoneFaceGrad)"/>
+        <rect x="268" y="158" width="4" height="202" fill="#3a3937" opacity="0.6"/>
 
-        <!-- stone texture lines (front face) -->
-        <g stroke="var(--stone-1)" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round">
-          <path d="M22 360 L22 240 Q24 130 95 90"/>
-          <path d="M298 360 L298 240 Q296 130 225 90"/>
-          <path d="M40 200 Q35 150 70 110"/>
-          <path d="M280 200 Q285 150 250 110"/>
-        </g>
-        <g stroke="var(--stone-3)" stroke-width="1.5" fill="none" opacity="0.5">
-          <path d="M65 70 Q160 40 255 70"/>
-          <path d="M30 250 L10 250"/>
-          <path d="M310 250 L290 250"/>
-        </g>
+        <!-- 아궁이 아랫바닥 덮개 (바닥 테 + 앞 선반) -->
+        <rect x="20" y="358" width="280" height="32" rx="3" fill="#4a4845"/>
+        <rect x="20" y="358" width="280" height="6" fill="#6a6864" opacity="0.6"/>
+        <!-- 바닥 그림자 -->
+        <ellipse cx="160" cy="388" rx="130" ry="8" fill="#000" opacity="0.4"/>
 
-        <!-- front lip / hearth floor ledge -->
-        <path d="M10 358 Q160 372 310 358 L310 380 L10 380 Z" fill="var(--stone-3)"/>
-        <ellipse cx="160" cy="360" rx="118" ry="9" fill="#000" opacity="0.35"/>
+        <!-- 전면 하이라이트 (돌 앞면 질감) -->
+        <rect x="48" y="158" width="224" height="200" fill="none" stroke="#5c5a56" stroke-width="1.5" rx="1" opacity="0.4"/>
+
+        <!-- ===== 무쇠솥 — 아궁이에 매립, 뚜껑만 노출 ===== -->
+        <!--
+          솥 구조:
+          - 아궁이 상단 y=130 라인에 솥이 얹혀 있음
+          - 솥 몸체(하단 반구)는 아궁이 안으로 들어가 보이지 않음
+          - 보이는 것: 솥 림(테두리) + 뚜껑(위로 볼록한 돔) + 꼭지
+        -->
+
+        <!-- 솥 림 그림자 (아궁이 위면에 드리우는 그림자) -->
+        <ellipse cx="160" cy="133" rx="116" ry="10" fill="#000" opacity="0.5"/>
+
+        <!-- 솥 림 (솥이 아궁이 위에 얹히는 넓적한 테두리) -->
+        <ellipse cx="160" cy="128" rx="114" ry="13" fill="#1a1a1a"/>
+        <ellipse cx="160" cy="126" rx="112" ry="11" fill="#252525"/>
+        <!-- 림 하이라이트 (앞쪽 광택) -->
+        <ellipse cx="160" cy="124" rx="108" ry="7" fill="none" stroke="#383838" stroke-width="2" opacity="0.8"/>
+
+
+
+        <!-- 뚜껑 본체 (위로 볼록한 돔형, 실제 참조사진처럼 납작한 반원) -->
+        <path d="M 52 126 Q 54 52 160 42 Q 266 52 268 126 Z" fill="url(#potGrad)"/>
+        <!-- 뚜껑 측면 광택 (왼쪽 상단) -->
+        <path d="M 70 118 Q 76 68 145 50 Q 110 58 80 95" fill="rgba(255,255,255,0.04)"/>
+        <!-- 뚜껑 테두리 선 -->
+        <path d="M 52 126 Q 54 52 160 42 Q 266 52 268 126" fill="none" stroke="#1e1e1e" stroke-width="2.5"/>
+
+        <!-- 뚜껑 꼭지 손잡이 -->
+        <ellipse cx="160" cy="44" rx="20" ry="7" fill="#1a1a1a"/>
+        <ellipse cx="160" cy="40" rx="16" ry="9" fill="#252525"/>
+        <ellipse cx="160" cy="37" rx="11" ry="6" fill="#303030"/>
+        <ellipse cx="160" cy="35" rx="7" ry="4" fill="#3c3c3c"/>
+        <!-- 꼭지 하이라이트 -->
+        <ellipse cx="157" cy="33" rx="4" ry="2" fill="#505050" opacity="0.6"/>
+
+        <!-- 뚜껑 하단 림 접합선 (뚜껑이 솥 본체에 얹히는 선) -->
+        <ellipse cx="160" cy="126" rx="108" ry="8" fill="#111111"/>
+        <ellipse cx="160" cy="124" rx="106" ry="6" fill="#1e1e1e"/>
       </svg>
 
       <div id="particles"></div>
@@ -359,9 +442,9 @@
   var logs = [];
   var totalAdded = 0;
   var nextId = 1;
-  var maxLogsVisible = 14;
-  var rowHeight = 30;
-  var baseY = 345;
+  var maxLogsVisible = 12;
+  var rowHeight = 28;
+  var baseY = 348;
 
   // ★ 1. 훨씬 긴 연소 시간 — 불멍답게 천천히
   var burnDurationRange = [90000, 150000]; // 1.5분~2.5분
@@ -406,9 +489,9 @@
     var y = baseY - layer * rowHeight;
     var jy = log.jitter.y;
 
-    // 아궁이 입구가 위로 갈수록 좁아지므로, 층이 높을수록 가로 폭을 줄여 벽 밖으로 안 나가게 함
-    var layerNarrow = Math.min(1, layer * 0.05);
-    var maxSpread = 58 * (1 - layerNarrow * 0.6);
+    // 직사각형 아궁이: 폭이 일정 (196px, 62~258), 층마다 거의 동일한 폭 허용
+    var layerNarrow = Math.min(1, layer * 0.02);
+    var maxSpread = 55 * (1 - layerNarrow * 0.3);
 
     // 같은 층 안에서 좌/중/우로 고르게 분산시키고, 그 안에서 랜덤 지터를 더함
     var slotCenters = [-maxSpread, 0, maxSpread];
@@ -638,8 +721,10 @@
     var baseFlameY = baseY - maxLayer * rowHeight - 6;
 
     var scale = Math.min(1.5, 0.5 + burningCount * 0.14);
+    // 적정 크기 임계값: scale >= 0.7 이면 3겹 불꽃 + 애니메이션
+    var isLargeFlame = scale >= 0.7;
 
-    // 메인 불꽃 (중앙)
+    // 메인 불꽃 (중앙) — 항상 3겹
     var cx = 160;
     var outer = flamePath(cx, baseFlameY, scale * 1.1, 'var(--flame-out)', 0);
     outer.classList.add('flame-outer');
@@ -656,14 +741,12 @@
     // ★ 장작 위 여러 위치에서 작은 불꽃들 (jitter 기반으로 분산)
     burningSlots.forEach(function(log, idx){
       var t = computeLogTransform(log);
-      // 불꽃 위치: 장작 위에 2~3개
       var offsets = log.jitter.flameOffsets;
       offsets.forEach(function(off, fi){
-        // 연소 진행도에 따라 불꽃 세기 결정
         var flameProgress = log.progress;
         var flameIntensity;
-        if (flameProgress < 0.2) flameIntensity = flameProgress / 0.2; // 서서히 살아남
-        else if (flameProgress > 0.75) flameIntensity = (1 - flameProgress) / 0.25; // 서서히 꺼짐
+        if (flameProgress < 0.2) flameIntensity = flameProgress / 0.2;
+        else if (flameProgress > 0.75) flameIntensity = (1 - flameProgress) / 0.25;
         else flameIntensity = 0.8 + Math.sin(flameProgress * Math.PI) * 0.2;
 
         if (flameIntensity < 0.05) return;
@@ -672,10 +755,26 @@
         var flameY = t.y + off.dy - 4;
         var flameScale = (0.32 + off.sz * 0.34) * scale * flameIntensity;
 
-        var sf = smallFlamePath(flameX, flameY, flameScale, off.color);
-        sf.style.animationDuration = (2.0 + off.sz * 2.5) + 's';
-        sf.style.animationDelay = (off.delay) + 's';
-        flameLayer.appendChild(sf);
+        if (isLargeFlame) {
+          // 적정 크기 이상: 3겹으로 겹쳐서 실제 불 같은 효과 + 모두 애니메이션
+          var animClasses = ['flame-outer', 'flame-mid', 'flame-inner'];
+          var colors = ['var(--flame-out)', 'var(--flame-mid)', 'var(--flame-in)'];
+          var scaleFactors = [1.0, 0.72, 0.44];
+          var offsets3 = [0, -1.5, 1];
+          for (var li = 0; li < 3; li++) {
+            var lf = smallFlamePathColored(flameX + offsets3[li], flameY, flameScale * scaleFactors[li], colors[li]);
+            lf.classList.add(animClasses[li]);
+            lf.style.animationDuration = (2.0 + off.sz * 2.5 + li * 0.8) + 's';
+            lf.style.animationDelay = (off.delay + li * 0.25) + 's';
+            flameLayer.appendChild(lf);
+          }
+        } else {
+          // 작은 불꽃: 단색 (기존 방식)
+          var sf = smallFlamePath(flameX, flameY, flameScale, off.color);
+          sf.style.animationDuration = (2.0 + off.sz * 2.5) + 's';
+          sf.style.animationDelay = (off.delay) + 's';
+          flameLayer.appendChild(sf);
+        }
       });
     });
   }
@@ -711,6 +810,21 @@
     return path;
   }
 
+  // 3겹 불꽃용: 특정 색상 지정 가능한 버전
+  function smallFlamePathColored(cx, baseY, scale, color){
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    var h = 95 * scale;
+    var w = 30 * scale;
+    var d = 'M ' + cx + ' ' + baseY + ' ' +
+      'C ' + (cx - w*0.55) + ' ' + (baseY - h*0.35) + ', ' + (cx - w*0.25) + ' ' + (baseY - h*0.65) + ', ' + cx + ' ' + (baseY - h) + ' ' +
+      'C ' + (cx + w*0.3) + ' ' + (baseY - h*0.65) + ', ' + (cx + w*0.6) + ' ' + (baseY - h*0.3) + ', ' + cx + ' ' + baseY + ' Z';
+    path.setAttribute('d', d);
+    path.setAttribute('fill', color);
+    path.setAttribute('transform-origin', cx + 'px ' + baseY + 'px');
+    path.setAttribute('opacity', '0.75');
+    return path;
+  }
+
   function updateButtonState(){
     var activeLayers = logs.filter(function(l){ return l.state !== 'ash'; }).length;
     if (activeLayers >= maxLogsVisible){
@@ -736,7 +850,7 @@
                              .map(function(l){return layerForIndex(l.slot);});
     if (burningLayers.length === 0) return;
     var maxLayer = Math.max.apply(null, burningLayers);
-    var approxYpct = ( (baseY - maxLayer*rowHeight) / 380 ) * 100;
+    var approxYpct = ( (baseY - maxLayer*rowHeight) / 420 ) * 100;
 
     var el = document.createElement('div');
     el.className = 'particle';
@@ -877,11 +991,22 @@
   // ★ 파티클 더 적게, 더 천천히
   setInterval(spawnParticle, 800);
 
-  setTimeout(function(){
-    addLog();
-  }, 600);
-
   render();
+
+  // BGM 자동 재생 (브라우저 정책상 첫 인터랙션 후 시작)
+  var bgm = document.getElementById('bgm');
+  bgm.volume = 0.55;
+  function startBgm(){
+    bgm.play().catch(function(){});
+    document.removeEventListener('click', startBgm);
+    document.removeEventListener('touchstart', startBgm);
+  }
+  // 바로 재생 시도 (자동재생 허용된 경우)
+  bgm.play().catch(function(){
+    // 차단된 경우 첫 터치/클릭 때 재생
+    document.addEventListener('click', startBgm);
+    document.addEventListener('touchstart', startBgm);
+  });
 })();
 </script>
 </body>
