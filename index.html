@@ -129,9 +129,80 @@
 
         .wheel-game { border-top: 3px solid var(--wheel-teal); }
         .wheel-game .icon-box { background-color: #b2dfdb; }
+
+        /* ===== 드래그 재배열 관련 스타일 ===== */
+        .menu-card {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            cursor: pointer;
+        }
+
+        .menu-card.dragging {
+            transform: scale(1.08);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+            z-index: 50;
+            opacity: 0.95;
+            transition: none !important;
+        }
+
+        .menu-card.drag-ready {
+            animation: dragReadyPulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes dragReadyPulse {
+            0%, 100% { transform: scale(1.0); }
+            50% { transform: scale(1.04); }
+        }
+
+        .menu-card.drag-over {
+            box-shadow: 0 0 0 3px var(--zero-blue) inset, 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .container.reorder-mode .menu-card:not(.dragging) {
+            transition: transform 0.15s ease;
+        }
+
+        .edit-mode-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1a3a5a;
+            color: white;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 0;
+            z-index: 100;
+            transform: translateY(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .edit-mode-banner.show {
+            transform: translateY(0);
+        }
+
+        .edit-mode-banner button {
+            margin-left: 12px;
+            background: white;
+            color: #1a3a5a;
+            border: none;
+            border-radius: 14px;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+    <div class="edit-mode-banner" id="edit-banner">
+        ✋ 배치 편집 모드 — 드래그해서 순서를 바꿔보세요
+        <button id="edit-done-btn">완료</button>
+    </div>
 
     <header>
         <h1>Healing Games</h1>
@@ -139,7 +210,7 @@
         <div class="date-badge" id="current-date"></div>
     </header>
 
-    <div class="container">
+    <div class="container" id="menu-container">
         <a href="Tetris2.html" class="menu-card block-game">
             <div class="icon-box">🧩</div>
             <div class="card-title">블록 퍼즐</div>
@@ -195,6 +266,248 @@
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const dateStr = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${week[d.getDay()]})`;
         document.getElementById('current-date').innerText = dateStr;
+    </script>
+
+    <script>
+    /* =========================================================
+       길게 누르기(Long Press) → 드래그로 메뉴 순서 재배열
+       - 링크(href)는 절대 변경하지 않음. 오직 DOM 순서만 바꿈.
+       - 순서는 localStorage('healingGamesOrder')에 저장되어 유지됨.
+       ========================================================= */
+    (function () {
+        const STORAGE_KEY = 'healingGamesOrder';
+        const container = document.getElementById('menu-container');
+        const banner = document.getElementById('edit-banner');
+        const doneBtn = document.getElementById('edit-done-btn');
+
+        const LONG_PRESS_MS = 400;   // 길게 누르는 기준 시간
+        const MOVE_CANCEL_PX = 10;   // 누른 채로 이 거리 이상 움직이면 길게누르기 취소(짧은 스크롤/탭 보호)
+
+        let cards = Array.from(container.querySelectorAll('.menu-card'));
+
+        // 카드 식별용 key = href (경로는 절대 바꾸지 않고, 식별에만 사용)
+        function keyOf(card) { return card.getAttribute('href'); }
+
+        // ---- 저장된 순서 복원 ----
+        function restoreOrder() {
+            let saved;
+            try {
+                saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            } catch (e) { saved = null; }
+            if (!saved || !Array.isArray(saved)) return;
+
+            const map = new Map(cards.map(c => [keyOf(c), c]));
+            const reordered = [];
+            saved.forEach(k => {
+                if (map.has(k)) {
+                    reordered.push(map.get(k));
+                    map.delete(k);
+                }
+            });
+            // 저장된 순서에 없는(새로 추가된) 카드는 뒤에 그대로 붙임
+            map.forEach(c => reordered.push(c));
+
+            if (reordered.length === cards.length) {
+                reordered.forEach(c => container.appendChild(c));
+                cards = reordered;
+            }
+        }
+
+        function saveOrder() {
+            const order = cards.map(keyOf);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+        }
+
+        restoreOrder();
+
+        // ---- 드래그 상태 ----
+        let longPressTimer = null;
+        let dragCard = null;
+        let startX = 0, startY = 0;
+        let pointerId = null;
+        let isDragging = false;
+        let isEditMode = false;
+        let dragOverCard = null;
+
+        function vibrate() {
+            if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+        }
+
+        function enterEditMode() {
+            isEditMode = true;
+            banner.classList.add('show');
+            container.classList.add('reorder-mode');
+        }
+
+        function exitEditMode() {
+            isEditMode = false;
+            banner.classList.remove('show');
+            container.classList.remove('reorder-mode');
+            cards.forEach(c => c.classList.remove('drag-ready', 'drag-over'));
+            saveOrder();
+        }
+
+        doneBtn.addEventListener('click', exitEditMode);
+
+        function clearLongPressTimer() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+
+        function getCardUnderPoint(x, y) {
+            const elements = document.elementsFromPoint(x, y);
+            for (const el of elements) {
+                const card = el.closest ? el.closest('.menu-card') : null;
+                if (card && card !== dragCard && container.contains(card)) return card;
+            }
+            return null;
+        }
+
+        function onPointerDown(e) {
+            // 이미 편집모드거나 새 드래그 시작 준비
+            const card = e.target.closest('.menu-card');
+            if (!card) return;
+
+            pointerId = e.pointerId;
+            startX = e.clientX;
+            startY = e.clientY;
+            dragCard = card;
+            isDragging = false;
+
+            clearLongPressTimer();
+            longPressTimer = setTimeout(() => {
+                // 길게 누름 인식 -> 드래그 시작 가능 상태
+                startDrag(card, e.clientX, e.clientY);
+            }, LONG_PRESS_MS);
+        }
+
+        function startDrag(card, x, y) {
+            isDragging = true;
+            if (!isEditMode) enterEditMode();
+            vibrate();
+            card.classList.add('dragging');
+            tryCapture(card);
+            updateDragPosition(card, x, y);
+        }
+
+        function tryCapture(card) {
+            try { card.setPointerCapture(pointerId); } catch (e) {}
+        }
+
+        function updateDragPosition(card, x, y) {
+            const rect = container.getBoundingClientRect();
+            card.style.position = 'fixed';
+            card.style.left = (x - card.offsetWidth / 2) + 'px';
+            card.style.top = (y - card.offsetHeight / 2) + 'px';
+            card.style.width = card._origWidth + 'px';
+            card.style.height = card._origHeight + 'px';
+            card.style.pointerEvents = 'none';
+        }
+
+        function onPointerMove(e) {
+            if (!dragCard) return;
+
+            if (!isDragging) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL_PX) {
+                    // 너무 빨리 움직이면 길게누르기 취소 (스크롤/탭 의도로 간주)
+                    clearLongPressTimer();
+                    if (!isEditMode) {
+                        dragCard = null;
+                        return;
+                    }
+                }
+                return;
+            }
+
+            e.preventDefault();
+            updateDragPosition(dragCard, e.clientX, e.clientY);
+
+            const overCard = getCardUnderPoint(e.clientX, e.clientY);
+            if (dragOverCard && dragOverCard !== overCard) {
+                dragOverCard.classList.remove('drag-over');
+            }
+            if (overCard && overCard !== dragCard) {
+                overCard.classList.add('drag-over');
+                dragOverCard = overCard;
+
+                // 실시간으로 순서 배열 갱신 + 나머지 카드 DOM 재배치
+                // (dragCard는 fixed 포지션이라 화면상 위치에 영향 없음)
+                const overIndex = cards.indexOf(overCard);
+                const dragIndex = cards.indexOf(dragCard);
+                if (overIndex !== dragIndex) {
+                    cards.splice(dragIndex, 1);
+                    cards.splice(overIndex, 0, dragCard);
+                    cards.forEach(c => {
+                        if (c !== dragCard) container.appendChild(c);
+                    });
+                }
+            }
+        }
+
+        function onPointerUp(e) {
+            clearLongPressTimer();
+
+            if (isDragging && dragCard) {
+                const card = dragCard;
+                card.classList.remove('dragging');
+                card.style.position = '';
+                card.style.left = '';
+                card.style.top = '';
+                card.style.width = '';
+                card.style.height = '';
+                card.style.pointerEvents = '';
+
+                if (dragOverCard) {
+                    dragOverCard.classList.remove('drag-over');
+                    dragOverCard = null;
+                }
+
+                // 최종 DOM 순서대로 cards 배열 동기화 및 실제 위치에 삽입
+                container.appendChild(card);
+                cards = Array.from(container.querySelectorAll('.menu-card'));
+                saveOrder();
+
+                e.preventDefault();
+            }
+
+            dragCard = null;
+            isDragging = false;
+            pointerId = null;
+        }
+
+        function onClickCapture(e) {
+            // 드래그(길게 누르기) 직후 발생하는 클릭으로 인해 의도치 않게 페이지 이동되는 것을 방지
+            if (isEditMode) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+
+        cards.forEach(card => {
+            card._origWidth = card.offsetWidth;
+            card._origHeight = card.offsetHeight;
+            card.addEventListener('pointerdown', onPointerDown);
+            card.addEventListener('click', onClickCapture, true);
+        });
+
+        // 카드 크기 캐시 갱신 (리사이즈 대비)
+        window.addEventListener('resize', () => {
+            cards.forEach(card => {
+                card._origWidth = card.offsetWidth;
+                card._origHeight = card.offsetHeight;
+            });
+        });
+
+        document.addEventListener('pointermove', onPointerMove, { passive: false });
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
+
+        // 편집 모드 중 컨테이너 바깥(헤더 등) 클릭 시 자동 종료는 하지 않음 (완료 버튼으로만 종료)
+    })();
     </script>
 </body>
 </html>
