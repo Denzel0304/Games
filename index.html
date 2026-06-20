@@ -22,12 +22,12 @@
             --slot-red: #e53935;
             --pick-violet: #7e57c2;
             --wheel-teal: #009688;
+            --fire-orange: #ff5722;
         }
 
         html, body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
             height: 100%;
             width: 100%;
         }
@@ -39,10 +39,21 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            touch-action: none;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
-        header { margin-top: 40px; text-align: center; }
+        header {
+            width: 100%;
+            box-sizing: border-box;
+            padding-top: 40px;
+            padding-bottom: 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--bg-color);
+        }
 
         h1 { font-size: 28px; color: #1a3a5a; margin: 0; letter-spacing: -1px; }
 
@@ -63,7 +74,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            padding: 25px 14px;
+            padding: 10px 14px 40px;
             width: 100%;
             max-width: 380px;
             box-sizing: border-box;
@@ -129,6 +140,9 @@
 
         .wheel-game { border-top: 3px solid var(--wheel-teal); }
         .wheel-game .icon-box { background-color: #b2dfdb; }
+
+        .fire-game { border-top: 3px solid var(--fire-orange); }
+        .fire-game .icon-box { background-color: #ffe0d6; }
     </style>
 </head>
 <body>
@@ -187,6 +201,10 @@
         <a href="aqua.html" class="menu-card wheel-game">
             <div class="icon-box">🐠</div>
             <div class="card-title">아쿠아리움</div>
+        </a>
+        <a href="agungi.html" class="menu-card fire-game">
+            <div class="icon-box">🔥</div>
+            <div class="card-title">아궁이</div>
         </a>
     </div>
 
