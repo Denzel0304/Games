@@ -50,23 +50,25 @@
   /* ---------- header ---------- */
   #header{
     flex:0 0 auto;
-    padding:max(18px, env(safe-area-inset-top)) 20px 10px;
-    text-align:center;
+    padding:max(6px, env(safe-area-inset-top)) 16px 0px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
   }
   #title{
-    font-size:15px;
+    font-size:11px;
     color:var(--text-warm);
-    letter-spacing:0.08em;
-    font-weight:500;
-    opacity:0.85;
+    letter-spacing:0.06em;
+    font-weight:400;
+    opacity:0.65;
   }
   #subtitle{
-    font-size:12px;
+    font-size:10px;
     color:var(--text-dim);
-    margin-top:4px;
     letter-spacing:0.02em;
-    height:16px;
     transition:opacity 0.4s;
+    opacity:0.55;
   }
 
   /* ---------- ember glow counter ---------- */
@@ -74,23 +76,26 @@
     flex:0 0 auto;
     display:flex;
     justify-content:center;
-    gap:28px;
-    padding:4px 20px 8px;
+    gap:18px;
+    padding:1px 16px 1px;
   }
   .stat{
-    text-align:center;
+    display:flex;
+    align-items:baseline;
+    gap:3px;
   }
   .stat-num{
-    font-size:20px;
-    font-weight:500;
+    font-size:11px;
+    font-weight:400;
     color:var(--text-warm);
     font-variant-numeric:tabular-nums;
+    opacity:0.75;
   }
   .stat-label{
     font-size:10px;
     color:var(--text-dim);
-    letter-spacing:0.05em;
-    margin-top:1px;
+    letter-spacing:0.02em;
+    opacity:0.6;
   }
 
   /* ---------- scene ---------- */
