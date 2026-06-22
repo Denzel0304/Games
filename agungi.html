@@ -934,8 +934,8 @@
     logs.push(log);
     totalAdded++;
 
-    // ★ 5. 불붙는 시간도 천천히 — 5~12초 뒤에 불 붙음
-    var igniteDelay = 5000 + Math.random() * 7000;
+    // 첫 장작은 즉시 점화, 이후 장작은 5~12초 뒤에 불 붙음
+    var igniteDelay = (logs.length === 1) ? 0 : 5000 + Math.random() * 7000;
     setTimeout(function(){
       if (log.state === 'fresh'){
         log.state = 'burning';
