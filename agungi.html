@@ -601,7 +601,7 @@
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('data-id', log.id);
     g.setAttribute('transform', 'translate(' + t.x + ',' + t.y + ') rotate(' + t.rot + ')');
-    if (log.isNew){ g.classList.add('log-enter'); }
+    // log-enter 애니메이션 제거 — fill:both의 backwards fill이 첫 장작을 opacity:0으로 고정시키는 버그 방지
 
     // 장작 몸체
     var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
@@ -701,10 +701,7 @@
         anyBurning = true;
         maxProgressBurning = Math.max(maxProgressBurning, log.progress);
       }
-      if (log.isNew){
-        // 한 프레임 뒤에 isNew를 끄면 log-enter 애니메이션이 첫 장작도 즉시 재생됨
-        (function(l){ requestAnimationFrame(function(){ l.isNew = false; }); })(log);
-      }
+      log.isNew = false;
     });
 
     renderFlames(burningCount, sorted);
