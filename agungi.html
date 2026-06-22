@@ -253,7 +253,7 @@
 </head>
 <body>
 
-<audio id="bgm" src="/agungi.mp3" loop preload="auto"></audio>
+<audio id="bgm" src="agungi.mp3" loop preload="auto"></audio>
 
 <div id="stage">
 
@@ -701,7 +701,10 @@
         anyBurning = true;
         maxProgressBurning = Math.max(maxProgressBurning, log.progress);
       }
-      log.isNew = false;
+      if (log.isNew){
+        // 한 프레임 뒤에 isNew를 끄면 log-enter 애니메이션이 첫 장작도 즉시 재생됨
+        (function(l){ requestAnimationFrame(function(){ l.isNew = false; }); })(log);
+      }
     });
 
     renderFlames(burningCount, sorted);
