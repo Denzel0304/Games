@@ -250,10 +250,10 @@
     var wob = h.wob>0 ? Math.sin(h.wob*1.2)*h.wob*0.6 : 0;
     h.wob = h.wob>0 ? h.wob-0.6 : 0;
     ctx.save(); ctx.translate(h.x,h.y); ctx.rotate((wob + (h.ang||0))*Math.PI/180); ctx.scale(R10/44, R10/44);
-    ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(60,-80); ctx.stroke();
+    ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-100); ctx.stroke();
     // fletching
-    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(34,-44); ctx.lineTo(40,-34); ctx.lineTo(28,-38); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(31,-49); ctx.lineTo(41,-46); ctx.lineTo(32,-40); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(0,-88); ctx.lineTo(12,-100); ctx.lineTo(6,-100); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(0,-88); ctx.lineTo(-12,-100); ctx.lineTo(-6,-100); ctx.closePath(); ctx.fill();
     // tip dot
     ctx.fillStyle='#3a2a1a'; ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
     ctx.restore();
@@ -274,8 +274,8 @@
     ctx.rotate(ang); ctx.scale(R10/44, R10/44);
     ctx.strokeStyle='#caa15a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(-52,0); ctx.lineTo(10,0); ctx.stroke();
     ctx.fillStyle='#3a2a1a'; ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(2,-4); ctx.lineTo(2,4); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(-26,0); ctx.lineTo(-20,-6); ctx.lineTo(-16,0); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(-26,0); ctx.lineTo(-20,6); ctx.lineTo(-16,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#ff5470'; ctx.beginPath(); ctx.moveTo(-52,0); ctx.lineTo(-46,-6); ctx.lineTo(-42,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.moveTo(-52,0); ctx.lineTo(-46,6); ctx.lineTo(-42,0); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
@@ -419,7 +419,7 @@
   function land(x,y){
     var pts = scoreAt(x,y);
     var hit = findSplit(x,y);                    // landed on a previous arrow's spot?
-    holes.push({ x:x, y:y, wob:12, ang:(Math.random()*70-35) });   // random stick angle
+    holes.push({ x:x, y:y, wob:12, ang:(Math.random()*40-20) });   // random stick angle
     thunkS();
 
     var bonus = 0;
