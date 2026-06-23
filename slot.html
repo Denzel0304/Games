@@ -113,6 +113,11 @@
   .spin:disabled{ filter:saturate(.5) brightness(.92); cursor:default; }
   .spin .cost{ display:block; font-size:12px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
 
+  .betRow{ flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .betBtn{ width:100%; padding:14px 4px; font-size:18px; letter-spacing:1px; }
+  .betBtn .cost{ font-size:11px; }
+  .betBtn.active{ box-shadow: inset 0 0 0 3px var(--mint), 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35); }
+
   #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
 
   @media (prefers-reduced-motion: reduce){
@@ -145,10 +150,24 @@
 
     <div class="message" id="message">버튼을 눌러 행운을 돌려보세요</div>
 
-    <button class="spin" id="spinBtn">
-      SPIN
-      <span class="cost">한 번 돌리기 · 20코인</span>
-    </button>
+    <div class="betRow" id="betRow">
+      <button class="spin betBtn" id="betBtn1" data-mult="1">
+        X1
+        <span class="cost">20코인</span>
+      </button>
+      <button class="spin betBtn" id="betBtn2" data-mult="2">
+        X2
+        <span class="cost">40코인</span>
+      </button>
+      <button class="spin betBtn" id="betBtn4" data-mult="4">
+        X4
+        <span class="cost">80코인</span>
+      </button>
+      <button class="spin betBtn" id="betBtn7" data-mult="7">
+        X7
+        <span class="cost">140코인</span>
+      </button>
+    </div>
   </main>
 
 <script>
@@ -180,7 +199,12 @@
   var linesSvg = document.getElementById('lines');
   var coinsEl = document.getElementById('coins');
   var msgEl   = document.getElementById('message');
-  var spinBtn = document.getElementById('spinBtn');
+  var betBtns = [
+    document.getElementById('betBtn1'),
+    document.getElementById('betBtn2'),
+    document.getElementById('betBtn4'),
+    document.getElementById('betBtn7')
+  ];
   var display = document.getElementById('display');
   var muteBtn = document.getElementById('muteBtn');
 
@@ -192,7 +216,10 @@
     reels.push(r); strips.push(s);
   }
 
-  var coins=300, spinning=false, muted=false;
+  var COINS_KEY = 'luckyslot_coins';
+  var savedCoins = parseInt(localStorage.getItem(COINS_KEY), 10);
+  var coins = (!isNaN(savedCoins) && savedCoins > 0) ? savedCoins : 300;
+  var spinning=false, muted=false;
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
@@ -421,14 +448,16 @@
     });
   }
 
+  function fmtCoins(n){ return Math.round(n).toLocaleString('en-US'); }
+
   function setCoins(target){
     var start=coins, diff=target-start;
-    if(diff===0){ coinsEl.textContent=target; coins=target; return; }
+    if(diff===0){ coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); return; }
     var dur=550, t0=performance.now();
     (function frame(now){
       var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
-      coinsEl.textContent=Math.round(start+diff*e);
-      if(p<1) requestAnimationFrame(frame); else { coinsEl.textContent=target; coins=target; }
+      coinsEl.textContent=fmtCoins(start+diff*e);
+      if(p<1) requestAnimationFrame(frame); else { coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); }
     })(performance.now());
   }
 
@@ -475,14 +504,16 @@
   }
 
   function doSpin(){
-    if(spinning) return;
-    if(coins<COST){ setCoins(80); flash('행운 충전! 코인을 채웠어요',false); return; }
-    spinning=true; spinBtn.disabled=true;
+    if(spinning) return false;
+    if(coins<=0){ setCoins(300); flash('코인이 모두 소진되어 300코인으로 다시 시작합니다',false); return false; }
+    var cost = COST * currentMult;
+    if(coins<cost){ flash('코인이 부족해요! 더 적은 배수를 선택해보세요',false); return false; }
+    spinning=true; setBetBtnsDisabled(true);
     display.classList.remove('win','shake');
     reels.forEach(function(r){ r.classList.remove('hit'); });
     linesSvg.innerHTML='';
     try{ if(audio().resume) audio().resume(); }catch(e){}
-    setCoins(coins-COST);
+    setCoins(coins-cost);
     msgEl.classList.remove('big'); msgEl.textContent='돌리는 중...';
     beep(660,0.06,'square',0.18); startWhir();
 
@@ -498,7 +529,7 @@
       stopWhir();
       var res=score(grid);
       if(res.total>0){
-        setCoins(coins+res.total);
+        setCoins(coins+res.total*currentMult);
         res.hitCells.forEach(function(i){ reels[i].classList.add('hit'); });
         drawLines(res.wins);
         flash(winMessage(res), res.jackpot||res.wins.length>=2);
@@ -507,15 +538,33 @@
       } else {
         flash(pick(NOWIN),false);
       }
-      spinning=false; spinBtn.disabled=false;
-      if(coins<COST) setTimeout(function(){ setCoins(80); flash('행운 충전! 코인을 채웠어요',false); },900);
+      spinning=false; setBetBtnsDisabled(false);
     });
+  }
+
+  // ---------- 베팅 배수 ----------
+  var currentMult = 1;
+  function setBetBtnsDisabled(disabled){
+    betBtns.forEach(function(b){ b.disabled = disabled; });
+  }
+  function selectMult(mult){
+    currentMult = mult;
+    betBtns.forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.mult,10)===mult); });
   }
 
   // ---------- init ----------
   strips.forEach(function(s){ fillCells(s,[pick(COMMON)]); });
   muteBtn.innerHTML=SPK_ON;
-  spinBtn.addEventListener('click',doSpin);
+  betBtns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var prevMult = currentMult;
+      selectMult(parseInt(b.dataset.mult,10));
+      var started = doSpin();
+      if(started===false) selectMult(prevMult);
+    });
+  });
+  selectMult(1);
+  coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
     if(!muted) beep(523,0.08,'triangle',0.15);
