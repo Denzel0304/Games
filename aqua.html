@@ -212,7 +212,9 @@ class Fish {
         let diff = targetAngle - this.angle;
         while(diff >  Math.PI) diff -= Math.PI*2;
         while(diff < -Math.PI) diff += Math.PI*2;
-        this.angle += diff * this.turnSpeed;
+        // 방랑 모드: 회전 속도를 절반 이하로 제한해 자연스럽게 선회
+        const activeTurnSpeed = target ? this.turnSpeed : this.turnSpeed * 0.4;
+        this.angle += diff * activeTurnSpeed;
 
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
