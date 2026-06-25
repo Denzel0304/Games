@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aqua Breeding</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:#001020; touch-action:none; user-select:none; -webkit-user-select:none; }
+
+/* ── 메인화면 ── */
+#main-screen {
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background: linear-gradient(180deg,#041a3a 0%,#001018 100%);
+    z-index:200;
+}
+#main-screen h1 {
+    color:#7dd9ff; font-size:clamp(22px,5vw,42px); font-family:'Segoe UI',sans-serif;
+    font-weight:700; letter-spacing:2px; text-shadow:0 0 18px rgba(0,180,255,0.7);
+    margin-bottom:10px;
+}
+#main-screen p {
+    color:rgba(150,220,255,0.7); font-size:14px; font-family:sans-serif;
+    margin-bottom:36px; letter-spacing:1px;
+}
+#fish-buttons {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    padding:0 20px; max-width:420px; width:100%;
+}
+.fish-btn {
+    background:rgba(0,80,160,0.45); border:1.5px solid rgba(80,180,255,0.5);
+    border-radius:14px; padding:18px 10px; cursor:pointer; text-align:center;
+    transition:all 0.18s; position:relative; overflow:hidden;
+}
+.fish-btn:hover { background:rgba(0,120,220,0.6); border-color:rgba(120,210,255,0.8); transform:scale(1.04); }
+.fish-btn:active { transform:scale(0.97); }
+.fish-btn canvas { display:block; margin:0 auto 6px; }
+.fish-btn .fish-name { color:#c0e8ff; font-size:13px; font-family:sans-serif; font-weight:600; }
+.fish-btn .fish-count {
+    position:absolute; top:6px; right:8px; color:rgba(100,200,255,0.7);
+    font-size:11px; font-family:sans-serif;
+}
+
+/* ── 게임화면 ── */
+#game-screen { position:fixed; inset:0; display:none; }
+#back-btn {
+    position:fixed; top:12px; left:12px; z-index:300;
+    background:rgba(0,60,120,0.7); border:1px solid rgba(80,180,255,0.5);
+    color:#7dd9ff; font-size:13px; font-family:sans-serif;
+    padding:7px 14px; border-radius:20px; cursor:pointer;
+    transition:all 0.15s;
+}
+#back-btn:hover { background:rgba(0,100,180,0.8); }
+
+/* 어항 divider */
+#tank-divider {
+    position:fixed; left:0; right:0; height:4px;
+    background:linear-gradient(90deg,transparent,rgba(80,180,255,0.6),transparent);
+    z-index:150; pointer-events:none;
+}
+
+/* ── 성어 어항 UI ── */
+#adult-ui {
+    position:fixed; top:12px; right:12px; z-index:200;
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+}
+
+/* 산란 progress 버튼 */
+#spawn-btn-wrap {
+    position:relative; width:130px; height:46px; border-radius:12px;
+    overflow:hidden; cursor:pointer;
+    border:1.5px solid rgba(120,210,255,0.6);
+    box-shadow:0 0 10px rgba(0,160,255,0.3);
+}
+#spawn-progress-f {
+    position:absolute; left:0; top:0; width:50%; height:100%;
+    background:rgba(255,80,120,0.0); transition:background 0.3s;
+}
+#spawn-progress-m {
+    position:absolute; right:0; top:0; width:50%; height:100%;
+    background:rgba(60,140,255,0.0); transition:background 0.3s;
+}
+#spawn-fill-f {
+    position:absolute; left:0; bottom:0; width:50%; height:0%;
+    background:linear-gradient(0deg,rgba(255,60,100,0.85),rgba(255,120,160,0.5));
+    transition:height 0.4s ease;
+}
+#spawn-fill-m {
+    position:absolute; right:0; bottom:0; width:50%; height:0%;
+    background:linear-gradient(0deg,rgba(40,120,255,0.85),rgba(80,180,255,0.5));
+    transition:height 0.4s ease;
+}
+#spawn-btn-label {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,0.95); font-size:13px; font-weight:700;
+    font-family:sans-serif; letter-spacing:1px; z-index:2;
+    text-shadow:0 1px 4px rgba(0,0,0,0.8);
+    pointer-events:none;
+}
+#spawn-btn-divider {
+    position:absolute; left:50%; top:8%; bottom:8%; width:1.5px;
+    background:rgba(255,255,255,0.3); z-index:3; pointer-events:none;
+}
+#spawn-btn-wrap.ready { cursor:pointer; animation:pulse-spawn 1.2s infinite; }
+#spawn-btn-wrap.not-ready { cursor:default; }
+@keyframes pulse-spawn {
+    0%,100%{ box-shadow:0 0 10px rgba(100,200,255,0.4); }
+    50%{ box-shadow:0 0 22px rgba(100,220,255,0.9); }
+}
+
+/* 먹이 UI - 성어 */
+#adult-feed-ui {
+    display:flex; align-items:center; gap:10px;
+}
+#adult-feed-count {
+    color:rgba(255,255,255,0.9); font-size:32px; font-weight:bold;
+    font-family:sans-serif; text-shadow:0 0 8px rgba(0,180,255,0.7);
+    min-width:28px; text-align:right;
+}
+#adult-feed-btn {
+    width:56px; height:56px; border-radius:50%;
+    background:rgba(0,140,220,0.55); border:2px solid rgba(120,210,255,0.7);
+    color:rgba(255,255,255,0.95); font-size:36px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 0 10px rgba(0,160,255,0.4);
+    transition:all 0.15s;
+}
+#adult-feed-btn:active { background:rgba(0,180,255,0.75); transform:scale(0.92); }
+
+/* 치어 분리 버튼 */
+#separate-btn {
+    background:rgba(0,160,80,0.55); border:1.5px solid rgba(80,255,160,0.6);
+    color:#a0ffcc; font-size:12px; font-weight:700;
+    font-family:sans-serif; padding:7px 14px; border-radius:20px;
+    cursor:pointer; letter-spacing:0.5px; display:none;
+    transition:all 0.15s; box-shadow:0 0 8px rgba(0,200,100,0.3);
+}
+#separate-btn:hover { background:rgba(0,200,100,0.7); }
+#separate-btn.visible { display:block; }
+
+/* ── 치어 어항 UI ── */
+#fry-ui {
+    position:fixed; bottom:12px; right:12px; z-index:200;
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+}
+#fry-feed-ui { display:flex; align-items:center; gap:10px; }
+#fry-feed-count {
+    color:rgba(255,220,100,0.9); font-size:28px; font-weight:bold;
+    font-family:sans-serif; text-shadow:0 0 8px rgba(255,200,0,0.6);
+    min-width:24px; text-align:right;
+}
+#fry-feed-btn {
+    width:48px; height:48px; border-radius:50%;
+    background:rgba(180,140,0,0.55); border:2px solid rgba(255,210,80,0.7);
+    color:rgba(255,255,255,0.95); font-size:30px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 0 8px rgba(200,160,0,0.4);
+    transition:all 0.15s;
+}
+#fry-feed-btn:active { background:rgba(220,180,0,0.75); transform:scale(0.92); }
+
+/* 분양 버튼 */
+#adopt-btn {
+    background:rgba(160,80,200,0.55); border:1.5px solid rgba(200,130,255,0.6);
+    color:#e0b0ff; font-size:12px; font-weight:700;
+    font-family:sans-serif; padding:7px 14px; border-radius:20px;
+    cursor:pointer; letter-spacing:0.5px;
+    transition:all 0.15s; box-shadow:0 0 8px rgba(160,80,200,0.3);
+}
+#adopt-btn:hover { background:rgba(180,100,220,0.7); }
+
+/* 치어 카운터 */
+#fry-counter {
+    color:rgba(255,220,100,0.8); font-size:12px; font-family:sans-serif;
+    text-align:right; letter-spacing:0.5px;
+}
+
+/* 어항 레이블 */
+.tank-label {
+    position:fixed; left:14px; z-index:200; color:rgba(120,200,255,0.55);
+    font-size:11px; font-family:sans-serif; letter-spacing:1px; font-weight:600;
+    pointer-events:none;
+}
+
+/* ── 모달 ── */
+#modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.75);
+    z-index:500; display:none; align-items:center; justify-content:center;
+}
+#modal-overlay.open { display:flex; }
+#modal-box {
+    background:linear-gradient(160deg,#061830,#02080f);
+    border:1.5px solid rgba(80,180,255,0.45);
+    border-radius:18px; padding:28px 24px; min-width:300px; max-width:90vw;
+    box-shadow:0 8px 40px rgba(0,0,0,0.7);
+}
+#modal-box h2 {
+    color:#7dd9ff; font-size:17px; font-family:sans-serif;
+    font-weight:700; margin-bottom:18px; letter-spacing:1px;
+}
+.modal-row {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px; color:#b0d8f5; font-size:13px; font-family:sans-serif;
+}
+.modal-row input {
+    width:70px; background:rgba(0,60,120,0.6); border:1px solid rgba(80,180,255,0.4);
+    color:#c8e8ff; font-size:14px; text-align:center;
+    padding:5px 8px; border-radius:8px; outline:none;
+}
+.modal-row input:focus { border-color:rgba(120,210,255,0.8); }
+.modal-total {
+    color:rgba(150,200,255,0.6); font-size:12px; font-family:sans-serif;
+    margin-bottom:18px; text-align:right;
+}
+.modal-btns { display:flex; gap:10px; justify-content:flex-end; }
+.modal-btn {
+    padding:9px 20px; border-radius:10px; font-size:13px;
+    font-family:sans-serif; font-weight:700; cursor:pointer; border:none;
+    transition:all 0.15s;
+}
+.modal-btn.confirm {
+    background:rgba(160,80,200,0.7); color:#fff;
+    box-shadow:0 2px 12px rgba(160,80,200,0.4);
+}
+.modal-btn.confirm:hover { background:rgba(180,100,220,0.85); }
+.modal-btn.cancel { background:rgba(60,80,100,0.7); color:#aaa; }
+.modal-btn.cancel:hover { background:rgba(80,100,130,0.8); }
+
+/* 산란 이펙트 토스트 */
+#spawn-toast {
+    position:fixed; left:50%; top:30%; transform:translate(-50%,-50%);
+    background:rgba(0,0,0,0.8); border:1.5px solid rgba(120,255,180,0.6);
+    color:#a0ffcc; font-size:16px; font-weight:700; font-family:sans-serif;
+    padding:14px 28px; border-radius:16px; z-index:400;
+    pointer-events:none; opacity:0; transition:opacity 0.4s;
+    text-align:center; letter-spacing:1px;
+}
+#spawn-toast.show { opacity:1; }
+
+canvas { display:block; touch-action:none; }
+
+/* 리셋 버튼 */
+#reset-btn {
+    background:rgba(160,30,30,0.55); border:1.5px solid rgba(255,100,100,0.5);
+    color:rgba(255,180,180,0.9); font-size:11px; font-weight:700;
+    font-family:sans-serif; padding:5px 11px; border-radius:16px;
+    cursor:pointer; letter-spacing:0.5px;
+    transition:all 0.15s; box-shadow:0 0 6px rgba(200,0,0,0.2);
+}
+#reset-btn:hover { background:rgba(200,40,40,0.75); }
+</style>
+</head>
+<body>
+
+<audio id="bgm" src="aqua.mp3" loop></audio>
+
+<!-- ── 메인화면 ── -->
+<div id="main-screen">
+    <h1>🐠 Aqua Breeding</h1>
+    <p>기르고 싶은 물고기를 선택하세요</p>
+    <div id="fish-buttons"></div>
+</div>
+
+<!-- ── 게임화면 ── -->
+<div id="game-screen">
+    <canvas id="aqua"></canvas>
+    <div id="tank-divider"></div>
+
+    <div class="tank-label" id="label-adult">🐟 성어 어항</div>
+    <div class="tank-label" id="label-fry">🐣 치어 어항</div>
+
+    <button id="back-btn">← 목록</button>
+
+    <!-- 성어 어항 UI (우상단) -->
+    <div id="adult-ui">
+        <div id="reset-btn">↺ 리셋</div>
+        <div id="spawn-btn-wrap" class="not-ready">
+            <div id="spawn-fill-f"></div>
+            <div id="spawn-fill-m"></div>
+            <div id="spawn-btn-divider"></div>
+            <div id="spawn-btn-label">산란 준비중</div>
+        </div>
+        <div id="separate-btn">🐟 치어 분리</div>
+        <div id="adult-feed-ui">
+            <span id="adult-feed-count">1</span>
+            <div id="adult-feed-btn">🦐</div>
+        </div>
+    </div>
+
+    <!-- 치어 어항 UI (우하단) -->
+    <div id="fry-ui">
+        <div id="fry-counter"></div>
+        <button id="adopt-btn">📦 분양</button>
+        <div id="fry-feed-ui">
+            <span id="fry-feed-count">1</span>
+            <div id="fry-feed-btn">🦐</div>
+        </div>
+    </div>
+</div>
+
+<!-- 분양 모달 -->
+<div id="modal-overlay">
+    <div id="modal-box">
+        <h2>📦 치어 분양</h2>
+        <div id="modal-content"></div>
+        <div class="modal-total" id="modal-total"></div>
+        <div class="modal-btns">
+            <button class="modal-btn cancel" id="modal-cancel">취소</button>
+            <button class="modal-btn confirm" id="modal-confirm">분양하기</button>
+        </div>
+    </div>
+</div>
+
+<div id="spawn-toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// 설정 & 상수
+// ═══════════════════════════════════════════════════════
+const FISH_TYPES = ["clownfish","butterfly","angelfish","tang","puffer","wrasse"];
+const FISH_NAMES = {
+    clownfish:"흰동가리", butterfly:"나비고기", angelfish:"엔젤피시",
+    tang:"블루탱", puffer:"복어", wrasse:"놀래기"
+};
+
+// 종류별 기본 크기 (원본과 동일)
+const BASE_SIZE_MAP = {
+    clownfish:  26, butterfly: 29, angelfish: 34,
+    tang:       31, puffer:    24, wrasse:    22
+};
+
+const FOOD_TO_SPAWN = 100;   // 산란에 필요한 먹이 수
+const FRY_PER_SPAWN_MIN = 10;
+const FRY_PER_SPAWN_MAX = 15;
+const FRY_SIZE_RATIO = 0.27;   // 성어 대비 치어 초기 크기
+const FEMALE_SIZE_RATIO = 0.80; // 수컷 대비 암컷 크기
+const FEED_STEPS = [1,3,5,7,9];
+
+// ═══════════════════════════════════════════════════════
+// 전역 상태
+// ═══════════════════════════════════════════════════════
+let currentType = null;
+let gameRunning = false;
+
+const canvas = document.getElementById("aqua");
+const ctx = canvas.getContext("2d");
+
+let adultFishes = [];   // [수컷, 암컷]  항상 2마리
+let fryFishes = [];     // 치어들
+let adultFoods = [];
+let fryFoods = [];
+let bubbles = [];
+
+let spawningActive = false;   // 산란 애니메이션 진행 중
+let spawningTimer = 0;
+let spawningTotal = 0;        // 이번 산란에서 낳을 마릿수
+let spawningBorn = 0;         // 이번 산란에서 태어난 수
+let pendingFries = [];        // 위 어항에서 태어났지만 아직 분리 안 된 치어
+
+// 먹이 수량 설정
+let adultFeedStep = 0, fryFeedStep = 0;
+
+// 저장 키
+function saveKey(type){ return `aqua2_${type}`; }
+
+// ═══════════════════════════════════════════════════════
+// localStorage 저장/불러오기
+// ═══════════════════════════════════════════════════════
+function defaultSaveData(type){
+    return {
+        male:   { foodEaten:0 },
+        female: { foodEaten:0 },
+        fryGroups: [],
+        pendingFryCount: 0,
+        pendingBatch: null,
+        spawning: null   // {active, born, total, batch} - 산란 중 저장
+    };
+}
+
+function loadData(type){
+    try {
+        const raw = localStorage.getItem(saveKey(type));
+        if(raw) return JSON.parse(raw);
+    } catch(e){}
+    return defaultSaveData(type);
+}
+
+function saveData(type, data){
+    try { localStorage.setItem(saveKey(type), JSON.stringify(data)); } catch(e){}
+}
+
+function buildSaveSnapshot(){
+    if(!currentType) return;
+    const data = loadData(currentType);
+
+    // 성어
+    if(adultFishes.length >= 2){
+        data.male.foodEaten   = adultFishes[0].foodEaten;
+        data.female.foodEaten = adultFishes[1].foodEaten;
+    }
+
+    // 치어 그룹 (현재 치어 어항 기준)
+    // fryFishes 는 [{batch, foodEaten, size, baseSize, ...}]
+    const groupMap = {};
+    for(let f of fryFishes){
+        if(!groupMap[f.batch]) groupMap[f.batch]=[];
+        groupMap[f.batch].push({ foodEaten:f.foodEaten, size:f.size, baseSize:f.baseSize });
+    }
+    data.fryGroups = Object.entries(groupMap).map(([b,arr])=>({ batch:parseInt(b), fishes:arr }));
+
+    // pending (위 어항에서 태어난 치어 분리 대기)
+    data.pendingFryCount = pendingFries.length;
+    data.pendingBatch = pendingFries.length > 0 ? pendingFries[0].batch : null;
+
+    // 산란 중 상태 저장
+    if(spawningActive){
+        data.spawning = {
+            active: true,
+            born: spawningBorn,
+            total: spawningTotal,
+            batch: window._nextBatch || 1
+        };
+    } else {
+        data.spawning = null;
+    }
+
+    saveData(currentType, data);
+}
+
+// ═══════════════════════════════════════════════════════
+// 메인화면 미니 미리보기
+// ═══════════════════════════════════════════════════════
+function drawPreviewFish(cvs, type){
+    const c = cvs.getContext("2d");
+    const s = 22;
+    c.clearRect(0,0,cvs.width,cvs.height);
+    c.save();
+    c.translate(cvs.width/2, cvs.height/2);
+    // 간단히 타원 + 색으로 표현
+    const hues = { clownfish:25, butterfly:48, angelfish:215, tang:218, puffer:45, wrasse:150 };
+    const h = hues[type]||180;
+    c.fillStyle=`hsl(${h},85%,55%)`;
+    c.beginPath();
+    c.ellipse(0,0,s,s*0.55,0,0,Math.PI*2);
+    c.fill();
+    // 꼬리
+    c.beginPath();
+    c.moveTo(-s,0);
+    c.bezierCurveTo(-s*1.4,-s*0.5,-s*1.6,-s*0.4,-s*1.5,0);
+    c.bezierCurveTo(-s*1.6,s*0.4,-s*1.4,s*0.5,-s,0);
+    c.fill();
+    // 눈
+    c.fillStyle="#fff"; c.beginPath(); c.arc(s*0.6,-s*0.1,s*0.12,0,Math.PI*2); c.fill();
+    c.fillStyle="#000"; c.beginPath(); c.arc(s*0.62,-s*0.1,s*0.07,0,Math.PI*2); c.fill();
+    c.restore();
+}
+
+function buildMainScreen(){
+    const container = document.getElementById("fish-buttons");
+    container.innerHTML = "";
+    for(let type of FISH_TYPES){
+        const btn = document.createElement("div");
+        btn.className = "fish-btn";
+        btn.dataset.type = type;
+
+        // 저장데이터에서 상태 읽기
+        const d = loadData(type);
+        const totalFry = d.fryGroups.reduce((s,g)=>s+g.fishes.length,0);
+        const pct = Math.round(Math.min(100, ((d.male.foodEaten + d.female.foodEaten)/2/FOOD_TO_SPAWN)*100));
+
+        btn.innerHTML = `
+            <canvas width="80" height="50"></canvas>
+            <div class="fish-name">${FISH_NAMES[type]}</div>
+            <div class="fish-count">치어 ${totalFry}마리</div>
+        `;
+        if(totalFry>0 || d.male.foodEaten>0 || d.female.foodEaten>0){
+            const badge = document.createElement("div");
+            badge.style.cssText="position:absolute;top:6px;left:8px;width:8px;height:8px;border-radius:50%;background:#4af;";
+            btn.appendChild(badge);
+        }
+        container.appendChild(btn);
+
+        const cvs = btn.querySelector("canvas");
+        drawPreviewFish(cvs, type);
+
+        btn.addEventListener("click", ()=>{ startGame(type); });
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 물고기 클래스
+// ═══════════════════════════════════════════════════════
+class Fish {
+    constructor(opts={}){
+        // opts: {type, gender:'male'|'female'|'fry', batch, x, y, size, foodEaten, baseSize}
+        this.type = opts.type || "clownfish";
+        this.gender = opts.gender || "male";   // male / female / fry
+        this.batch = opts.batch || 1;
+        this.foodEaten = opts.foodEaten || 0;
+        this.hueShift = (Math.random()-0.5)*18;
+        this.tailSpeed = 160 + Math.random()*220;
+        this.turnSpeed = 0.012 + Math.random()*0.035;
+        this.wanderAngle = Math.random()*Math.PI*2;
+        this.wanderTimer = 0;
+        this.wanderPeriod = 120 + Math.random()*200;
+        this.speedChangeTimer = Math.random()*300;
+        this.speedChangePeriod = 180 + Math.random()*320;
+        this.angle = Math.random()*Math.PI*2;
+        if(Math.random()<0.5) this.angle = Math.PI + (Math.random()-0.5)*0.5;
+
+        // 크기 설정
+        const base = BASE_SIZE_MAP[this.type] || 26;
+        if(this.gender === 'male'){
+            this.baseSize = opts.baseSize || base;
+            // 성어는 크기 고정: 50개 먹었을 때(1.25배) 크기로 고정
+            this.size = this.baseSize * 1.25;
+        } else if(this.gender === 'female'){
+            this.baseSize = opts.baseSize || base * FEMALE_SIZE_RATIO;
+            // 암컷도 동일 비율로 고정
+            this.size = this.baseSize * 1.25;
+        } else { // fry
+            this.baseSize = opts.baseSize || base * FRY_SIZE_RATIO;
+            // 치어는 먹이에 따라 성장
+            this.size = opts.size || this.baseSize;
+            if(!opts.size) this._applyGrowth();
+        }
+
+        this.baseSpeed = (this.gender==='fry') ? 0.14 + Math.random()*0.28 : 0.2 + Math.random()*0.6;
+        this.speed = this.baseSpeed;
+
+        // 위치
+        this.tankTop = opts.tankTop || 0;
+        this.tankBottom = opts.tankBottom || canvas.height;
+        const margin = this.size + 20;
+        this.x = opts.x !== undefined ? opts.x : margin + Math.random()*(canvas.width - margin*2);
+        this.y = opts.y !== undefined ? opts.y : this.tankTop + margin + Math.random()*(this.tankBottom - this.tankTop - margin*2);
+
+        // 산란 중 슬로우
+        this.spawningSlowdown = 1.0;
+    }
+
+    _applyGrowth(){
+        const stage = Math.min(Math.floor(this.foodEaten / 10), 10);
+        const grow = 1 + (stage/10)*0.5;
+        this.size = this.baseSize * grow;
+    }
+
+    eatFood(){
+        this.foodEaten++;
+        if(this.gender === 'fry') this._applyGrowth();
+        // 성어는 크기 고정, foodEaten만 카운트 (산란 게이지용)
+    }
+
+    // 성어 사이즈에 도달했는지 (치어 전용)
+    isAdultSized(){
+        if(this.gender !== 'fry') return false;
+        const adultBase = BASE_SIZE_MAP[this.type] || 26;
+        return this.size >= adultBase * 0.95;
+    }
+
+    update(foods, tankTop, tankBottom){
+        this.speedChangeTimer++;
+        if(this.speedChangeTimer >= this.speedChangePeriod){
+            this.baseSpeed = (this.gender==='fry') ? 0.12+Math.random()*0.25 : 0.15+Math.random()*0.65;
+            this.speedChangeTimer = 0;
+            this.speedChangePeriod = 180 + Math.random()*320;
+        }
+
+        // 산란 슬로우 처리
+        const slowFactor = this.spawningSlowdown;
+
+        let target = null, shortest = Infinity;
+        for(let food of foods){
+            let d = Math.hypot(food.x-this.x, food.y-this.y);
+            if(d < shortest){ shortest=d; target=food; }
+        }
+
+        let targetAngle;
+        if(target){
+            this.wanderTimer = this.wanderPeriod;
+            this.speed = this.baseSpeed * 1.4 * slowFactor;
+            targetAngle = Math.atan2(target.y-this.y, target.x-this.x);
+            if(shortest < this.size*0.8){
+                let idx = foods.indexOf(target);
+                if(idx !== -1){
+                    foods.splice(idx,1);
+                    this.eatFood();
+                    return true; // ate food
+                }
+            }
+        } else {
+            this.wanderTimer++;
+            if(this.wanderTimer >= this.wanderPeriod){
+                this.wanderAngle = Math.random()*Math.PI*2;
+                this.wanderTimer = 0;
+                this.wanderPeriod = 120 + Math.random()*200;
+            }
+            this.speed = this.baseSpeed * slowFactor;
+            targetAngle = this.wanderAngle;
+        }
+
+        let diff = targetAngle - this.angle;
+        while(diff > Math.PI) diff -= Math.PI*2;
+        while(diff < -Math.PI) diff += Math.PI*2;
+        const activeTurn = target ? this.turnSpeed : this.turnSpeed*0.4;
+        this.angle += diff * activeTurn;
+
+        this.x += Math.cos(this.angle)*this.speed;
+        this.y += Math.sin(this.angle)*this.speed;
+
+        const margin = this.size * 0.6;
+        // 4면 모두 어항 안에 가두기 (wraparound 제거)
+        if(this.x < margin){
+            this.x = margin;
+            // 오른쪽 방향으로 꺾기
+            this.angle = (Math.random()-0.5)*Math.PI*0.8;
+            this.wanderAngle = this.angle;
+        }
+        if(this.x > canvas.width - margin){
+            this.x = canvas.width - margin;
+            this.angle = Math.PI + (Math.random()-0.5)*Math.PI*0.8;
+            this.wanderAngle = this.angle;
+        }
+        if(this.y < tankTop + margin){
+            this.y = tankTop + margin;
+            this.angle = Math.PI*0.5 + (Math.random()-0.5)*Math.PI*0.6;
+            this.wanderAngle = this.angle;
+        }
+        if(this.y > tankBottom - margin){
+            this.y = tankBottom - margin;
+            this.angle = -Math.PI*0.5 + (Math.random()-0.5)*Math.PI*0.6;
+            this.wanderAngle = this.angle;
+        }
+
+        return false;
+    }
+
+    draw(){
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const facingLeft = Math.cos(this.angle) < 0;
+        if(facingLeft){ ctx.scale(-1,1); ctx.rotate(Math.PI-this.angle); }
+        else { ctx.rotate(this.angle); }
+        const t = Date.now();
+        const s = this.size;
+        const tw = Math.sin(t/this.tailSpeed)*0.28;
+        this._drawFish(s, tw);
+        ctx.restore();
+
+        // 성별 표시 (성어만)
+        if(this.gender !== 'fry'){
+            ctx.save();
+            ctx.font = `${Math.max(8,s*0.35)}px sans-serif`;
+            ctx.fillStyle = this.gender==='male' ? 'rgba(100,180,255,0.8)' : 'rgba(255,120,160,0.8)';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.gender==='male'?'♂':'♀', this.x, this.y - s - 4);
+            ctx.restore();
+        }
+        // 치어 차수 표시 없음
+    }
+
+    // ── 물고기 그리기 (원본 로직 그대로) ──
+    _drawFish(s, tw){
+        switch(this.type){
+            case "clownfish":  this._drawClownfish(s,tw); break;
+            case "butterfly":  this._drawButterfly(s,tw); break;
+            case "angelfish":  this._drawAngelfish(s,tw); break;
+            case "tang":       this._drawTang(s,tw);      break;
+            case "puffer":     this._drawPuffer(s,tw);    break;
+            case "wrasse":     this._drawWrasse(s,tw);    break;
+        }
+    }
+
+    _drawClownfish(s, tw){
+        const h = this.hueShift;
+        ctx.save();
+        ctx.translate(-s, 0);
+        ctx.rotate(tw * 1.4);
+        ctx.fillStyle = `hsl(${25+h},90%,55%)`;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.bezierCurveTo(-s*.5,-s*.55, -s*.9,-s*.5, -s*.85,0);
+        ctx.bezierCurveTo(-s*.9, s*.5,  -s*.5, s*.55, 0,0);
+        ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,0.7)"; ctx.lineWidth=s*0.07;
+        ctx.beginPath(); ctx.moveTo(-s*.2,-s*.4); ctx.lineTo(-s*.6,0); ctx.lineTo(-s*.2,s*.4); ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle=`hsl(${25+h},85%,45%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.3,-s*.45); ctx.bezierCurveTo(-s*.1,-s*.9,s*.4,-s*.85,s*.5,-s*.45); ctx.lineTo(-s*.3,-s*.45); ctx.fill();
+        let bg = ctx.createRadialGradient(0,-s*.1,s*.05,0,-s*.1,s*.6);
+        bg.addColorStop(0,`hsl(${28+h},100%,68%)`); bg.addColorStop(1,`hsl(${20+h},90%,42%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s,s*.58,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,0.88)";
+        ctx.beginPath(); ctx.ellipse(s*.42,0,s*.09,s*.5,0,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0,0,s*.09,s*.5,0,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-s*.4,0,s*.07,s*.42,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(0,0,0,0.35)"; ctx.lineWidth=s*0.06;
+        ctx.beginPath(); ctx.ellipse(0,0,s,s*.58,0,0,Math.PI*2); ctx.stroke();
+        ctx.fillStyle=`hsl(${25+h},80%,40%)`;
+        ctx.beginPath(); ctx.moveTo(s*.1,s*.52); ctx.lineTo(-s*.2,s*.85); ctx.lineTo(-s*.45,s*.55); ctx.fill();
+        this._drawEye(s*.6,-s*.12,s*.1);
+    }
+
+    _drawButterfly(s, tw){
+        const h = this.hueShift;
+        ctx.save(); ctx.translate(-s*.75,0); ctx.rotate(tw*1.2);
+        ctx.fillStyle=`hsl(${48+h},95%,62%)`;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-s*.4,-s*.5,-s*.7,-s*.4,-s*.65,0); ctx.bezierCurveTo(-s*.7,s*.4,-s*.4,s*.5,0,0); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle=`hsl(${48+h},90%,55%)`; ctx.lineWidth=s*0.06;
+        ctx.beginPath(); ctx.moveTo(s*.3,-s*.5); ctx.bezierCurveTo(s*.1,-s*1.2,-s*.3,-s*1.1,-s*.5,-s*.5); ctx.stroke();
+        ctx.fillStyle=`hsl(${48+h},85%,58%)`;
+        ctx.beginPath(); ctx.moveTo(s*.3,-s*.45); ctx.bezierCurveTo(s*.1,-s*.9,-s*.3,-s*.85,-s*.5,-s*.45); ctx.lineTo(-s*.5,-s*.45); ctx.fill();
+        let bg = ctx.createRadialGradient(0,0,s*.05,0,0,s*.65);
+        bg.addColorStop(0,`hsl(${52+h},100%,75%)`); bg.addColorStop(1,`hsl(${44+h},90%,50%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s*.85,s*.55,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(0,0,0,0.7)"; ctx.beginPath(); ctx.ellipse(s*.55,-s*.08,s*.18,s*.28,-0.3,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(0,0,0,0.45)"; ctx.lineWidth=s*0.09;
+        for(let xi of [-s*.35,-s*.05,s*.25]){ ctx.beginPath(); ctx.moveTo(xi,-s*.5); ctx.lineTo(xi,s*.5); ctx.stroke(); }
+        ctx.strokeStyle="rgba(0,0,0,0.3)"; ctx.lineWidth=s*0.055;
+        ctx.beginPath(); ctx.ellipse(0,0,s*.85,s*.55,0,0,Math.PI*2); ctx.stroke();
+        this._drawEye(s*.58,-s*.08,s*.09);
+    }
+
+    _drawAngelfish(s, tw){
+        const h = this.hueShift;
+        ctx.save(); ctx.translate(-s*.7,0); ctx.rotate(tw);
+        ctx.fillStyle=`hsl(${210+h},80%,55%)`;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-s*.3,-s*.7,-s*.7,-s*.65,-s*.75,0); ctx.bezierCurveTo(-s*.7,s*.65,-s*.3,s*.7,0,0); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle=`hsl(${210+h},75%,48%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.1,s*.5); ctx.bezierCurveTo(-s*.2,s*1.1,-s*.5,s*1.2,-s*.7,s*.9); ctx.bezierCurveTo(-s*.6,s*.6,-s*.3,s*.55,-s*.1,s*.5); ctx.fill();
+        ctx.fillStyle=`hsl(${215+h},80%,52%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.1,-s*.5); ctx.bezierCurveTo(-s*.1,-s*1.15,s*.2,-s*1.2,s*.4,-s*.9); ctx.bezierCurveTo(s*.5,-s*.7,s*.4,-s*.5,s*.3,-s*.5); ctx.closePath(); ctx.fill();
+        let bg = ctx.createRadialGradient(0,-s*.1,s*.05,0,0,s*.75);
+        bg.addColorStop(0,`hsl(${218+h},90%,72%)`); bg.addColorStop(0.6,`hsl(${212+h},85%,52%)`); bg.addColorStop(1,`hsl(${205+h},80%,38%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s*.7,s*.62,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,0.25)"; ctx.lineWidth=s*.08;
+        for(let xi of [-s*.25,0,s*.25]){ ctx.beginPath(); ctx.moveTo(xi,-s*.55); ctx.lineTo(xi,s*.55); ctx.stroke(); }
+        ctx.strokeStyle="rgba(0,0,0,0.2)"; ctx.lineWidth=s*.05;
+        ctx.beginPath(); ctx.ellipse(0,0,s*.7,s*.62,0,0,Math.PI*2); ctx.stroke();
+        this._drawEye(s*.52,-s*.1,s*.11);
+    }
+
+    _drawTang(s, tw){
+        const h = this.hueShift;
+        ctx.save(); ctx.translate(-s*.8,0); ctx.rotate(tw*1.1);
+        ctx.fillStyle=`hsl(${215+h},85%,55%)`;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-s*.2,-s*.6,-s*.6,-s*.55,-s*.7,-s*.1); ctx.bezierCurveTo(-s*.6,s*.55,-s*.2,s*.6,0,0); ctx.bezierCurveTo(-s*.3,s*.35,-s*.3,-s*.35,0,0); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle=`hsl(${210+h},80%,48%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.4,-s*.48); ctx.bezierCurveTo(-s*.2,-s*.85,s*.3,-s*.8,s*.45,-s*.48); ctx.lineTo(-s*.4,-s*.48); ctx.fill();
+        let bg = ctx.createRadialGradient(s*.1,-s*.1,s*.04,0,0,s*.65);
+        bg.addColorStop(0,`hsl(${220+h},95%,72%)`); bg.addColorStop(0.5,`hsl(${218+h},90%,55%)`); bg.addColorStop(1,`hsl(${210+h},85%,35%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s,s*.62,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=`hsl(${55+h},100%,60%)`;
+        ctx.beginPath(); ctx.ellipse(-s*.72,0,s*.12,s*.18,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(0,0,0,0.5)"; ctx.lineWidth=s*.06;
+        ctx.beginPath(); ctx.moveTo(s*.55,-s*.35); ctx.lineTo(s*.55,s*.25); ctx.stroke();
+        ctx.strokeStyle="rgba(0,0,0,0.18)"; ctx.lineWidth=s*.05;
+        ctx.beginPath(); ctx.ellipse(0,0,s,s*.62,0,0,Math.PI*2); ctx.stroke();
+        this._drawEye(s*.62,-s*.1,s*.11);
+    }
+
+    _drawPuffer(s, tw){
+        const h = this.hueShift;
+        ctx.save(); ctx.translate(-s*.75,0); ctx.rotate(tw*0.9);
+        ctx.fillStyle=`hsl(${45+h},80%,52%)`;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-s*.25,-s*.4,-s*.5,-s*.35,-s*.48,0); ctx.bezierCurveTo(-s*.5,s*.35,-s*.25,s*.4,0,0); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle=`hsl(${42+h},75%,50%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.1,-s*.58); ctx.lineTo(s*.25,-s*.9); ctx.lineTo(s*.4,-s*.58); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s*.1,s*.58); ctx.lineTo(s*.2,s*.85); ctx.lineTo(s*.4,s*.58); ctx.fill();
+        let bg = ctx.createRadialGradient(-s*.05,-s*.1,s*.04,0,0,s*.72);
+        bg.addColorStop(0,`hsl(${50+h},95%,78%)`); bg.addColorStop(0.5,`hsl(${45+h},88%,58%)`); bg.addColorStop(1,`hsl(${38+h},80%,40%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s*.92,s*.78,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(0,0,0,0.2)";
+        for(let px=-s*.5;px<s*.6;px+=s*.22){
+            for(let py=-s*.4;py<s*.45;py+=s*.22){
+                if(Math.hypot(px,py)<s*.75){ ctx.beginPath(); ctx.arc(px,py,s*.04,0,Math.PI*2); ctx.fill(); }
+            }
+        }
+        ctx.fillStyle="rgba(255,255,255,0.18)"; ctx.beginPath(); ctx.ellipse(s*.05,s*.2,s*.6,s*.35,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(0,0,0,0.2)"; ctx.lineWidth=s*.05;
+        ctx.beginPath(); ctx.ellipse(0,0,s*.92,s*.78,0,0,Math.PI*2); ctx.stroke();
+        this._drawEye(s*.55,-s*.08,s*.13);
+    }
+
+    _drawWrasse(s, tw){
+        const h = this.hueShift;
+        ctx.save(); ctx.translate(-s*.8,0); ctx.rotate(tw*1.3);
+        ctx.fillStyle=`hsl(${145+h},70%,45%)`;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-s*.3,-s*.52,-s*.65,-s*.48,-s*.68,0); ctx.bezierCurveTo(-s*.65,s*.48,-s*.3,s*.52,0,0); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle=`hsl(${150+h},65%,42%)`;
+        ctx.beginPath(); ctx.moveTo(-s*.5,-s*.45); ctx.bezierCurveTo(-s*.3,-s*.78,s*.3,-s*.75,s*.5,-s*.45); ctx.fill();
+        let bg = ctx.createLinearGradient(-s,-s*.3,s,s*.3);
+        bg.addColorStop(0,`hsl(${152+h},80%,58%)`); bg.addColorStop(0.4,`hsl(${145+h},75%,48%)`); bg.addColorStop(1,`hsl(${135+h},70%,38%)`);
+        ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,s,s*.5,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,0.22)"; ctx.lineWidth=s*.06;
+        for(let yi of [-s*.18,0,s*.18]){ ctx.beginPath(); ctx.moveTo(-s*.8,yi); ctx.lineTo(s*.8,yi); ctx.stroke(); }
+        ctx.fillStyle=`hsl(${155+h},78%,35%)`;
+        ctx.beginPath(); ctx.ellipse(s*.6,0,s*.38,s*.46,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(0,0,0,0.18)"; ctx.lineWidth=s*.05;
+        ctx.beginPath(); ctx.ellipse(0,0,s,s*.5,0,0,Math.PI*2); ctx.stroke();
+        this._drawEye(s*.68,-s*.1,s*.1);
+    }
+
+    _drawEye(ex, ey, r){
+        ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(ex,ey,r,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(0,0,0,0.85)"; ctx.beginPath(); ctx.arc(ex+r*0.15,ey,r*0.6,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,0.9)"; ctx.beginPath(); ctx.arc(ex+r*0.25,ey-r*0.25,r*0.25,0,Math.PI*2); ctx.fill();
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 게임 시작
+// ═══════════════════════════════════════════════════════
+function startGame(type){
+    currentType = type;
+    gameRunning = true;
+
+    document.getElementById("main-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "block";
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // 저장 데이터 로드
+    const saved = loadData(type);
+
+    // 어항 경계 계산
+    const divY = Math.floor(canvas.height / 2);
+    document.getElementById("tank-divider").style.top = divY + "px";
+    document.getElementById("label-adult").style.top = (divY-22)+"px";
+    document.getElementById("label-fry").style.top = (divY+6)+"px";
+
+    const adultTop = 0, adultBottom = divY;
+    const fryTop = divY, fryBottom = canvas.height;
+
+    adultFishes = [];
+    fryFishes = [];
+    adultFoods = [];
+    fryFoods = [];
+    bubbles = [];
+    pendingFries = [];
+    spawningActive = false;
+    spawningTimer = 0;
+
+    // 성어 생성 (수컷)
+    const male = new Fish({
+        type, gender:'male',
+        foodEaten: saved.male.foodEaten,
+        tankTop: adultTop, tankBottom: adultBottom
+    });
+    male.tankTop = adultTop; male.tankBottom = adultBottom;
+
+    // 성어 생성 (암컷)
+    const female = new Fish({
+        type, gender:'female',
+        foodEaten: saved.female.foodEaten,
+        tankTop: adultTop, tankBottom: adultBottom
+    });
+    female.tankTop = adultTop; female.tankBottom = adultBottom;
+
+    adultFishes = [male, female];
+
+    // 치어 복원
+    let nextBatch = 1;
+    for(let grp of saved.fryGroups){
+        if(grp.batch >= nextBatch) nextBatch = grp.batch + 1;
+        for(let fd of grp.fishes){
+            const fry = new Fish({
+                type, gender:'fry', batch: grp.batch,
+                foodEaten: fd.foodEaten,
+                size: fd.size,
+                baseSize: fd.baseSize,
+                tankTop: fryTop, tankBottom: fryBottom
+            });
+            fry.tankTop = fryTop; fry.tankBottom = fryBottom;
+            fryFishes.push(fry);
+        }
+    }
+    window._nextBatch = nextBatch;
+
+    // pending 치어 (위 어항 대기 중)
+    const pendingBatch = saved.pendingBatch || nextBatch;
+    if(saved.pendingFryCount > 0){
+        for(let i=0;i<saved.pendingFryCount;i++){
+            const pf = new Fish({
+                type, gender:'fry', batch:pendingBatch,
+                tankTop: adultTop, tankBottom: adultBottom
+            });
+            pf.tankTop = adultTop; pf.tankBottom = adultBottom;
+            pendingFries.push(pf);
+        }
+        if(pendingBatch >= nextBatch) window._nextBatch = pendingBatch + 1;
+    }
+
+    // 네비게이션 스택 푸시
+    pushGameHistory();
+
+    // UI 초기화
+    initGameUI(type, adultTop, adultBottom, fryTop, fryBottom);
+
+    // 산란 중 상태 복원
+    if(saved.spawning && saved.spawning.active){
+        const sp = saved.spawning;
+        spawningActive = true;
+        spawningBorn = sp.born;
+        spawningTotal = sp.total;
+        window._nextBatch = sp.batch;
+        // 암컷 슬로우다운 복원
+        if(adultFishes[1]) adultFishes[1].spawningSlowdown = 0.06;
+        // 남은 산란 이어서 진행
+        const remaining = sp.total - sp.born;
+        if(remaining > 0){
+            window._spawnInterval = setInterval(()=>{
+                spawnOneFry(adultTop, adultBottom);
+            }, 10000);
+            showToast(`🐟 산란 재개! (${sp.born}/${sp.total} 완료)`);
+        } else {
+            spawningActive = false;
+        }
+        updateSpawnUI();
+    }
+
+    // 기포 시작
+    startBubbles();
+
+    // 애니메이션
+    if(!window._animRunning){
+        window._animRunning = true;
+        animate();
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 게임 UI
+// ═══════════════════════════════════════════════════════
+function initGameUI(type, adultTop, adultBottom, fryTop, fryBottom){
+    // 먹이 버튼 초기화
+    adultFeedStep = 0; fryFeedStep = 0;
+    document.getElementById("adult-feed-count").textContent = FEED_STEPS[adultFeedStep];
+    document.getElementById("fry-feed-count").textContent = FEED_STEPS[fryFeedStep];
+
+    const adultFeedBtn = document.getElementById("adult-feed-btn");
+    const fryFeedBtn = document.getElementById("fry-feed-btn");
+    const adultFeedCount = document.getElementById("adult-feed-count");
+    const fryFeedCount = document.getElementById("fry-feed-count");
+
+    // 먹이 수량 변경
+    adultFeedBtn.onclick = (e)=>{
+        e.stopPropagation();
+        adultFeedStep = (adultFeedStep+1)%FEED_STEPS.length;
+        adultFeedCount.textContent = FEED_STEPS[adultFeedStep];
+    };
+    fryFeedBtn.onclick = (e)=>{
+        e.stopPropagation();
+        fryFeedStep = (fryFeedStep+1)%FEED_STEPS.length;
+        fryFeedCount.textContent = FEED_STEPS[fryFeedStep];
+    };
+
+    // 캔버스 클릭 → 먹이 추가
+    let lastClick = 0;
+    window._canvasClickFn && canvas.removeEventListener("click", window._canvasClickFn);
+    window._canvasClickFn = canvasClick;
+    canvas.addEventListener("click", canvasClick);
+    function canvasClick(e){
+        const now = Date.now();
+        if(now - lastClick < 300){ lastClick=now; return; }
+        lastClick = now;
+        const cy = e.clientY;
+        const divY = Math.floor(canvas.height/2);
+        if(cy < divY){
+            // 성어 어항
+            const n = FEED_STEPS[adultFeedStep];
+            spawnFoods(adultFoods, e.clientX, cy, n);
+        } else {
+            // 치어 어항 - 성어 크기 도달 치어가 있으면 큰 먹이도 섞기
+            const n = FEED_STEPS[fryFeedStep];
+            const hasAdultFry = fryFishes.some(f=>f.isAdultSized());
+            spawnFoods(fryFoods, e.clientX, cy, n, !hasAdultFry);
+        }
+    }
+
+    // 산란 버튼
+    const spawnWrap = document.getElementById("spawn-btn-wrap");
+    spawnWrap.onclick = ()=>{
+        if(spawningActive) return;
+        const male = adultFishes[0], female = adultFishes[1];
+        if(!male||!female) return;
+        if(male.foodEaten >= FOOD_TO_SPAWN && female.foodEaten >= FOOD_TO_SPAWN){
+            startSpawning(adultTop, adultBottom);
+        }
+    };
+
+    // 치어 분리 버튼
+    const sepBtn = document.getElementById("separate-btn");
+    sepBtn.onclick = ()=>{
+        if(pendingFries.length === 0) return;
+        const fryTop = Math.floor(canvas.height/2);
+        const fryBottom = canvas.height;
+        for(let pf of pendingFries){
+            pf.x = 50 + Math.random()*(canvas.width-100);
+            pf.y = fryTop + 40 + Math.random()*(fryBottom-fryTop-80);
+            pf.tankTop = fryTop;
+            pf.tankBottom = fryBottom;
+            fryFishes.push(pf);
+        }
+        pendingFries = [];
+        sepBtn.classList.remove("visible");
+        buildSaveSnapshot();
+        updateFryCounter();
+    };
+
+    // 분양 버튼
+    document.getElementById("adopt-btn").onclick = openAdoptModal;
+
+    // 리셋 버튼
+    document.getElementById("reset-btn").onclick = (e)=>{
+        e.stopPropagation();
+        if(!confirm(`⚠️ ${FISH_NAMES[type] || type} 데이터를 초기화할까요?\n성어 먹이 기록, 치어 전체가 삭제됩니다.`)) return;
+        // 산란 중이면 중단
+        if(window._spawnInterval){ clearInterval(window._spawnInterval); window._spawnInterval=null; }
+        spawningActive = false;
+        spawningBorn = 0;
+        spawningTotal = 0;
+        // localStorage 초기화
+        saveData(type, defaultSaveData(type));
+        // 메모리 초기화
+        adultFishes[0].foodEaten = 0;
+        adultFishes[1].foodEaten = 0;
+        adultFishes[1].spawningSlowdown = 1.0;
+        fryFishes = [];
+        pendingFries = [];
+        adultFoods = [];
+        fryFoods = [];
+        window._nextBatch = 1;
+        document.getElementById("separate-btn").classList.remove("visible");
+        updateSpawnUI();
+        updateFryCounter();
+        showToast("↺ 데이터가 초기화되었습니다.");
+    };
+
+    // 뒤로가기
+    document.getElementById("back-btn").onclick = ()=>{
+        // history.go(-1) → popstate 발동 → goBackFromGame()
+        history.go(-1);
+    };
+
+    updateSpawnUI();
+    updateFryCounter();
+}
+
+function spawnFoods(arr, cx, cy, count, small=false){
+    const big = !small;
+    if(count === 1){
+        arr.push({x:cx, y:cy, small, big});
+        return;
+    }
+    for(let i=0;i<count;i++){
+        const angle = Math.random()*Math.PI*2;
+        const r = 10 + Math.random()*28;
+        arr.push({x:cx+Math.cos(angle)*r, y:cy+Math.sin(angle)*r, small, big});
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 산란
+// ═══════════════════════════════════════════════════════
+function startSpawning(tankTop, tankBottom){
+    if(spawningActive) return;
+    spawningActive = true;
+    spawningTimer = 0;
+    spawningTotal = FRY_PER_SPAWN_MIN + Math.floor(Math.random()*(FRY_PER_SPAWN_MAX-FRY_PER_SPAWN_MIN+1));
+    spawningBorn = 0;
+    document.getElementById("separate-btn").classList.remove("visible");
+
+    // 암컷 슬로우다운
+    const female = adultFishes[1];
+    if(female) female.spawningSlowdown = 0.06;
+
+    // 토스트
+    showToast(`🐟 산란 시작! (${spawningTotal}마리 예정)`);
+
+    // 10초마다 1마리 생성 인터벌
+    window._spawnInterval = setInterval(()=>{
+        spawnOneFry(tankTop, tankBottom);
+    }, 10000);
+}
+
+function spawnOneFry(tankTop, tankBottom){
+    if(!spawningActive) return;
+    const female = adultFishes[1];
+    if(!female) return;
+
+    const batch = window._nextBatch || 1;
+    const fry = new Fish({
+        type: currentType,
+        gender: 'fry',
+        batch: batch,
+        tankTop, tankBottom,
+        x: female.x + (Math.random()-0.5)*30,
+        y: female.y + female.size*0.5 + Math.random()*10
+    });
+    fry.tankTop = tankTop;
+    fry.tankBottom = tankBottom;
+    pendingFries.push(fry);
+    spawningBorn++;
+
+    showToast(`🥚 치어 탄생! (${spawningBorn}/${spawningTotal})`);
+
+    if(spawningBorn >= spawningTotal){
+        // 산란 완료
+        clearInterval(window._spawnInterval);
+        spawningActive = false;
+        window._nextBatch = (window._nextBatch||1) + 1;
+
+        // 성어 먹이 카운터 리셋 (크기는 고정이므로 _applyGrowth 불필요)
+        adultFishes[0].foodEaten = 0;
+        adultFishes[1].foodEaten = 0;
+        adultFishes[1].spawningSlowdown = 1.0;
+
+        document.getElementById("separate-btn").classList.add("visible");
+        showToast(`✅ 산란 완료! 치어 분리 버튼을 눌러주세요.`);
+        updateSpawnUI();
+        buildSaveSnapshot();
+    }
+    updateFryCounter();
+    buildSaveSnapshot();
+}
+
+// ═══════════════════════════════════════════════════════
+// UI 업데이트
+// ═══════════════════════════════════════════════════════
+function updateSpawnUI(){
+    if(!adultFishes[0]||!adultFishes[1]) return;
+    const mEat = adultFishes[0].foodEaten;
+    const fEat = adultFishes[1].foodEaten;
+    const mPct = Math.min(100, (mEat/FOOD_TO_SPAWN)*100);
+    const fPct = Math.min(100, (fEat/FOOD_TO_SPAWN)*100);
+
+    document.getElementById("spawn-fill-m").style.height = mPct+"%";
+    document.getElementById("spawn-fill-f").style.height = fPct+"%";
+
+    const ready = mEat >= FOOD_TO_SPAWN && fEat >= FOOD_TO_SPAWN && !spawningActive;
+    const wrap = document.getElementById("spawn-btn-wrap");
+    const lbl = document.getElementById("spawn-btn-label");
+
+    if(spawningActive){
+        wrap.className = "not-ready";
+        lbl.textContent = `산란중 ${spawningBorn}/${spawningTotal}`;
+    } else if(ready){
+        wrap.className = "ready";
+        lbl.textContent = "🐣 산란!";
+    } else {
+        wrap.className = "not-ready";
+        lbl.textContent = `♀${Math.round(fPct)}% ♂${Math.round(mPct)}%`;
+    }
+}
+
+function updateFryCounter(){
+    const total = fryFishes.length + pendingFries.length;
+    document.getElementById("fry-counter").textContent =
+        total > 0 ? `치어 ${total}마리` : "";
+
+    // 분리 대기 표시
+    const sepBtn = document.getElementById("separate-btn");
+    if(pendingFries.length > 0){
+        sepBtn.classList.add("visible");
+        sepBtn.textContent = `🐟 치어 분리 (${pendingFries.length}마리)`;
+    } else {
+        sepBtn.classList.remove("visible");
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 분양 모달
+// ═══════════════════════════════════════════════════════
+function openAdoptModal(){
+    if(fryFishes.length === 0){ showToast("치어 어항이 비어있습니다."); return; }
+
+    const groups = {};
+    for(let f of fryFishes){ groups[f.batch]=(groups[f.batch]||0)+1; }
+
+    const content = document.getElementById("modal-content");
+    content.innerHTML = "";
+    const inputs = {};
+
+    for(let [batch, count] of Object.entries(groups)){
+        const row = document.createElement("div");
+        row.className = "modal-row";
+        row.innerHTML = `<span>${batch}차 치어 (${count}마리)</span><input type="number" min="0" max="${count}" value="0" data-batch="${batch}" data-max="${count}">`;
+        content.appendChild(row);
+        inputs[batch] = row.querySelector("input");
+    }
+
+    function updateTotal(){
+        let t = 0;
+        for(let inp of Object.values(inputs)) t += parseInt(inp.value||0);
+        document.getElementById("modal-total").textContent = `총 ${t}마리 분양`;
+    }
+    for(let inp of Object.values(inputs)) inp.addEventListener("input", updateTotal);
+    updateTotal();
+
+    document.getElementById("modal-overlay").classList.add("open");
+    pushModalHistory();
+
+    document.getElementById("modal-cancel").onclick = ()=>{
+        closeModal();
+        // popstate 스택 소비를 위해 history.go(-1) (우리가 pushModalHistory 했으므로)
+        history.go(-1);
+    };
+    document.getElementById("modal-confirm").onclick = ()=>{
+        for(let [batch, inp] of Object.entries(inputs)){
+            let n = parseInt(inp.value||0);
+            if(n <= 0) continue;
+            const max = parseInt(inp.dataset.max);
+            n = Math.min(n, max);
+            let removed = 0;
+            for(let i=fryFishes.length-1;i>=0&&removed<n;i--){
+                if(fryFishes[i].batch == batch){
+                    fryFishes.splice(i,1);
+                    removed++;
+                }
+            }
+        }
+        closeModal();
+        history.go(-1);
+        updateFryCounter();
+        buildSaveSnapshot();
+        showToast("✅ 분양 완료!");
+    };
+}
+
+// ═══════════════════════════════════════════════════════
+// 토스트
+// ═══════════════════════════════════════════════════════
+function showToast(msg, duration=2800){
+    const t = document.getElementById("spawn-toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(()=>t.classList.remove("show"), duration);
+}
+
+// ═══════════════════════════════════════════════════════
+// 기포
+// ═══════════════════════════════════════════════════════
+let bubbleInterval = null;
+function startBubbles(){
+    stopBubbles();
+    bubbleInterval = setInterval(()=>{
+        if(!gameRunning) return;
+        bubbles.push({
+            x: Math.random()*canvas.width,
+            y: canvas.height+20,
+            r: 2+Math.random()*7,
+            speed: 0.3+Math.random()*1.0
+        });
+    }, 600);
+}
+function stopBubbles(){ if(bubbleInterval){ clearInterval(bubbleInterval); bubbleInterval=null; } }
+
+// ═══════════════════════════════════════════════════════
+// 배경 / 어항 그리기
+// ═══════════════════════════════════════════════════════
+function drawTank(){
+    const divY = Math.floor(canvas.height/2);
+
+    // 성어 어항 배경
+    let g = ctx.createLinearGradient(0,0,0,divY);
+    g.addColorStop(0,"#0d4a8a"); g.addColorStop(1,"#001a30");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,divY);
+
+    // 치어 어항 배경 (약간 더 밝고 따뜻)
+    let g2 = ctx.createLinearGradient(0,divY,0,canvas.height);
+    g2.addColorStop(0,"#002540"); g2.addColorStop(1,"#001018");
+    ctx.fillStyle = g2;
+    ctx.fillRect(0,divY,canvas.width,canvas.height-divY);
+
+    // 햇살 (성어)
+    ctx.fillStyle="rgba(255,255,255,0.025)";
+    for(let i=0;i<7;i++){
+        ctx.beginPath();
+        ctx.moveTo(i*250,0); ctx.lineTo(i*250+100,divY); ctx.lineTo(i*250+180,divY); ctx.fill();
+    }
+
+    // 해초 (성어 어항)
+    const t = Date.now();
+    for(let i=0;i<25;i++){
+        const x = i*70;
+        ctx.strokeStyle="#00aa55"; ctx.lineWidth=4;
+        ctx.beginPath();
+        ctx.moveTo(x,divY);
+        ctx.quadraticCurveTo(x+Math.sin(t/800+i)*22, divY-90, x, divY-160);
+        ctx.stroke();
+    }
+
+    // 해초 (치어 어항 - 작은)
+    for(let i=0;i<20;i++){
+        const x = i*80 + 30;
+        ctx.strokeStyle="#00bb66"; ctx.lineWidth=2.5;
+        ctx.beginPath();
+        ctx.moveTo(x,canvas.height);
+        ctx.quadraticCurveTo(x+Math.sin(t/900+i)*15, canvas.height-60, x, canvas.height-100);
+        ctx.stroke();
+    }
+
+    // 구분선 (물결 효과)
+    ctx.strokeStyle="rgba(80,180,255,0.4)";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let x=0;x<=canvas.width;x+=4){
+        const wave = Math.sin(x/60 + t/1000)*2;
+        if(x===0) ctx.moveTo(x,divY+wave);
+        else ctx.lineTo(x,divY+wave);
+    }
+    ctx.stroke();
+}
+
+// ═══════════════════════════════════════════════════════
+// 메인 애니메이션 루프
+// ═══════════════════════════════════════════════════════
+let lastSave = 0;
+
+function animate(){
+    if(!gameRunning){ window._animRunning=false; return; }
+    requestAnimationFrame(animate);
+
+    const divY = Math.floor(canvas.height/2);
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawTank();
+
+    // 기포
+    for(let i=bubbles.length-1;i>=0;i--){
+        const b=bubbles[i];
+        b.y -= b.speed;
+        ctx.strokeStyle="rgba(255,255,255,0.4)"; ctx.lineWidth=0.6;
+        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
+        if(b.y < -20) bubbles.splice(i,1);
+    }
+
+    // 성어 먹이
+    for(let f of adultFoods){
+        ctx.fillStyle="gold";
+        ctx.beginPath(); ctx.arc(f.x,f.y,4,0,Math.PI*2); ctx.fill();
+    }
+
+    // 치어 먹이 (크기 구분)
+    for(let f of fryFoods){
+        const r = f.big ? 4 : 1.5;
+        ctx.fillStyle = f.big ? "gold" : "rgba(255,220,80,0.9)";
+        ctx.beginPath(); ctx.arc(f.x,f.y,r,0,Math.PI*2); ctx.fill();
+    }
+
+    // 성어 업데이트 & 그리기
+    let ateFood = false;
+    for(let fish of adultFishes){
+        const ate = fish.update(adultFoods, 0, divY);
+        if(ate) ateFood = true;
+        fish.draw();
+    }
+    // pending 치어 (위 어항)
+    for(let fish of pendingFries){
+        fish.update([], 0, divY);
+        fish.draw();
+    }
+    if(ateFood) updateSpawnUI();
+
+    // 치어 업데이트 & 그리기
+    for(let fish of fryFishes){
+        // 치어가 성어 크기 도달 시 - 같은 fryFoods지만 먹이 크기는 성어용으로 표시됨
+        fish.update(fryFoods, divY, canvas.height);
+        fish.draw();
+    }
+
+    // 산란 진행 중 타이머 표시
+    if(spawningActive){
+        ctx.save();
+        ctx.fillStyle="rgba(255,220,100,0.8)";
+        ctx.font="bold 13px sans-serif";
+        ctx.textAlign="left";
+        ctx.fillText(`🥚 산란중 ${spawningBorn}/${spawningTotal}`, 14, divY-8);
+        ctx.restore();
+    }
+
+    // 주기적 저장 (5초마다)
+    const now = Date.now();
+    if(now - lastSave > 5000){
+        lastSave = now;
+        buildSaveSnapshot();
+        updateFryCounter();
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 리사이즈
+// ═══════════════════════════════════════════════════════
+window.addEventListener("resize", ()=>{
+    if(!gameRunning) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const divY = Math.floor(canvas.height/2);
+    document.getElementById("tank-divider").style.top = divY+"px";
+    document.getElementById("label-adult").style.top = (divY-22)+"px";
+    document.getElementById("label-fry").style.top = (divY+6)+"px";
+    // 성어 경계 재설정
+    for(let f of adultFishes){ f.tankTop=0; f.tankBottom=divY; }
+    for(let f of pendingFries){ f.tankTop=0; f.tankBottom=divY; }
+    for(let f of fryFishes){ f.tankTop=divY; f.tankBottom=canvas.height; }
+});
+
+// 더블클릭 확대 차단
+document.addEventListener("dblclick",e=>{e.preventDefault();e.stopPropagation();},{passive:false});
+document.addEventListener("gesturestart",e=>{e.preventDefault();},{passive:false});
+document.body.style.userSelect="none";
+document.body.style.webkitUserSelect="none";
+
+// ═══════════════════════════════════════════════════════
+// BGM
+// ═══════════════════════════════════════════════════════
+const bgm = document.getElementById("bgm");
+function ensureBgmPlay(){
+    if(bgm && bgm.paused) bgm.play().catch(()=>{});
+}
+document.addEventListener("click", ensureBgmPlay, {once:false});
+document.addEventListener("touchstart", ensureBgmPlay, {passive:true, once:false});
+
+// ═══════════════════════════════════════════════════════
+// 뒤로가기 스택 관리 (history API 미사용 - 플래그 방식)
+// ─ 레벨: 0=메인, 1=게임, 2=모달
+// ═══════════════════════════════════════════════════════
+let navLevel = 0; // 0:메인, 1:게임, 2:모달
+
+function closeModal(){
+    document.getElementById("modal-overlay").classList.remove("open");
+    navLevel = 1;
+}
+
+function goBackFromGame(){
+    if(window._spawnInterval){ clearInterval(window._spawnInterval); window._spawnInterval=null; }
+    buildSaveSnapshot();
+    spawningActive = false;
+    if(adultFishes[1]) adultFishes[1].spawningSlowdown = 1.0;
+    gameRunning = false;
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("main-screen").style.display = "flex";
+    buildMainScreen();
+    if(window._canvasClickFn) canvas.removeEventListener("click", window._canvasClickFn);
+    stopBubbles();
+    navLevel = 0;
+}
+
+// 기기 뒤로가기 버튼 처리
+document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape" || e.key === "BrowserBack"){
+        if(navLevel === 2) closeModal();
+        else if(navLevel === 1) goBackFromGame();
+    }
+});
+
+// Android 뒤로가기: history 스택 1개만 관리
+function pushGameHistory(){
+    history.pushState({nav:'game'}, '');
+    navLevel = 1;
+}
+function pushModalHistory(){
+    history.pushState({nav:'modal'}, '');
+    navLevel = 2;
+}
+
+window.addEventListener("popstate", (e)=>{
+    if(navLevel === 2){
+        // 모달 닫기
+        closeModal();
+        // 게임 스택 다시 추가
+        history.pushState({nav:'game'}, '');
+        navLevel = 1;
+    } else if(navLevel === 1){
+        goBackFromGame();
+    }
+});
+
+// ═══════════════════════════════════════════════════════
+// 초기 진입
+// ═══════════════════════════════════════════════════════
+buildMainScreen();
+
+</script>
+</body>
+</html>
