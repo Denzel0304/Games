@@ -45,7 +45,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#001020; touch
 /* ── 게임화면 ── */
 #game-screen { position:fixed; inset:0; display:none; }
 #back-btn {
-    position:fixed; top:12px; left:12px; z-index:300;
+    position:fixed; top:12px; left:12px; z-index:400;
     background:rgba(0,60,120,0.7); border:1px solid rgba(80,180,255,0.5);
     color:#7dd9ff; font-size:13px; font-family:sans-serif;
     padding:7px 14px; border-radius:20px; cursor:pointer;
@@ -62,8 +62,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:#001020; touch
 
 /* ── 성어 어항 UI ── */
 #adult-ui {
-    position:fixed; top:12px; right:12px; z-index:200;
+    position:fixed; top:12px; right:12px; z-index:400;
     display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+    pointer-events:auto;
 }
 
 /* 산란 progress 버튼 */
@@ -141,8 +142,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:#001020; touch
 
 /* ── 치어 어항 UI ── */
 #fry-ui {
-    position:fixed; bottom:12px; right:12px; z-index:200;
+    position:fixed; bottom:12px; right:12px; z-index:400;
     display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+    pointer-events:auto;
 }
 #fry-feed-ui { display:flex; align-items:center; gap:10px; }
 #fry-feed-count {
@@ -247,8 +249,45 @@ canvas { display:block; touch-action:none; }
     font-family:sans-serif; padding:5px 11px; border-radius:16px;
     cursor:pointer; letter-spacing:0.5px;
     transition:all 0.15s; box-shadow:0 0 6px rgba(200,0,0,0.2);
+    position:relative; z-index:999; touch-action:manipulation;
 }
 #reset-btn:hover { background:rgba(200,40,40,0.75); }
+#reset-btn:active { background:rgba(220,50,50,0.9); transform:scale(0.95); }
+
+/* 리셋 확인 오버레이 */
+#reset-confirm-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.8);
+    z-index:600; display:none; align-items:center; justify-content:center;
+}
+#reset-confirm-overlay.open { display:flex; }
+#reset-confirm-box {
+    background:linear-gradient(160deg,#1a0606,#0a0202);
+    border:1.5px solid rgba(255,100,100,0.5);
+    border-radius:18px; padding:28px 24px; min-width:280px; max-width:88vw;
+    box-shadow:0 8px 40px rgba(0,0,0,0.8); text-align:center;
+}
+#reset-confirm-box h3 {
+    color:#ff8080; font-size:16px; font-family:sans-serif;
+    font-weight:700; margin-bottom:12px;
+}
+#reset-confirm-box p {
+    color:rgba(255,200,200,0.75); font-size:13px; font-family:sans-serif;
+    margin-bottom:22px; line-height:1.6;
+}
+.reset-btns { display:flex; gap:10px; justify-content:center; }
+.reset-btn-cancel {
+    padding:10px 22px; border-radius:10px; font-size:13px;
+    font-family:sans-serif; font-weight:700; cursor:pointer; border:none;
+    background:rgba(60,80,100,0.7); color:#aaa; transition:all 0.15s;
+}
+.reset-btn-cancel:hover { background:rgba(80,100,130,0.85); }
+.reset-btn-ok {
+    padding:10px 22px; border-radius:10px; font-size:13px;
+    font-family:sans-serif; font-weight:700; cursor:pointer; border:none;
+    background:rgba(180,30,30,0.8); color:#fff;
+    box-shadow:0 2px 12px rgba(180,30,30,0.4); transition:all 0.15s;
+}
+.reset-btn-ok:hover { background:rgba(220,40,40,0.9); }
 </style>
 </head>
 <body>
@@ -295,6 +334,18 @@ canvas { display:block; touch-action:none; }
         <div id="fry-feed-ui">
             <span id="fry-feed-count">1</span>
             <div id="fry-feed-btn">🦐</div>
+        </div>
+    </div>
+</div>
+
+<!-- 리셋 확인 오버레이 -->
+<div id="reset-confirm-overlay">
+    <div id="reset-confirm-box">
+        <h3>⚠️ 데이터 초기화</h3>
+        <p id="reset-confirm-msg"></p>
+        <div class="reset-btns">
+            <button class="reset-btn-cancel" id="reset-cancel-btn">취소</button>
+            <button class="reset-btn-ok" id="reset-ok-btn">초기화</button>
         </div>
     </div>
 </div>
@@ -1018,26 +1069,47 @@ function initGameUI(type, adultTop, adultBottom, fryTop, fryBottom){
     // 분양 버튼
     document.getElementById("adopt-btn").onclick = openAdoptModal;
 
-    // 리셋 버튼
-    document.getElementById("reset-btn").onclick = (e)=>{
+    // 리셋 버튼 - 커스텀 확인 오버레이 사용 (confirm() 미사용)
+    const resetBtn = document.getElementById("reset-btn");
+    // 기존 이벤트 완전 제거 후 재등록
+    const newResetBtn = resetBtn.cloneNode(true);
+    resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+
+    newResetBtn.addEventListener("click", (e)=>{
+        e.preventDefault();
         e.stopPropagation();
-        if(!confirm(`⚠️ ${FISH_NAMES[type] || type} 데이터를 초기화할까요?\n성어 먹이 기록, 치어 전체가 삭제됩니다.`)) return;
+        const overlay = document.getElementById("reset-confirm-overlay");
+        document.getElementById("reset-confirm-msg").textContent =
+            `${FISH_NAMES[type] || type}의 모든 데이터를 초기화합니다.\n성어 먹이 기록, 치어, 산란 기록이 모두 삭제됩니다.`;
+        overlay.classList.add("open");
+    }, {capture:true});
+
+    document.getElementById("reset-cancel-btn").onclick = (e)=>{
+        e.stopPropagation();
+        document.getElementById("reset-confirm-overlay").classList.remove("open");
+    };
+    document.getElementById("reset-ok-btn").onclick = (e)=>{
+        e.stopPropagation();
+        document.getElementById("reset-confirm-overlay").classList.remove("open");
+
         // 산란 중이면 중단
         if(window._spawnInterval){ clearInterval(window._spawnInterval); window._spawnInterval=null; }
         spawningActive = false;
         spawningBorn = 0;
         spawningTotal = 0;
-        // localStorage 초기화
-        saveData(type, defaultSaveData(type));
+
+        // localStorage 완전 초기화
+        localStorage.removeItem(saveKey(type));
+
         // 메모리 초기화
-        adultFishes[0].foodEaten = 0;
-        adultFishes[1].foodEaten = 0;
-        adultFishes[1].spawningSlowdown = 1.0;
+        if(adultFishes[0]) adultFishes[0].foodEaten = 0;
+        if(adultFishes[1]){ adultFishes[1].foodEaten = 0; adultFishes[1].spawningSlowdown = 1.0; }
         fryFishes = [];
         pendingFries = [];
         adultFoods = [];
         fryFoods = [];
         window._nextBatch = 1;
+
         document.getElementById("separate-btn").classList.remove("visible");
         updateSpawnUI();
         updateFryCounter();
