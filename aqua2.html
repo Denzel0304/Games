@@ -1692,16 +1692,8 @@ function closeModal(){
 
 function goBackFromGame(){
     if(window._spawnInterval){ clearInterval(window._spawnInterval); window._spawnInterval=null; }
-    buildSaveSnapshot();
-    spawningActive = false;
-    if(adultFishes[1]) adultFishes[1].spawningSlowdown = 1.0;
-    gameRunning = false;
-    document.getElementById("game-screen").style.display = "none";
-    document.getElementById("main-screen").style.display = "flex";
-    buildMainScreen();
-    if(window._canvasClickFn) canvas.removeEventListener("click", window._canvasClickFn);
-    stopBubbles();
-    navLevel = 0;
+    buildSaveSnapshot();  // localStorage 저장 먼저
+    location.reload();    // 새로고침 → 목록화면이 깔끔한 초기 상태로
 }
 
 // 기기 뒤로가기 버튼 처리
