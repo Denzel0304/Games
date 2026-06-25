@@ -15,39 +15,39 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
     z-index:200;
 }
 #main-screen h1 {
-    color:#7dd9ff; font-size:clamp(22px,5vw,42px); font-family:'Segoe UI',sans-serif;
+    color:#7dd9ff; font-size:clamp(28px,6vw,54px); font-family:'Segoe UI',sans-serif;
     font-weight:700; letter-spacing:2px; text-shadow:0 0 18px rgba(0,180,255,0.7);
-    margin-bottom:10px;
+    margin-bottom:12px;
 }
 #main-screen p {
-    color:rgba(150,220,255,0.7); font-size:14px; font-family:sans-serif;
-    margin-bottom:36px; letter-spacing:1px;
+    color:rgba(150,220,255,0.7); font-size:17px; font-family:sans-serif;
+    margin-bottom:44px; letter-spacing:1px;
 }
 #fish-buttons {
-    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
-    padding:0 20px; max-width:420px; width:100%;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+    padding:0 28px; max-width:600px; width:100%;
 }
 .fish-btn {
     background:rgba(0,80,160,0.45); border:1.5px solid rgba(80,180,255,0.5);
-    border-radius:14px; padding:18px 10px; cursor:pointer; text-align:center;
+    border-radius:18px; padding:26px 12px 20px; cursor:pointer; text-align:center;
     transition:all 0.18s; position:relative; overflow:hidden;
 }
 .fish-btn:hover { background:rgba(0,120,220,0.6); border-color:rgba(120,210,255,0.8); transform:scale(1.04); }
 .fish-btn:active { transform:scale(0.97); }
-.fish-btn canvas { display:block; margin:0 auto 6px; }
-.fish-btn .fish-name { color:#c0e8ff; font-size:13px; font-family:sans-serif; font-weight:600; }
+.fish-btn canvas { display:block; margin:0 auto 10px; }
+.fish-btn .fish-name { color:#c0e8ff; font-size:16px; font-family:sans-serif; font-weight:700; }
 .fish-btn .fish-count {
-    position:absolute; top:6px; right:8px; color:rgba(100,200,255,0.7);
-    font-size:11px; font-family:sans-serif;
+    position:absolute; top:8px; right:10px; color:rgba(100,200,255,0.7);
+    font-size:12px; font-family:sans-serif;
 }
 
 /* ── 게임화면 ── */
 #game-screen { position:fixed; inset:0; display:none; }
 #back-btn {
-    position:fixed; top:12px; left:12px; z-index:400;
-    background:rgba(0,60,120,0.7); border:1px solid rgba(80,180,255,0.5);
-    color:#7dd9ff; font-size:13px; font-family:sans-serif;
-    padding:7px 14px; border-radius:20px; cursor:pointer;
+    position:fixed; top:14px; left:14px; z-index:400;
+    background:rgba(0,60,120,0.7); border:1.5px solid rgba(80,180,255,0.5);
+    color:#7dd9ff; font-size:16px; font-family:sans-serif;
+    padding:11px 20px; border-radius:24px; cursor:pointer;
     transition:all 0.15s;
 }
 #back-btn:hover { background:rgba(0,100,180,0.8); }
@@ -114,14 +114,14 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
     display:flex; align-items:center; gap:10px;
 }
 #adult-feed-count {
-    color:rgba(255,255,255,0.9); font-size:32px; font-weight:bold;
+    color:rgba(255,255,255,0.9); font-size:38px; font-weight:bold;
     font-family:sans-serif; text-shadow:0 0 8px rgba(0,180,255,0.7);
-    min-width:28px; text-align:right;
+    min-width:32px; text-align:right;
 }
 #adult-feed-btn {
-    width:56px; height:56px; border-radius:50%;
+    width:70px; height:70px; border-radius:50%;
     background:rgba(0,140,220,0.55); border:2px solid rgba(120,210,255,0.7);
-    color:rgba(255,255,255,0.95); font-size:36px;
+    color:rgba(255,255,255,0.95); font-size:44px;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; box-shadow:0 0 10px rgba(0,160,255,0.4);
     transition:all 0.15s;
@@ -131,8 +131,8 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
 /* 치어 분리 버튼 */
 #separate-btn {
     background:rgba(0,160,80,0.55); border:1.5px solid rgba(80,255,160,0.6);
-    color:#a0ffcc; font-size:12px; font-weight:700;
-    font-family:sans-serif; padding:7px 14px; border-radius:20px;
+    color:#a0ffcc; font-size:14px; font-weight:700;
+    font-family:sans-serif; padding:10px 18px; border-radius:22px;
     cursor:pointer; letter-spacing:0.5px; display:none;
     transition:all 0.15s; box-shadow:0 0 8px rgba(0,200,100,0.3);
 }
@@ -147,14 +147,14 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
 }
 #fry-feed-ui { display:flex; align-items:center; gap:10px; }
 #fry-feed-count {
-    color:rgba(255,220,100,0.9); font-size:28px; font-weight:bold;
+    color:rgba(255,220,100,0.9); font-size:34px; font-weight:bold;
     font-family:sans-serif; text-shadow:0 0 8px rgba(255,200,0,0.6);
-    min-width:24px; text-align:right;
+    min-width:28px; text-align:right;
 }
 #fry-feed-btn {
-    width:48px; height:48px; border-radius:50%;
+    width:62px; height:62px; border-radius:50%;
     background:rgba(180,140,0,0.55); border:2px solid rgba(255,210,80,0.7);
-    color:rgba(255,255,255,0.95); font-size:30px;
+    color:rgba(255,255,255,0.95); font-size:38px;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; box-shadow:0 0 8px rgba(200,160,0,0.4);
     transition:all 0.15s;
@@ -164,8 +164,8 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
 /* 분양 버튼 */
 #adopt-btn {
     background:rgba(160,80,200,0.55); border:1.5px solid rgba(200,130,255,0.6);
-    color:#e0b0ff; font-size:12px; font-weight:700;
-    font-family:sans-serif; padding:7px 14px; border-radius:20px;
+    color:#e0b0ff; font-size:14px; font-weight:700;
+    font-family:sans-serif; padding:10px 18px; border-radius:22px;
     cursor:pointer; letter-spacing:0.5px;
     transition:all 0.15s; box-shadow:0 0 8px rgba(160,80,200,0.3);
 }
@@ -244,8 +244,8 @@ canvas { display:block; touch-action:none; }
 /* 리셋 버튼 */
 #reset-btn {
     background:rgba(160,30,30,0.55); border:1.5px solid rgba(255,100,100,0.5);
-    color:rgba(255,180,180,0.9); font-size:11px; font-weight:700;
-    font-family:sans-serif; padding:5px 11px; border-radius:16px;
+    color:rgba(255,180,180,0.9); font-size:14px; font-weight:700;
+    font-family:sans-serif; padding:9px 18px; border-radius:20px;
     cursor:pointer; letter-spacing:0.5px;
     transition:all 0.15s; box-shadow:0 0 6px rgba(200,0,0,0.2);
     position:relative; z-index:999; touch-action:manipulation;
@@ -520,7 +520,7 @@ function buildMainScreen(){
         const pct = Math.round(Math.min(100, ((d.male.foodEaten + d.female.foodEaten)/2/FOOD_TO_SPAWN)*100));
 
         btn.innerHTML = `
-            <canvas width="80" height="50"></canvas>
+            <canvas width="120" height="76"></canvas>
             <div class="fish-name">${FISH_NAMES[type]}</div>
             <div class="fish-count">치어 ${totalFry}마리</div>
         `;
