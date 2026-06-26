@@ -174,7 +174,7 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
     pointer-events:auto;
     /* top은 JS에서 divY + 12px로 동적 설정 */
 }
-#fry-feed-ui { display:flex; align-items:center; gap:14px; }
+#fry-feed-ui { display:flex; align-items:center; gap:14px; margin-right:clamp(10px,2.5vw,20px); }
 #fry-feed-count {
     color:rgba(255,220,100,0.9); font-size:clamp(16px,3.2vw,28px); font-weight:bold;
     font-family:sans-serif; text-shadow:0 0 8px rgba(255,200,0,0.6);
@@ -1447,6 +1447,7 @@ function spawnOneFry(tankTop, tankBottom){
     spawningBorn++;
 
     showToast(`🥚 치어 탄생! (${spawningBorn}/${spawningTotal})`);
+    updateSpawnUI();
 
     if(spawningBorn >= spawningTotal){
         // 산란 완료
@@ -1773,6 +1774,7 @@ document.body.style.webkitUserSelect="none";
 // ═══════════════════════════════════════════════════════
 const bgm = document.getElementById("bgm");
 function ensureBgmPlay(){
+    if(!gameRunning) return; // 사육장(게임화면)에서만 BGM 재생
     if(bgm && bgm.paused) bgm.play().catch(()=>{});
 }
 document.addEventListener("click", ensureBgmPlay, {once:false});
@@ -1818,6 +1820,8 @@ function goBackFromGame(){
     document.getElementById("game-screen").style.display = "none";
     document.getElementById("main-screen").style.display = "";
     document.getElementById("vp").content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+    // 선택화면으로 나가면 BGM 정지 (사육장 진입 시에만 재생)
+    if(bgm){ bgm.pause(); bgm.currentTime = 0; }
     buildMainScreen();
 }
 
