@@ -11,7 +11,9 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
 /* ── 메인화면 ── */
 #main-screen {
     position:fixed; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
+    align-items:center; justify-content:flex-start;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding-top:clamp(24px,6vh,60px); padding-bottom:clamp(24px,6vh,60px);
     background: linear-gradient(180deg,#041a3a 0%,#001018 100%);
     z-index:200;
 }
@@ -417,10 +419,10 @@ canvas { display:block; touch-action:none; }
 // ═══════════════════════════════════════════════════════
 // 설정 & 상수
 // ═══════════════════════════════════════════════════════
-const FISH_TYPES = ["clownfish","butterfly","angelfish","tang","puffer","wrasse"];
+const FISH_TYPES = ["clownfish","butterfly","angelfish","tang","puffer","wrasse","turtle"];
 const FISH_NAMES = {
     clownfish:"흰동가리", butterfly:"나비고기", angelfish:"엔젤피시",
-    tang:"블루탱", puffer:"복어", wrasse:"놀래기"
+    tang:"블루탱", puffer:"복어", wrasse:"놀래기", turtle:"거북이"
 };
 const FISH_PRICES = {
     clownfish: 50000,   // 흰동가리 5만원
@@ -428,13 +430,14 @@ const FISH_PRICES = {
     angelfish: 38000,   // 엔젤피시 3만 8천원
     tang:     100000,   // 블루탱 10만원
     puffer:    32000,   // 복어 3만 2천원
-    wrasse:    20000    // 놀래기 2만원
+    wrasse:    20000,   // 놀래기 2만원
+    turtle:   200000    // 거북이 20만원
 };
 
 // 종류별 기본 크기 (원본과 동일)
 const BASE_SIZE_MAP = {
     clownfish:  26, butterfly: 29, angelfish: 34,
-    tang:       31, puffer:    24, wrasse:    22
+    tang:       31, puffer:    24, wrasse:    22, turtle: 36
 };
 
 const FOOD_TO_SPAWN = 100;   // 산란에 필요한 먹이 수
@@ -598,6 +601,7 @@ function _previewDrawFish(c, type, s, h){
         case "tang":      _pTang(c,s,tw,h);      break;
         case "puffer":    _pPuffer(c,s,tw,h);    break;
         case "wrasse":    _pWrasse(c,s,tw,h);    break;
+        case "turtle":    _pTurtle(c,s,tw,h);    break;
     }
 }
 
@@ -716,6 +720,56 @@ function _pWrasse(c,s,tw,h){
     c.strokeStyle="rgba(0,0,0,0.18)"; c.lineWidth=s*.05;
     c.beginPath(); c.ellipse(0,0,s,s*.5,0,0,Math.PI*2); c.stroke();
     _previewEye(c,s,s*.68,-s*.1,s*.1);
+}
+
+function _pTurtle(c,s,tw,h){
+    // 뒷다리
+    c.save(); c.translate(-s*.55, s*.42); c.rotate(tw*0.5);
+    c.fillStyle=`hsl(${15+h},45%,32%)`;
+    c.beginPath(); c.ellipse(0,0,s*.28,s*.14,0.3,0,Math.PI*2); c.fill();
+    c.restore();
+    c.save(); c.translate(-s*.55, -s*.42); c.rotate(-tw*0.5);
+    c.fillStyle=`hsl(${15+h},45%,32%)`;
+    c.beginPath(); c.ellipse(0,0,s*.28,s*.14,-0.3,0,Math.PI*2); c.fill();
+    c.restore();
+    // 앞다리
+    c.save(); c.translate(s*.25, s*.55); c.rotate(tw*1.6+0.5);
+    c.fillStyle=`hsl(${18+h},50%,33%)`;
+    c.beginPath(); c.ellipse(0,0,s*.5,s*.2,0.4,0,Math.PI*2); c.fill();
+    c.strokeStyle="rgba(0,0,0,0.15)"; c.lineWidth=s*.03; c.stroke();
+    c.restore();
+    c.save(); c.translate(s*.25, -s*.55); c.rotate(-tw*1.6-0.5);
+    c.fillStyle=`hsl(${18+h},50%,33%)`;
+    c.beginPath(); c.ellipse(0,0,s*.5,s*.2,-0.4,0,Math.PI*2); c.fill();
+    c.strokeStyle="rgba(0,0,0,0.15)"; c.lineWidth=s*.03; c.stroke();
+    c.restore();
+    // 머리+목
+    c.fillStyle=`hsl(${22+h},48%,55%)`;
+    c.beginPath(); c.ellipse(s*.95,0,s*.32,s*.24,0,0,Math.PI*2); c.fill();
+    c.strokeStyle="rgba(0,0,0,0.2)"; c.lineWidth=s*.04; c.stroke();
+    // 등껍질
+    let bg=c.createRadialGradient(-s*.1,-s*.15,s*.1,0,0,s*.95);
+    bg.addColorStop(0,`hsl(${18+h},65%,52%)`); bg.addColorStop(0.55,`hsl(${12+h},60%,40%)`); bg.addColorStop(1,`hsl(${8+h},55%,24%)`);
+    c.fillStyle=bg; c.beginPath(); c.ellipse(-s*.08,0,s*.78,s*.62,0,0,Math.PI*2); c.fill();
+    c.strokeStyle="rgba(0,0,0,0.3)"; c.lineWidth=s*.05;
+    c.beginPath(); c.ellipse(-s*.08,0,s*.78,s*.62,0,0,Math.PI*2); c.stroke();
+    // 육각 스큐트 무늬
+    c.strokeStyle="rgba(0,0,0,0.25)"; c.lineWidth=s*.035;
+    const scutes=[[-s*.08,-s*.32,s*.18],[-s*.08,0,s*.2],[-s*.08,s*.32,s*.18],
+                  [-s*.42,-s*.18,s*.14],[-s*.42,s*.18,s*.14],
+                  [s*.28,-s*.2,s*.14],[s*.28,s*.2,s*.14],[s*.5,0,s*.13]];
+    for(let [sx,sy,sr] of scutes){
+        c.beginPath(); c.moveTo(sx+sr,sy);
+        for(let i=1;i<=6;i++){ const ang=i*Math.PI/3; c.lineTo(sx+Math.cos(ang)*sr, sy+Math.sin(ang)*sr*0.85); }
+        c.closePath(); c.stroke();
+    }
+    // 하이라이트
+    c.fillStyle="rgba(255,255,255,0.08)";
+    c.beginPath(); c.ellipse(-s*.2,-s*.2,s*.35,s*.2,-0.3,0,Math.PI*2); c.fill();
+    // 짧은 꼬리
+    c.fillStyle=`hsl(${15+h},45%,28%)`;
+    c.beginPath(); c.moveTo(-s*.78,-s*.08); c.lineTo(-s*.95,0); c.lineTo(-s*.78,s*.08); c.fill();
+    _previewEye(c,s,s*1.02,-s*.05,s*.065);
 }
 
 let _previewAnimId = null;
@@ -972,6 +1026,7 @@ class Fish {
             case "tang":       this._drawTang(s,tw);      break;
             case "puffer":     this._drawPuffer(s,tw);    break;
             case "wrasse":     this._drawWrasse(s,tw);    break;
+            case "turtle":     this._drawTurtle(s,tw);    break;
         }
     }
 
@@ -1108,6 +1163,120 @@ class Fish {
         ctx.strokeStyle="rgba(0,0,0,0.18)"; ctx.lineWidth=s*.05;
         ctx.beginPath(); ctx.ellipse(0,0,s,s*.5,0,0,Math.PI*2); ctx.stroke();
         this._drawEye(s*.68,-s*.1,s*.1);
+    }
+
+    _drawTurtle(s, tw){
+        const h = this.hueShift;
+
+        // 뒷다리
+        ctx.save();
+        ctx.translate(-s*.55, s*.42);
+        ctx.rotate(tw*0.5);
+        ctx.fillStyle = `hsl(${15+h},45%,32%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.28, s*.14, 0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(-s*.55, -s*.42);
+        ctx.rotate(-tw*0.5);
+        ctx.fillStyle = `hsl(${15+h},45%,32%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.28, s*.14, -0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // 앞다리
+        ctx.save();
+        ctx.translate(s*.25, s*.55);
+        ctx.rotate(tw*1.6 + 0.5);
+        ctx.fillStyle = `hsl(${18+h},50%,33%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.5, s*.2, 0.4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = s*.03;
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(s*.25, -s*.55);
+        ctx.rotate(-tw*1.6 - 0.5);
+        ctx.fillStyle = `hsl(${18+h},50%,33%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.5, s*.2, -0.4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = s*.03;
+        ctx.stroke();
+        ctx.restore();
+
+        // 머리 + 목
+        ctx.fillStyle = `hsl(${22+h},48%,55%)`;
+        ctx.beginPath();
+        ctx.ellipse(s*.95, 0, s*.32, s*.24, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = s*.04;
+        ctx.stroke();
+
+        // 등껍질 (둥근 돔형, 그라디언트)
+        let bg = ctx.createRadialGradient(-s*.1,-s*.15,s*.1, 0,0,s*.95);
+        bg.addColorStop(0, `hsl(${18+h},65%,52%)`);
+        bg.addColorStop(0.55, `hsl(${12+h},60%,40%)`);
+        bg.addColorStop(1, `hsl(${8+h},55%,24%)`);
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.ellipse(-s*.08, 0, s*.78, s*.62, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // 등껍질 테두리
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = s*.05;
+        ctx.beginPath();
+        ctx.ellipse(-s*.08, 0, s*.78, s*.62, 0, 0, Math.PI*2);
+        ctx.stroke();
+
+        // 육각 스큐트 무늬
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.lineWidth = s*.035;
+        const scutes = [
+            [-s*.08, -s*.32, s*.18],
+            [-s*.08, 0,       s*.2 ],
+            [-s*.08,  s*.32, s*.18],
+            [-s*.42, -s*.18, s*.14],
+            [-s*.42,  s*.18, s*.14],
+            [ s*.28, -s*.2,  s*.14],
+            [ s*.28,  s*.2,  s*.14],
+            [ s*.5,   0,     s*.13]
+        ];
+        for(let [sx, sy, sr] of scutes){
+            ctx.beginPath();
+            ctx.moveTo(sx+sr, sy);
+            for(let i=1;i<=6;i++){
+                const ang = i * Math.PI/3;
+                ctx.lineTo(sx+Math.cos(ang)*sr, sy+Math.sin(ang)*sr*0.85);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // 등껍질 하이라이트
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(-s*.2,-s*.2, s*.35, s*.2, -0.3, 0, Math.PI*2);
+        ctx.fill();
+
+        // 짧은 꼬리
+        ctx.fillStyle = `hsl(${15+h},45%,28%)`;
+        ctx.beginPath();
+        ctx.moveTo(-s*.78, -s*.08);
+        ctx.lineTo(-s*.95, 0);
+        ctx.lineTo(-s*.78, s*.08);
+        ctx.fill();
+
+        this._drawEye(s*1.02, -s*.05, s*.065);
     }
 
     _drawEye(ex, ey, r){
