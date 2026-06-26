@@ -67,24 +67,37 @@ html, body { overflow:hidden; background:#001020; touch-action:none; }
     z-index:150; pointer-events:none;
 }
 
-/* ── 성어 어항 UI ── */
-/* 리셋+먹이+치어분리: 우상단 고정 */
-#adult-ui {
-    position:fixed; top:12px; right:12px; z-index:400;
-    display:flex; flex-direction:column; align-items:flex-end;
-    gap:clamp(12px,2.5vw,22px);
-    pointer-events:auto;
+/* ── 상단 바: [리셋] [산란그래프] [먹이버튼] 한 줄 ── */
+#top-bar {
+    position:fixed; top:12px; left:12px; right:12px; z-index:401;
+    display:flex; flex-direction:row; align-items:center;
+    justify-content:space-between;
+    pointer-events:none;
 }
+#top-bar > * { pointer-events:auto; }
 
-/* 산란 progress 버튼: 상단 중앙 fixed */
+/* 산란 progress 버튼: top-bar 내 */
 #spawn-btn-wrap {
-    position:fixed;
-    top:12px; left:50%; transform:translateX(-50%);
+    flex:0 0 auto;
+    position:static; transform:none;
     z-index:401;
     width:clamp(120px,26vw,240px); height:clamp(44px,9.5vw,88px); border-radius:clamp(10px,2vw,16px);
     overflow:hidden; cursor:pointer;
     border:2px solid rgba(120,210,255,0.6);
     box-shadow:0 0 12px rgba(0,160,255,0.35);
+}
+
+/* 먹이 UI — top-bar 내 */
+#adult-feed-ui {
+    flex:0 0 auto;
+}
+
+/* ── 성어 어항 UI (치어분리 전용) ── */
+#adult-ui {
+    position:fixed; right:12px; z-index:400;
+    display:flex; flex-direction:column; align-items:flex-end;
+    gap:clamp(12px,2.5vw,22px);
+    pointer-events:auto;
 }
 #spawn-progress-f {
     position:absolute; left:0; top:0; width:50%; height:100%;
@@ -342,23 +355,23 @@ canvas { display:block; touch-action:none; }
 
     <button id="back-btn">← 목록</button>
 
-    <!-- 산란 그래프: 상단 중앙 (fixed CSS로 위치 지정) -->
-    <div id="spawn-btn-wrap" class="not-ready">
-        <div id="spawn-fill-f"></div>
-        <div id="spawn-fill-m"></div>
-        <div id="spawn-btn-divider"></div>
-        <div id="spawn-btn-label">산란 준비중</div>
-    </div>
-
-
-    <!-- 우상단: 리셋 + 먹이 + 치어분리 -->
-    <div id="adult-ui">
+    <!-- 상단 바: [리셋] [산란그래프] [먹이버튼] -->
+    <div id="top-bar">
         <div id="reset-btn">↺ 리셋</div>
-        <!-- 성어 먹이버튼: 리셋과 치어분리 사이 -->
+        <div id="spawn-btn-wrap" class="not-ready">
+            <div id="spawn-fill-f"></div>
+            <div id="spawn-fill-m"></div>
+            <div id="spawn-btn-divider"></div>
+            <div id="spawn-btn-label">산란 준비중</div>
+        </div>
         <div id="adult-feed-ui">
             <span id="adult-feed-count">1</span>
             <div id="adult-feed-btn">🦐</div>
         </div>
+    </div>
+
+    <!-- 우상단: 치어분리 (top-bar 아래) -->
+    <div id="adult-ui">
         <div id="separate-btn">🐟 치어 분리</div>
     </div>
 
@@ -389,6 +402,7 @@ canvas { display:block; touch-action:none; }
 <div id="modal-overlay">
     <div id="modal-box">
         <h2>📦 치어 분양</h2>
+        <p style="font-size:clamp(10px,2.2vw,13px);color:rgba(200,180,255,0.75);margin:0 0 10px;text-align:center;">큰 치어부터 분양됩니다</p>
         <div id="modal-content"></div>
         <div class="modal-total" id="modal-total"></div>
         <div class="modal-btns">
@@ -1088,6 +1102,11 @@ function startGame(type){
     // 치어 UI: 치어항 상단에 위치
     document.getElementById("fry-ui").style.top = (divY+12)+"px";
     document.getElementById("fry-counter-wrap").style.top = (divY+12)+"px";
+    // 치어분리 버튼: top-bar 바로 아래
+    setTimeout(()=>{
+        const tbH = document.getElementById("top-bar").offsetHeight || 56;
+        document.getElementById("adult-ui").style.top = (12+tbH+8)+"px";
+    }, 30);
 
     const adultTop = 0, adultBottom = divY;
     const fryTop = divY, fryBottom = canvas.height;
@@ -1490,13 +1509,14 @@ function openAdoptModal(){
             if(n <= 0) continue;
             const max = parseInt(inp.dataset.max);
             n = Math.min(n, max);
-            let removed = 0;
-            for(let i=fryFishes.length-1;i>=0&&removed<n;i--){
-                if(fryFishes[i].batch == batch){
-                    fryFishes.splice(i,1);
-                    removed++;
-                }
-            }
+            // 해당 batch 치어를 크기 내림차순 정렬 → 큰 것부터 분양
+            const batchFish = fryFishes
+                .map((f, i) => ({f, i}))
+                .filter(({f}) => f.batch == batch)
+                .sort((a, b) => (b.f.size ?? b.f.baseSize ?? 0) - (a.f.size ?? a.f.baseSize ?? 0));
+            // 상위 n마리의 원본 인덱스를 내림차순으로 수집해 splice
+            const toRemove = batchFish.slice(0, n).map(({i}) => i).sort((a,b)=>b-a);
+            for(const idx of toRemove) fryFishes.splice(idx, 1);
         }
         closeModalByButton();
         updateFryCounter();
@@ -1681,6 +1701,9 @@ window.addEventListener("resize", ()=>{
     document.getElementById("label-fry").style.top = (divY+6)+"px";
     document.getElementById("fry-ui").style.top = (divY+12)+"px";
     document.getElementById("fry-counter-wrap").style.top = (divY+12)+"px";
+    // 치어분리 버튼 위치 갱신
+    const tbH2 = document.getElementById("top-bar").offsetHeight || 56;
+    document.getElementById("adult-ui").style.top = (12+tbH2+8)+"px";
     // 성어 경계 재설정
     for(let f of adultFishes){ f.tankTop=0; f.tankBottom=divY; }
     for(let f of pendingFries){ f.tankTop=0; f.tankBottom=divY; }
