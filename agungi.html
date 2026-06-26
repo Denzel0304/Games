@@ -934,6 +934,11 @@
     logs.push(log);
     totalAdded++;
 
+    // 첫 장작을 넣는 순간(첫 터치) BGM 재생 시작
+    if (totalAdded === 1 && typeof startBgm === 'function'){
+      startBgm();
+    }
+
     // 첫 장작은 즉시 점화, 이후 장작은 5~12초 뒤에 불 붙음
     var igniteDelay = (logs.length === 1) ? 0 : 5000 + Math.random() * 7000;
     setTimeout(function(){
@@ -998,21 +1003,17 @@
 
   render();
 
-  // BGM 자동 재생 (브라우저 정책상 첫 인터랙션 후 시작)
+  // BGM: 첫 장작을 넣는 순간(첫 터치)부터 재생
   var bgm = document.getElementById('bgm');
   bgm.volume = 0.55;
+  var bgmStarted = false;
   function startBgm(){
+    if (bgmStarted) return;
+    bgmStarted = true;
     bgm.play().catch(function(){});
-    document.removeEventListener('click', startBgm);
-    document.removeEventListener('touchstart', startBgm);
   }
-  // 바로 재생 시도 (자동재생 허용된 경우)
-  bgm.play().catch(function(){
-    // 차단된 경우 첫 터치/클릭 때 재생
-    document.addEventListener('click', startBgm);
-    document.addEventListener('touchstart', startBgm);
-  });
 })();
+
 </script>
 </body>
 </html>
