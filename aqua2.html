@@ -422,6 +422,14 @@ const FISH_NAMES = {
     clownfish:"흰동가리", butterfly:"나비고기", angelfish:"엔젤피시",
     tang:"블루탱", puffer:"복어", wrasse:"놀래기"
 };
+const FISH_PRICES = {
+    clownfish: 50000,   // 흰동가리 5만원
+    butterfly: 75000,   // 나비고기 7만 5천원
+    angelfish: 38000,   // 엔젤피시 3만 8천원
+    tang:     100000,   // 블루탱 10만원
+    puffer:    32000,   // 복어 3만 2천원
+    wrasse:    20000    // 놀래기 2만원
+};
 
 // 종류별 기본 크기 (원본과 동일)
 const BASE_SIZE_MAP = {
@@ -459,6 +467,20 @@ let pendingFries = [];        // 위 어항에서 태어났지만 아직 분리 
 
 // 먹이 수량 설정
 let adultFeedStep = 0, fryFeedStep = 0;
+
+// 누적 수익
+let totalEarnings = 0;
+const EARNINGS_KEY = "aqua2_totalEarnings";
+
+function loadEarnings(){
+    try { return parseInt(localStorage.getItem(EARNINGS_KEY)||"0")||0; } catch(e){ return 0; }
+}
+function saveEarnings(){
+    try { localStorage.setItem(EARNINGS_KEY, String(totalEarnings)); } catch(e){}
+}
+function fmtMoney(n){
+    return "₩" + n.toLocaleString("ko-KR");
+}
 
 // 저장 키
 function saveKey(type){ return `aqua2_${type}`; }
@@ -700,6 +722,9 @@ let _previewAnimId = null;
 let _previewCanvases = [];
 
 function buildMainScreen(){
+    // 누적 수익 로드
+    totalEarnings = loadEarnings();
+
     // 이전 애니메이션 중단
     if(_previewAnimId){ cancelAnimationFrame(_previewAnimId); _previewAnimId=null; }
     _previewCanvases = [];
@@ -730,6 +755,26 @@ function buildMainScreen(){
         _previewCanvases.push({cvs, type});
         btn.addEventListener("click", ()=>{ startGame(type); });
     }
+
+    // 누적 수익 표시
+    let earningsEl = document.getElementById("main-earnings");
+    if(!earningsEl){
+        earningsEl = document.createElement("div");
+        earningsEl.id = "main-earnings";
+        earningsEl.style.cssText = [
+            "margin-top:clamp(18px,4vw,36px)",
+            "font-size:clamp(18px,4.5vw,34px)",
+            "font-family:'Segoe UI',sans-serif",
+            "font-weight:700",
+            "letter-spacing:1px",
+            "color:#ffd700",
+            "text-shadow:0 0 18px rgba(255,200,0,0.8),0 0 6px rgba(255,160,0,0.5)",
+            "text-align:center",
+            "pointer-events:none"
+        ].join(";");
+        document.getElementById("main-screen").appendChild(earningsEl);
+    }
+    earningsEl.textContent = "💰 누적 수익: " + fmtMoney(totalEarnings);
 
     // 미리보기 물고기 애니메이션 루프
     function previewLoop(){
@@ -1491,7 +1536,10 @@ function openAdoptModal(){
     function updateTotal(){
         let t = 0;
         for(let inp of Object.values(inputs)) t += parseInt(inp.value||0);
-        document.getElementById("modal-total").textContent = `총 ${t}마리 분양`;
+        const price = FISH_PRICES[currentType] || 0;
+        const money = t * price;
+        document.getElementById("modal-total").textContent =
+            `총 ${t}마리 · ${fmtMoney(money)}` + (t > 0 ? ` (마리당 ${fmtMoney(price)})` : "");
     }
     for(let inp of Object.values(inputs)) inp.addEventListener("input", updateTotal);
     updateTotal();
@@ -1503,11 +1551,13 @@ function openAdoptModal(){
         closeModalByButton();
     };
     document.getElementById("modal-confirm").onclick = ()=>{
+        let earned = 0;
         for(let [batch, inp] of Object.entries(inputs)){
             let n = parseInt(inp.value||0);
             if(n <= 0) continue;
             const max = parseInt(inp.dataset.max);
             n = Math.min(n, max);
+            earned += n * (FISH_PRICES[currentType] || 0);
             // 해당 batch 치어를 크기 내림차순 정렬 → 큰 것부터 분양
             const batchFish = fryFishes
                 .map((f, i) => ({f, i}))
@@ -1517,10 +1567,14 @@ function openAdoptModal(){
             const toRemove = batchFish.slice(0, n).map(({i}) => i).sort((a,b)=>b-a);
             for(const idx of toRemove) fryFishes.splice(idx, 1);
         }
+        if(earned > 0){
+            totalEarnings += earned;
+            saveEarnings();
+        }
         closeModalByButton();
         updateFryCounter();
         buildSaveSnapshot();
-        showToast("✅ 분양 완료!");
+        showToast(earned > 0 ? `✅ 분양 완료! +${fmtMoney(earned)}` : "✅ 분양 완료!");
     };
 }
 
