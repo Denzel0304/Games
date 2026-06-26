@@ -82,7 +82,7 @@ html, body {
 
 <div id="feed-ui">
     <span id="feed-count">1</span>
-    <div id="feed-btn">+</div>
+    <div id="feed-btn">🦐</div>
 </div>
 
 <script>
@@ -666,6 +666,164 @@ class Fish {
 }
 
 
+// ================= 거북이 =================
+// Fish를 상속받아 이동/먹이추적/성장/화면래핑 로직은 그대로 사용하고,
+// draw()만 거북이 형태로 재정의한다.
+class Turtle extends Fish {
+
+    constructor(){
+        super("turtle");
+        this.type = "turtle";
+
+        // 거북이는 물고기보다 크고 느리며, 방향 전환도 느릿느릿하다
+        this.size = 34 + Math.random() * 16;
+        this.baseSize = this.size;
+
+        this.baseSpeed = 0.12 + Math.random() * 0.25;
+        this.speed = this.baseSpeed;
+        this.turnSpeed = 0.006 + Math.random() * 0.015;
+        this.tailSpeed = 260 + Math.random() * 180; // 지느러미(앞다리) 펄럭임 주기
+
+        this.hueShift = (Math.random()-0.5) * 14;
+    }
+
+    draw(){
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const facingLeft = Math.cos(this.angle) < 0;
+        if(facingLeft){
+            ctx.scale(-1,1);
+            ctx.rotate(Math.PI - this.angle);
+        } else {
+            ctx.rotate(this.angle);
+        }
+
+        const t  = Date.now();
+        const s  = this.size;
+        const tw = Math.sin(t / this.tailSpeed) * 0.5; // 앞/뒷다리 펄럭임
+
+        this._drawTurtle(s, tw);
+
+        ctx.restore();
+    }
+
+    _drawTurtle(s, tw){
+        const h = this.hueShift;
+
+        // 뒷다리 (작고, 위상 반대로 살짝 흔들림)
+        ctx.save();
+        ctx.translate(-s*.55, s*.42);
+        ctx.rotate(tw*0.5);
+        ctx.fillStyle = `hsl(${15+h},45%,32%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.28, s*.14, 0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(-s*.55, -s*.42);
+        ctx.rotate(-tw*0.5);
+        ctx.fillStyle = `hsl(${15+h},45%,32%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.28, s*.14, -0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // 앞다리 (헤엄의 주 동력, 크게 펄럭임)
+        ctx.save();
+        ctx.translate(s*.25, s*.55);
+        ctx.rotate(tw*1.6 + 0.5);
+        ctx.fillStyle = `hsl(${18+h},50%,33%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.5, s*.2, 0.4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = s*.03;
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(s*.25, -s*.55);
+        ctx.rotate(-tw*1.6 - 0.5);
+        ctx.fillStyle = `hsl(${18+h},50%,33%)`;
+        ctx.beginPath();
+        ctx.ellipse(0,0, s*.5, s*.2, -0.4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = s*.03;
+        ctx.stroke();
+        ctx.restore();
+
+        // 머리 + 목
+        ctx.fillStyle = `hsl(${22+h},48%,55%)`;
+        ctx.beginPath();
+        ctx.ellipse(s*.95, 0, s*.32, s*.24, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = s*.04;
+        ctx.stroke();
+
+        // 등껍질 (둥근 돔형, 그라디언트)
+        let bg = ctx.createRadialGradient(-s*.1,-s*.15,s*.1, 0,0,s*.95);
+        bg.addColorStop(0, `hsl(${18+h},65%,52%)`);
+        bg.addColorStop(0.55, `hsl(${12+h},60%,40%)`);
+        bg.addColorStop(1, `hsl(${8+h},55%,24%)`);
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.ellipse(-s*.08, 0, s*.78, s*.62, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // 등껍질 테두리
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = s*.05;
+        ctx.beginPath();
+        ctx.ellipse(-s*.08, 0, s*.78, s*.62, 0, 0, Math.PI*2);
+        ctx.stroke();
+
+        // 육각 스큐트 무늬
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.lineWidth = s*.035;
+        const scutes = [
+            [-s*.08, -s*.32, s*.18],
+            [-s*.08, 0,       s*.2 ],
+            [-s*.08,  s*.32, s*.18],
+            [-s*.42, -s*.18, s*.14],
+            [-s*.42,  s*.18, s*.14],
+            [ s*.28, -s*.2,  s*.14],
+            [ s*.28,  s*.2,  s*.14],
+            [ s*.5,   0,     s*.13]
+        ];
+        for(let [sx, sy, sr] of scutes){
+            ctx.beginPath();
+            ctx.moveTo(sx+sr, sy);
+            for(let i=1;i<=6;i++){
+                const ang = i * Math.PI/3;
+                ctx.lineTo(sx+Math.cos(ang)*sr, sy+Math.sin(ang)*sr*0.85);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // 등껍질 하이라이트
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(-s*.2,-s*.2, s*.35, s*.2, -0.3, 0, Math.PI*2);
+        ctx.fill();
+
+        // 짧은 꼬리
+        ctx.fillStyle = `hsl(${15+h},45%,28%)`;
+        ctx.beginPath();
+        ctx.moveTo(-s*.78, -s*.08);
+        ctx.lineTo(-s*.95, 0);
+        ctx.lineTo(-s*.78, s*.08);
+        ctx.fill();
+
+        this._drawEye(s*1.02, -s*.05, s*.065);
+    }
+}
+
+
 // 물고기 생성 (종류별 최소 1마리씩 보장)
 for(let i=0;i<FISH_TYPES.length;i++){
     fishes.push(new Fish(FISH_TYPES[i]));
@@ -673,6 +831,12 @@ for(let i=0;i<FISH_TYPES.length;i++){
 // 나머지 랜덤으로 추가
 for(let i=0;i<3;i++){
     fishes.push(new Fish());
+}
+
+// 거북이 2~3마리 생성
+const TURTLE_COUNT = 2 + Math.floor(Math.random()*2); // 2 또는 3
+for(let i=0;i<TURTLE_COUNT;i++){
+    fishes.push(new Turtle());
 }
 
 
