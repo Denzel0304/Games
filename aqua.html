@@ -267,10 +267,13 @@ class Fish {
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
 
-        if(this.x < -80)  this.x = canvas.width + 80;
-        if(this.x > canvas.width + 80)  this.x = -80;
-        if(this.y < 80)   this.y = 80;
-        if(this.y > canvas.height - 80) this.y = canvas.height - 80;
+        const margin = 60;
+        if(this.x < margin)                { const a = (Math.random() - 0.5) * Math.PI;           this.angle = a; this.wanderAngle = a; }
+        if(this.x > canvas.width - margin) { const a = Math.PI + (Math.random() - 0.5) * Math.PI; this.angle = a; this.wanderAngle = a; }
+        if(this.y < 80)                    { const a = Math.random() * Math.PI;                    this.angle = a; this.wanderAngle = a; }
+        if(this.y > canvas.height - 80)    { const a = -Math.random() * Math.PI;                   this.angle = a; this.wanderAngle = a; }
+        this.x = Math.max(margin, Math.min(canvas.width - margin, this.x));
+        this.y = Math.max(80, Math.min(canvas.height - 80, this.y));
     }
 
 
@@ -1191,10 +1194,13 @@ class Shark {
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
 
-        if(this.x < -150) this.x = canvas.width + 150;
-        if(this.x > canvas.width + 150) this.x = -150;
-        if(this.y < 80)   this.y = 80;
-        if(this.y > canvas.height - 80) this.y = canvas.height - 80;
+        const sMargin = 80;
+        if(this.x < sMargin)                { const a = (Math.random() - 0.5) * Math.PI;           this.angle = a; this.wanderAngle = a; }
+        if(this.x > canvas.width - sMargin) { const a = Math.PI + (Math.random() - 0.5) * Math.PI; this.angle = a; this.wanderAngle = a; }
+        if(this.y < 80)                     { const a = Math.random() * Math.PI;                    this.angle = a; this.wanderAngle = a; }
+        if(this.y > canvas.height - 80)     { const a = -Math.random() * Math.PI;                   this.angle = a; this.wanderAngle = a; }
+        this.x = Math.max(sMargin, Math.min(canvas.width - sMargin, this.x));
+        this.y = Math.max(80, Math.min(canvas.height - 80, this.y));
     }
 
     draw() {
