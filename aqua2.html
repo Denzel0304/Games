@@ -1051,27 +1051,27 @@ class Fish {
         this.x += Math.cos(this.angle)*this.speed;
         this.y += Math.sin(this.angle)*this.speed;
 
-        const margin = this.size * 0.6;
+        const margin = this.size + 20;
         // 4면 모두 어항 안에 가두기 (wraparound 제거)
         if(this.x < margin){
             this.x = margin;
             // 오른쪽 방향으로 꺾기
-            this.angle = (Math.random()-0.5)*Math.PI*0.8;
+            this.angle = (Math.random()-0.5)*Math.PI;
             this.wanderAngle = this.angle;
         }
         if(this.x > canvas.width - margin){
             this.x = canvas.width - margin;
-            this.angle = Math.PI + (Math.random()-0.5)*Math.PI*0.8;
+            this.angle = Math.PI + (Math.random()-0.5)*Math.PI;
             this.wanderAngle = this.angle;
         }
         if(this.y < tankTop + margin){
             this.y = tankTop + margin;
-            this.angle = Math.PI*0.5 + (Math.random()-0.5)*Math.PI*0.6;
+            this.angle = Math.random()*Math.PI;
             this.wanderAngle = this.angle;
         }
         if(this.y > tankBottom - margin){
             this.y = tankBottom - margin;
-            this.angle = -Math.PI*0.5 + (Math.random()-0.5)*Math.PI*0.6;
+            this.angle = -Math.random()*Math.PI;
             this.wanderAngle = this.angle;
         }
 
