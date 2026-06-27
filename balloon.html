@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>야시장 풍선 다트</title>
+<style>
+  :root{
+    --night:#0b1426;
+    --night2:#10203d;
+    --tent:#d6362c;
+    --tent2:#a8261f;
+    --neon-pink:#ff3d7f;
+    --neon-yellow:#ffd93d;
+    --neon-cyan:#3dd9ff;
+    --bulb:#fff4c2;
+    --paper:#f7e9c9;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden; background:var(--night);
+    font-family:'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    touch-action:none; user-select:none;
+  }
+  #stage{
+    position:relative; width:100%; height:100%;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,217,61,0.08), transparent 50%),
+      radial-gradient(ellipse at 80% 0%, rgba(255,61,127,0.10), transparent 50%),
+      linear-gradient(to bottom, var(--night) 0%, var(--night2) 55%, #060c18 100%);
+    overflow:hidden;
+  }
+
+  /* ---------- 별/배경 장식 ---------- */
+  .star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; opacity:0.5; animation:twinkle 3s infinite ease-in-out; }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.8;} }
+
+  /* ---------- 천막 차양 ---------- */
+  .tent-row{
+    position:absolute; top:0; left:0; width:100%; height:38px;
+    display:flex; z-index:5; filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));
+  }
+  .tent-tooth{
+    flex:1 0 40px; height:38px;
+    background:repeating-linear-gradient(45deg, var(--tent) 0 14px, var(--tent2) 14px 28px);
+    clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+  }
+  .bulb-row{ position:absolute; top:34px; left:0; width:100%; height:10px; display:flex; justify-content:space-around; z-index:6; }
+  .bulb{
+    width:7px; height:7px; border-radius:50%; background:var(--bulb);
+    box-shadow:0 0 6px 2px var(--bulb), 0 0 14px 4px rgba(255,244,194,.6);
+    animation:bulbflicker 1.6s infinite ease-in-out;
+  }
+  .bulb:nth-child(odd){ animation-delay:.4s; }
+  .bulb:nth-child(3n){ animation-delay:.8s; }
+  @keyframes bulbflicker{ 0%,100%{opacity:1;} 50%{opacity:.55;} }
+
+  /* ---------- 네온 간판 ---------- */
+  #signboard{
+    position:absolute; top:46px; left:50%; transform:translateX(-50%);
+    z-index:7; text-align:center; pointer-events:none;
+  }
+  #signboard h1{
+    margin:0; font-size:clamp(20px,6vw,30px); letter-spacing:2px;
+    color:var(--neon-pink);
+    text-shadow:
+      0 0 6px var(--neon-pink),
+      0 0 16px var(--neon-pink),
+      0 0 28px rgba(255,61,127,.7);
+    font-weight:800; font-style:italic;
+    animation:neonpulse 2.4s infinite ease-in-out;
+  }
+  @keyframes neonpulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
+
+  /* ---------- 스코어보드 ---------- */
+  #hud{
+    position:absolute; top:90px; left:0; width:100%; z-index:8;
+    display:flex; justify-content:center; gap:10px; padding:0 12px;
+  }
+  .hud-box{
+    background:linear-gradient(180deg,#1a2b4d,#0e1830);
+    border:2px solid var(--neon-yellow);
+    border-radius:10px; padding:6px 14px; min-width:74px; text-align:center;
+    box-shadow:0 0 10px rgba(255,217,61,.35), inset 0 0 8px rgba(0,0,0,.5);
+  }
+  .hud-label{ font-size:10px; color:#ffe9a3; opacity:.8; letter-spacing:1px; }
+  .hud-value{
+    font-size:20px; font-weight:800; color:var(--neon-yellow);
+    text-shadow:0 0 8px rgba(255,217,61,.7);
+    font-family:'Consolas','Courier New',monospace;
+  }
+  #darts-icons{ display:flex; gap:4px; justify-content:center; margin-top:2px; }
+  .dart-icon{ width:10px; height:10px; opacity:1; transition:opacity .2s; }
+  .dart-icon svg{ width:100%; height:100%; }
+
+  /* ---------- 풍선 보드 ---------- */
+  #board{
+    position:absolute; top:150px; left:0; width:100%; height:calc(100% - 320px);
+    z-index:3;
+  }
+  .balloon{
+    position:absolute; width:54px; height:64px; cursor:pointer;
+    will-change:transform;
+    animation:bob ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
+  .balloon svg{ width:100%; height:100%; filter:drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+  .balloon .shine{ opacity:.55; }
+  .balloon.popping{ animation:none; pointer-events:none; }
+
+  /* ---------- 조준/발사 영역 ---------- */
+  #launch-zone{
+    position:absolute; bottom:0; left:0; width:100%; height:170px; z-index:9;
+    background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+  }
+  #counter-stand{
+    position:absolute; bottom:0; left:0; width:100%; height:54px;
+    background:repeating-linear-gradient(135deg, var(--paper) 0 22px, #e8d4a3 22px 44px);
+    border-top:4px solid #7a5230;
+    box-shadow:0 -4px 14px rgba(0,0,0,.4);
+  }
+  #anchor{
+    position:absolute; left:50%; bottom:118px; width:1px; height:1px;
+  }
+  #slingshot-y{
+    position:absolute; left:50%; bottom:98px; transform:translateX(-50%);
+    width:64px; height:60px; pointer-events:none; z-index:11;
+  }
+  #band-svg{
+    position:absolute; left:0; top:0; width:100%; height:100%; z-index:10; pointer-events:none;
+    overflow:visible;
+  }
+  #dart-proj{
+    position:absolute; width:46px; height:14px; z-index:12; pointer-events:none;
+    transform-origin:left center; display:none;
+  }
+  #aim-touch{
+    position:absolute; left:0; bottom:60px; width:100%; height:170px; z-index:15;
+  }
+  #power-hint{
+    position:absolute; left:50%; bottom:160px; transform:translateX(-50%);
+    color:#ffe9a3; font-size:12px; opacity:.85; text-align:center; z-index:9;
+    text-shadow:0 0 6px rgba(0,0,0,.8); pointer-events:none;
+  }
+
+  /* ---------- 콤보/팝업 텍스트 ---------- */
+  .floattext{
+    position:absolute; z-index:20; font-weight:800; pointer-events:none;
+    text-shadow:0 2px 4px rgba(0,0,0,.6);
+    animation:floatup 0.9s ease-out forwards;
+  }
+  @keyframes floatup{
+    0%{ transform:translateY(0) scale(.7); opacity:1; }
+    20%{ transform:translateY(-6px) scale(1.15); }
+    100%{ transform:translateY(-46px) scale(1); opacity:0; }
+  }
+
+  /* ---------- 파티클 ---------- */
+  .particle{
+    position:absolute; border-radius:50%; pointer-events:none; z-index:18;
+  }
+  .confetti{
+    position:absolute; pointer-events:none; z-index:18;
+  }
+
+  /* ---------- 화면 흔들림 ---------- */
+  .shake{ animation:screenshake 0.28s; }
+  @keyframes screenshake{
+    0%{ transform:translate(0,0); }
+    20%{ transform:translate(-6px,3px); }
+    40%{ transform:translate(5px,-4px); }
+    60%{ transform:translate(-4px,2px); }
+    80%{ transform:translate(3px,-2px); }
+    100%{ transform:translate(0,0); }
+  }
+  .flash{
+    position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:50;
+  }
+  .flash.go{ animation:flashpop 0.18s ease-out; }
+  @keyframes flashpop{ 0%{opacity:.55;} 100%{opacity:0;} }
+
+  /* ---------- 게임오버 / 시작 ---------- */
+  #overlay{
+    position:absolute; inset:0; z-index:100;
+    background:rgba(6,10,20,.86);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    text-align:center; padding:20px;
+  }
+  #overlay h2{
+    color:var(--neon-pink); font-size:clamp(22px,7vw,34px); margin:0 0 6px;
+    text-shadow:0 0 10px var(--neon-pink), 0 0 22px rgba(255,61,127,.7);
+    font-style:italic;
+  }
+  #overlay p{ color:#ffe9a3; font-size:14px; margin:4px 0 18px; line-height:1.6; }
+  #overlay .bignum{ color:var(--neon-yellow); font-size:46px; font-weight:800; text-shadow:0 0 14px rgba(255,217,61,.7); font-family:Consolas,monospace; }
+  .btn{
+    background:linear-gradient(180deg,var(--tent),var(--tent2));
+    border:2px solid var(--neon-yellow);
+    color:#fff8e0; font-size:16px; font-weight:700; padding:12px 30px;
+    border-radius:30px; cursor:pointer; box-shadow:0 0 14px rgba(255,217,61,.4), 0 4px 0 rgba(0,0,0,.3);
+    letter-spacing:1px; margin-top:8px;
+  }
+  .btn:active{ transform:translateY(2px); box-shadow:0 0 10px rgba(255,217,61,.4); }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="flash" class="flash"></div>
+
+  <div id="board"></div>
+
+  <div class="tent-row" id="tentRow"></div>
+  <div class="bulb-row" id="bulbRow"></div>
+
+  <div id="signboard"><h1>夜市 다트 풍선 🎪</h1></div>
+
+  <div id="hud">
+    <div class="hud-box">
+      <div class="hud-label">SCORE</div>
+      <div class="hud-value" id="scoreVal">0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">COMBO</div>
+      <div class="hud-value" id="comboVal">0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">DARTS</div>
+      <div id="darts-icons"></div>
+    </div>
+  </div>
+
+  <div id="power-hint">화면을 드래그해서 당기고 놓으면 발사!</div>
+
+  <div id="launch-zone">
+    <div id="counter-stand"></div>
+    <svg id="band-svg"></svg>
+    <div id="slingshot-y">
+      <svg viewBox="0 0 64 60" width="100%" height="100%">
+        <path d="M10 58 L24 14" stroke="#7a5230" stroke-width="7" stroke-linecap="round"/>
+        <path d="M54 58 L40 14" stroke="#7a5230" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="24" cy="12" r="5" fill="#5c3b1e"/>
+        <circle cx="40" cy="12" r="5" fill="#5c3b1e"/>
+      </svg>
+    </div>
+    <div id="dart-proj">
+      <svg viewBox="0 0 46 14" width="100%" height="100%">
+        <line x1="0" y1="7" x2="32" y2="7" stroke="#cfd6dd" stroke-width="2.5"/>
+        <polygon points="32,7 46,2 46,12" fill="#e63946"/>
+        <polygon points="0,1 8,7 0,13" fill="#ffd93d"/>
+      </svg>
+    </div>
+    <div id="aim-touch"></div>
+  </div>
+
+  <div id="overlay">
+    <h2>夜市 다트 풍선</h2>
+    <p>드래그해서 새총을 당기고 놓아보세요.<br>풍선을 터뜨려 점수를 쌓고 콤보를 이어가세요!</p>
+    <div class="btn" id="startBtn">게임 시작</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+  const board = document.getElementById('board');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const scoreVal = document.getElementById('scoreVal');
+  const comboVal = document.getElementById('comboVal');
+  const dartsIcons = document.getElementById('darts-icons');
+  const bandSvg = document.getElementById('band-svg');
+  const slingY = document.getElementById('slingshot-y');
+  const dartProj = document.getElementById('dart-proj');
+  const aimTouch = document.getElementById('aim-touch');
+  const flashEl = document.getElementById('flash');
+  const powerHint = document.getElementById('power-hint');
+
+  let W=0, H=0;
+  function resize(){
+    W = stage.clientWidth; H = stage.clientHeight;
+    bandSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    bandSvg.style.width = W+'px'; bandSvg.style.height = H+'px';
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- 배경 별 ----------
+  function makeStars(){
+    for(let i=0;i<40;i++){
+      const s=document.createElement('div');
+      s.className='star';
+      s.style.left=Math.random()*100+'%';
+      s.style.top=(Math.random()*40)+'%';
+      s.style.animationDelay=(Math.random()*3)+'s';
+      stage.appendChild(s);
+    }
+  }
+  makeStars();
+
+  // ---------- 천막/전구 생성 ----------
+  function makeTent(){
+    const row=document.getElementById('tentRow');
+    const bulbRow=document.getElementById('bulbRow');
+    const n=18;
+    for(let i=0;i<n;i++){
+      const t=document.createElement('div'); t.className='tent-tooth'; row.appendChild(t);
+    }
+    for(let i=0;i<24;i++){
+      const b=document.createElement('div'); b.className='bulb'; bulbRow.appendChild(b);
+    }
+  }
+  makeTent();
+
+  // ---------- 풍선 정의 ----------
+  const balloonColors = [
+    ['#ff3d7f','#ff8fb8'], ['#ffd93d','#fff3b0'], ['#3dd9ff','#a6ecff'],
+    ['#7CFF6B','#c8ffbf'], ['#ff8a3d','#ffc89a'], ['#c07cff','#e3c4ff']
+  ];
+
+  function balloonSVG(c1,c2){
+    return `<svg viewBox="0 0 54 64" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="27" cy="27" rx="24" ry="27" fill="${c1}"/>
+      <ellipse class="shine" cx="19" cy="17" rx="7" ry="10" fill="${c2}"/>
+      <polygon points="24,52 30,52 27,60" fill="${c1}"/>
+      <line x1="27" y1="60" x2="27" y2="64" stroke="#666" stroke-width="1.4"/>
+    </svg>`;
+  }
+
+  let balloons = [];
+  let score = 0, combo = 0, maxCombo = 0;
+  let dartsLeft = 5;
+  const MAX_DARTS = 5;
+  let totalPopped = 0;
+  let roundActive = false;
+  let spawnTimer = null;
+
+  function spawnBalloon(){
+    if(!roundActive) return;
+    const el = document.createElement('div');
+    el.className='balloon';
+    const [c1,c2] = balloonColors[Math.floor(Math.random()*balloonColors.length)];
+    el.innerHTML = balloonSVG(c1,c2);
+    const size = 46 + Math.random()*22;
+    el.style.width = size+'px';
+    el.style.height = (size*64/54)+'px';
+    const boardW = board.clientWidth, boardH = board.clientHeight;
+    const x = Math.random()*(boardW - size);
+    const y = Math.random()*(boardH - size - 10);
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    const dur = 1.6 + Math.random()*1.4;
+    el.style.animationDuration = dur+'s';
+    el.style.animationDelay = (-Math.random()*dur)+'s';
+    el.dataset.alive = '1';
+    board.appendChild(el);
+    balloons.push(el);
+  }
+
+  function maintainBalloons(){
+    if(!roundActive) return;
+    const aliveCount = balloons.filter(b=>b.dataset.alive==='1').length;
+    const target = Math.min(7, 4 + Math.floor(totalPopped/6));
+    if(aliveCount < target){ spawnBalloon(); }
+  }
+
+  // ---------- HUD ----------
+  function renderDarts(){
+    dartsIcons.innerHTML='';
+    for(let i=0;i<MAX_DARTS;i++){
+      const d=document.createElement('div');
+      d.className='dart-icon';
+      d.style.opacity = i < dartsLeft ? '1' : '0.15';
+      d.innerHTML = `<svg viewBox="0 0 46 14"><line x1="0" y1="7" x2="32" y2="7" stroke="#cfd6dd" stroke-width="2.5"/><polygon points="32,7 46,2 46,12" fill="#e63946"/></svg>`;
+      dartsIcons.appendChild(d);
+    }
+  }
+  function updateScore(){ scoreVal.textContent = score; }
+  function updateCombo(){ comboVal.textContent = combo; }
+
+  // ---------- 이펙트 ----------
+  function screenShake(){
+    stage.classList.remove('shake');
+    void stage.offsetWidth;
+    stage.classList.add('shake');
+  }
+  function screenFlash(){
+    flashEl.classList.remove('go');
+    void flashEl.offsetWidth;
+    flashEl.classList.add('go');
+  }
+  function floatText(x,y,text,color,scale){
+    const el=document.createElement('div');
+    el.className='floattext';
+    el.textContent=text;
+    el.style.left=x+'px';
+    el.style.top=y+'px';
+    el.style.color=color;
+    el.style.fontSize=(scale||22)+'px';
+    stage.appendChild(el);
+    setTimeout(()=>el.remove(), 950);
+  }
+
+  function popParticles(x,y,c1,c2){
+    const n = 14;
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      const size = 4+Math.random()*6;
+      p.style.width=size+'px'; p.style.height=size+'px';
+      p.style.background = Math.random()>0.5 ? c1 : c2;
+      p.style.left = x+'px'; p.style.top = y+'px';
+      stage.appendChild(p);
+      const angle = Math.random()*Math.PI*2;
+      const dist = 30+Math.random()*70;
+      const dx = Math.cos(angle)*dist;
+      const dy = Math.sin(angle)*dist - 20;
+      const dur = 450+Math.random()*350;
+      p.animate([
+        { transform:'translate(0,0) scale(1)', opacity:1 },
+        { transform:`translate(${dx}px, ${dy+90}px) scale(0.3)`, opacity:0 }
+      ], { duration:dur, easing:'cubic-bezier(.2,.7,.4,1)' });
+      setTimeout(()=>p.remove(), dur+30);
+    }
+    // 작은 고무 조각 (사각형 컨페티 느낌)
+    for(let i=0;i<6;i++){
+      const p=document.createElement('div');
+      p.className='confetti';
+      p.style.width='7px'; p.style.height='3px';
+      p.style.background = c1;
+      p.style.left=x+'px'; p.style.top=y+'px';
+      stage.appendChild(p);
+      const angle = Math.random()*Math.PI*2;
+      const dist = 40+Math.random()*60;
+      const dx = Math.cos(angle)*dist;
+      const dy = Math.sin(angle)*dist;
+      const rot = Math.random()*720-360;
+      const dur = 500+Math.random()*300;
+      p.animate([
+        { transform:'translate(0,0) rotate(0deg)', opacity:1 },
+        { transform:`translate(${dx}px, ${dy+100}px) rotate(${rot}deg)`, opacity:0 }
+      ], { duration:dur, easing:'ease-out' });
+      setTimeout(()=>p.remove(), dur+30);
+    }
+  }
+
+  // ---------- 사운드 (Web Audio API) ----------
+  let actx = null;
+  function ensureAudio(){
+    if(!actx){
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(actx.state === 'suspended') actx.resume();
+  }
+  function popSound(pitch){
+    if(!actx) return;
+    const t0 = actx.currentTime;
+    // 펑 터지는 노이즈
+    const bufferSize = actx.sampleRate * 0.18;
+    const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2);
+    }
+    const noise = actx.createBufferSource();
+    noise.buffer = buffer;
+    const filt = actx.createBiquadFilter();
+    filt.type='bandpass';
+    filt.frequency.value = 1200 * (pitch||1);
+    filt.Q.value = 0.7;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.5,t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0+0.18);
+    noise.connect(filt); filt.connect(g); g.connect(actx.destination);
+    noise.start(t0); noise.stop(t0+0.2);
+
+    // 톤 펑
+    const osc = actx.createOscillator();
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(420*(pitch||1), t0);
+    osc.frequency.exponentialRampToValueAtTime(90*(pitch||1), t0+0.13);
+    const g2 = actx.createGain();
+    g2.gain.setValueAtTime(0.35, t0);
+    g2.gain.exponentialRampToValueAtTime(0.001, t0+0.15);
+    osc.connect(g2); g2.connect(actx.destination);
+    osc.start(t0); osc.stop(t0+0.15);
+  }
+  function twangSound(){
+    if(!actx) return;
+    const t0 = actx.currentTime;
+    const osc = actx.createOscillator();
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(180, t0);
+    osc.frequency.exponentialRampToValueAtTime(70, t0+0.18);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.25, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0+0.2);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0+0.2);
+  }
+  function missSound(){
+    if(!actx) return;
+    const t0 = actx.currentTime;
+    const osc = actx.createOscillator();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(300, t0);
+    osc.frequency.exponentialRampToValueAtTime(120, t0+0.25);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.18, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0+0.25);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0+0.25);
+  }
+  function comboFanfare(level){
+    if(!actx) return;
+    const t0 = actx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    const n = Math.min(notes.length, level);
+    for(let i=0;i<n;i++){
+      const osc = actx.createOscillator();
+      osc.type='square';
+      osc.frequency.value = notes[i];
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0.001, t0+i*0.06);
+      g.gain.linearRampToValueAtTime(0.12, t0+i*0.06+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t0+i*0.06+0.18);
+      osc.connect(g); g.connect(actx.destination);
+      osc.start(t0+i*0.06); osc.stop(t0+i*0.06+0.2);
+    }
+  }
+
+  // ---------- 다트 발사 / 새총 ----------
+  let anchorX=0, anchorY=0;
+  let dragging=false, dragX=0, dragY=0;
+  const MAX_PULL = 90;
+
+  function setAnchor(){
+    const r = slingY.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    anchorX = r.left - stageRect.left + r.width/2;
+    anchorY = r.top - stageRect.top + 14;
+  }
+
+  function clearBand(){ bandSvg.innerHTML=''; }
+  function drawBand(px,py){
+    clearBand();
+    const leftArm = {x:anchorX-16, y:anchorY+44};
+    const rightArm = {x:anchorX+16, y:anchorY+44};
+    const path = `M${leftArm.x},${leftArm.y} L${px},${py} L${rightArm.x},${rightArm.y}`;
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', path);
+    p.setAttribute('stroke', '#caa46b');
+    p.setAttribute('stroke-width', '4');
+    p.setAttribute('fill', 'none');
+    p.setAttribute('stroke-linecap','round');
+    bandSvg.appendChild(p);
+  }
+
+  function onDragStart(clientX, clientY){
+    if(!roundActive || dartsLeft<=0) return;
+    ensureAudio();
+    const stageRect = stage.getBoundingClientRect();
+    dragX = clientX - stageRect.left;
+    dragY = clientY - stageRect.top;
+    dragging = true;
+    powerHint.style.opacity = '0';
+  }
+  function onDragMove(clientX, clientY){
+    if(!dragging) return;
+    const stageRect = stage.getBoundingClientRect();
+    let x = clientX - stageRect.left;
+    let y = clientY - stageRect.top;
+    const dx = x-anchorX, dy = y-anchorY;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist > MAX_PULL){
+      x = anchorX + dx/dist*MAX_PULL;
+      y = anchorY + dy/dist*MAX_PULL;
+    }
+    // 아래쪽으로만 당기게 (위로 못 당김)
+    if(y < anchorY) y = anchorY;
+    dragX = x; dragY = y;
+    drawBand(dragX,dragY);
+  }
+  function onDragEnd(){
+    if(!dragging) return;
+    dragging = false;
+    const dx = anchorX - dragX;
+    const dy = anchorY - dragY;
+    const pullDist = Math.sqrt(dx*dx+dy*dy);
+    clearBand();
+    powerHint.style.opacity = '0.85';
+    if(pullDist < 14){ return; } // 너무 약하면 발사 안함
+    fireDart(dx,dy,pullDist);
+  }
+
+  function fireDart(dx,dy,pullDist){
+    if(dartsLeft<=0) return;
+    dartsLeft--; renderDarts();
+    twangSound();
+
+    const power = Math.min(1, pullDist/MAX_PULL);
+    const angle = Math.atan2(dy,dx); // 발사 방향 (당긴 반대 방향)
+    const speed = 700 + power*900; // px/sec
+    const vx = Math.cos(angle)*speed;
+    const vy = Math.sin(angle)*speed;
+
+    let x = anchorX, y = anchorY;
+    dartProj.style.display='block';
+    dartProj.style.left = x+'px';
+    dartProj.style.top = y+'px';
+    dartProj.style.transform = `rotate(${angle*180/Math.PI}deg)`;
+
+    let lastT = performance.now();
+    let hit = false;
+
+    function step(now){
+      const dt = Math.min(0.032,(now-lastT)/1000);
+      lastT = now;
+      x += vx*dt;
+      y += vy*dt;
+      dartProj.style.left = x+'px';
+      dartProj.style.top = y+'px';
+
+      // 풍선 충돌 체크
+      if(!hit){
+        for(const b of balloons){
+          if(b.dataset.alive !== '1') continue;
+          const rect = b.getBoundingClientRect();
+          const stageRect = stage.getBoundingClientRect();
+          const bx = rect.left-stageRect.left, by = rect.top-stageRect.top;
+          const bw = rect.width, bh = rect.height;
+          if(x > bx-6 && x < bx+bw+6 && y > by-6 && y < by+bh+6){
+            hit = true;
+            popBalloon(b, bx+bw/2, by+bh/2);
+            break;
+          }
+        }
+      }
+
+      if(hit || x < -60 || x > W+60 || y < -60 || y > H+60){
+        dartProj.style.display='none';
+        if(!hit){
+          missCombo();
+        }
+        if(dartsLeft<=0){
+          setTimeout(checkRoundEnd, 380);
+        }
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function missCombo(){
+    combo = 0;
+    updateCombo();
+    missSound();
+  }
+
+  function popBalloon(el, x, y){
+    el.dataset.alive='0';
+    el.classList.add('popping');
+    const svg = el.querySelector('svg');
+    el.style.transition='transform .12s ease-out, opacity .12s ease-out';
+    el.style.transform += ' scale(1.3)';
+    el.style.opacity='0';
+
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    totalPopped++;
+    const base = 10;
+    const comboBonus = Math.min(combo-1, 10) * 4;
+    const gained = base + comboBonus;
+    score += gained;
+    updateScore(); updateCombo();
+
+    const c1 = '#ff3d7f', c2='#ffd93d';
+    const styleAttr = svg.querySelector('ellipse');
+    const fillColor = styleAttr ? styleAttr.getAttribute('fill') : '#ff3d7f';
+    popParticles(x,y,fillColor,'#fff');
+
+    screenShake();
+    screenFlash();
+    popSound(1 + Math.min(combo,8)*0.05);
+
+    floatText(x-14, y-10, `+${gained}`, '#ffd93d', 22);
+    if(combo>1 && combo%3===0){
+      floatText(x-22, y-34, `${combo} COMBO!`, '#ff3d7f', 16);
+      comboFanfare(Math.min(4, Math.floor(combo/3)));
+    }
+
+    setTimeout(()=>{ el.remove(); balloons = balloons.filter(bb=>bb!==el); }, 150);
+
+    setTimeout(maintainBalloons, 120);
+  }
+
+  function checkRoundEnd(){
+    roundActive = false;
+    showGameOver();
+  }
+
+  // ---------- 입력 바인딩 ----------
+  aimTouch.addEventListener('mousedown', e=>onDragStart(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e=>onDragMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', onDragEnd);
+
+  aimTouch.addEventListener('touchstart', e=>{
+    const t=e.touches[0]; onDragStart(t.clientX,t.clientY); e.preventDefault();
+  }, {passive:false});
+  window.addEventListener('touchmove', e=>{
+    if(!dragging) return;
+    const t=e.touches[0]; onDragMove(t.clientX,t.clientY); e.preventDefault();
+  }, {passive:false});
+  window.addEventListener('touchend', e=>{ onDragEnd(); }, {passive:false});
+
+  // ---------- 시작 / 종료 ----------
+  function showGameOver(){
+    overlay.classList.remove('hidden');
+    overlay.innerHTML = `
+      <h2>라운드 종료!</h2>
+      <p>최종 점수</p>
+      <div class="bignum">${score}</div>
+      <p>최고 콤보: ${maxCombo} 연속 터뜨리기</p>
+      <div class="btn" id="restartBtn">다시 하기</div>
+    `;
+    document.getElementById('restartBtn').addEventListener('click', startGame);
+  }
+
+  function startGame(){
+    ensureAudio();
+    overlay.classList.add('hidden');
+    score=0; combo=0; maxCombo=0; dartsLeft=MAX_DARTS; totalPopped=0;
+    updateScore(); updateCombo(); renderDarts();
+    balloons.forEach(b=>b.remove());
+    balloons=[];
+    roundActive = true;
+    resize();
+    setAnchor();
+    for(let i=0;i<4;i++) spawnBalloon();
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  window.addEventListener('load', ()=>{
+    resize();
+    setAnchor();
+    renderDarts();
+  });
+  resize();
+  setTimeout(setAnchor, 50);
+})();
+</script>
+</body>
+</html>
