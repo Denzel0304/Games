@@ -72,6 +72,48 @@ html, body {
     transform: scale(0.92);
 }
 
+/* ── 상어 토글 ── */
+#shark-toggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.38);
+    border: 1.5px solid rgba(180,60,60,0.55);
+    border-radius: 24px;
+    padding: 6px 14px 6px 10px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.18s, border-color 0.18s;
+}
+#shark-toggle:active { background: rgba(180,20,20,0.45); }
+#shark-toggle.on {
+    background: rgba(160,10,10,0.55);
+    border-color: rgba(255,80,80,0.85);
+    box-shadow: 0 0 12px rgba(255,60,60,0.45);
+}
+#shark-toggle-icon { font-size: 26px; line-height: 1; }
+#shark-toggle-label {
+    color: rgba(255,200,200,0.92);
+    font-size: 13px;
+    font-family: sans-serif;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+#shark-timer {
+    color: rgba(255,160,160,0.90);
+    font-size: 13px;
+    font-family: monospace;
+    font-weight: bold;
+    min-width: 32px;
+    display: none;
+}
+#shark-toggle.on #shark-timer { display: inline; }
+
 </style>
 </head>
 
@@ -79,6 +121,12 @@ html, body {
 
 <canvas id="aqua"></canvas>
 <audio id="bgm" src="aquabubble.mp3" loop autoplay></audio>
+
+<div id="shark-toggle">
+    <span id="shark-toggle-icon">🦈</span>
+    <span id="shark-toggle-label">상어</span>
+    <span id="shark-timer"></span>
+</div>
 
 <div id="feed-ui">
     <span id="feed-count">1</span>
@@ -1009,6 +1057,347 @@ class Ray extends Fish {
 }
 
 
+// ================= 상어 =================
+// 기존 코드 완전 분리. shark 변수가 null이면 아무 영향 없음.
+
+class Shark {
+
+    constructor() {
+        const side = Math.floor(Math.random() * 4);
+        if(side === 0){ this.x = -120; this.y = 100 + Math.random()*(canvas.height-200); }
+        else if(side === 1){ this.x = canvas.width+120; this.y = 100 + Math.random()*(canvas.height-200); }
+        else if(side === 2){ this.x = Math.random()*canvas.width; this.y = -120; }
+        else { this.x = Math.random()*canvas.width; this.y = canvas.height+120; }
+
+        this.angle = Math.atan2(canvas.height/2 - this.y, canvas.width/2 - this.x);
+        this.size = 85 + Math.random() * 30;
+        this.baseSpeed = 1.8 + Math.random() * 0.8;
+        this.speed = this.baseSpeed;
+        this.turnSpeed = 0.12 + Math.random() * 0.05;  // 빠른 방향전환
+        this.tailSpeed = 90 + Math.random() * 50;
+
+        this.HUNT_INTERVAL = 33 * 1000; // 33초
+        this.target = null;
+
+        // 방랑
+        this.wanderAngle = this.angle;
+        this.wanderTimer = 0;
+        this.wanderPeriod = 90 + Math.random() * 120;
+
+        this.hueShift = (Math.random()-0.5) * 10;
+
+        this.huntQueue = null; // null=방랑중, []=사냥큐 비었음, [...]=사냥중
+        // 관찰 시작
+        this._startWatch();
+    }
+
+    // 관찰 시작 시점의 foodEaten을 각 fish에 직접 기록
+    _startWatch() {
+        this.watchStart = Date.now();
+        for(let f of fishes) {
+            f._sharkWatchBase = f.foodEaten;
+        }
+    }
+
+    // 33초 동안 먹이를 1개도 못 먹은 개체 중 가장 가까운 것 반환
+    _findTarget() {
+        let best = null;
+        let shortest = Infinity;
+        for(let f of fishes) {
+            // _sharkWatchBase가 없으면 관찰 시작 이후 생성된 개체 → 건너뜀
+            if(f._sharkWatchBase === undefined) continue;
+            // 관찰 기간 동안 foodEaten이 전혀 안 늘었으면 타겟
+            if(f.foodEaten <= f._sharkWatchBase) {
+                const d = Math.hypot(f.x - this.x, f.y - this.y);
+                if(d < shortest){ shortest = d; best = f; }
+            }
+        }
+        return best;
+    }
+
+    update() {
+        const now = Date.now();
+
+        // ── 사냥 큐 처리 중 ──
+        if(this.huntQueue !== null) {
+            // 현재 타겟이 이미 사라졌으면 null 처리
+            if(this.target && !fishes.includes(this.target)) {
+                this.target = null;
+            }
+            // 현재 타겟 없으면 큐에서 다음 꺼내기
+            if(!this.target) {
+                while(this.huntQueue.length > 0) {
+                    const next = this.huntQueue.shift();
+                    if(fishes.includes(next)) { this.target = next; break; }
+                }
+                // 큐 소진 → 사냥 완료, 새 사이클 시작
+                if(!this.target) {
+                    this.huntQueue = null;
+                    this._startWatch();
+                }
+            }
+        }
+
+        // ── 이동 ──
+        let targetAngle;
+        if(this.target) {
+            // 타겟 추적
+            const d = Math.hypot(this.target.x - this.x, this.target.y - this.y);
+            targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+            this.speed = this.baseSpeed * 1.5;
+            const catchDist = this.size * 0.5 + (this.target.size || 30) * 0.5;
+            if(d < catchDist) {
+                // 잡아먹기
+                const idx = fishes.indexOf(this.target);
+                if(idx !== -1) fishes.splice(idx, 1);
+                this.target = null;
+                // 다음 타겟은 다음 프레임 큐 처리에서
+            }
+        } else if(this.huntQueue === null) {
+            // 방랑 + 33초 경과 체크
+            if((now - this.watchStart) >= this.HUNT_INTERVAL) {
+                // 굶은 개체 목록 전체를 큐로 만들기
+                const queue = [];
+                for(let f of fishes) {
+                    if(f._sharkWatchBase !== undefined && f.foodEaten <= f._sharkWatchBase) {
+                        queue.push(f);
+                    }
+                }
+                if(queue.length > 0) {
+                    this.huntQueue = queue;
+                } else {
+                    this._startWatch(); // 모두 먹었으면 재시작
+                }
+            } else {
+                // 방랑
+                this.wanderTimer++;
+                if(this.wanderTimer >= this.wanderPeriod) {
+                    this.wanderAngle = Math.random() * Math.PI * 2;
+                    this.wanderTimer = 0;
+                    this.wanderPeriod = 90 + Math.random() * 120;
+                }
+                this.speed = this.baseSpeed * 0.75;
+                targetAngle = this.wanderAngle;
+            }
+        }
+
+        if(targetAngle === undefined) targetAngle = this.angle;
+
+        let diff = targetAngle - this.angle;
+        while(diff >  Math.PI) diff -= Math.PI*2;
+        while(diff < -Math.PI) diff += Math.PI*2;
+        this.angle += diff * this.turnSpeed;
+
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+
+        if(this.x < -150) this.x = canvas.width + 150;
+        if(this.x > canvas.width + 150) this.x = -150;
+        if(this.y < 80)   this.y = 80;
+        if(this.y > canvas.height - 80) this.y = canvas.height - 80;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const facingLeft = Math.cos(this.angle) < 0;
+        if(facingLeft){ ctx.scale(-1,1); ctx.rotate(Math.PI - this.angle); }
+        else { ctx.rotate(this.angle); }
+
+        const t  = Date.now();
+        const s  = this.size;
+        const tw = Math.sin(t / this.tailSpeed) * 0.32;
+
+        this._drawShark(s, tw);
+        ctx.restore();
+    }
+
+    _drawShark(s, tw) {
+        const h = this.hueShift;
+
+        // 1) 꼬리 (하나의 날카로운 삼각형 부채꼴)
+        ctx.save();
+        ctx.translate(-s*0.88, 0);
+        ctx.rotate(tw * 1.5);
+        ctx.fillStyle = `hsl(${205+h},25%,36%)`;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-s*.55, -s*.52);
+        ctx.bezierCurveTo(-s*.60, -s*.58, -s*.60, s*.58, -s*.55, s*.52);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // 2) 등지느러미 (크고 날카로운 삼각형)
+        ctx.fillStyle = `hsl(${208+h},28%,32%)`;
+        ctx.beginPath();
+        ctx.moveTo(-s*.05, -s*.30);
+        ctx.lineTo( s*.28, -s*.82);   // 뾰족한 끝
+        ctx.bezierCurveTo(s*.35,-s*.75, s*.52,-s*.55, s*.55,-s*.32);
+        ctx.bezierCurveTo(s*.38,-s*.28, s*.10,-s*.30, -s*.05,-s*.30);
+        ctx.closePath();
+        ctx.fill();
+        // 등지느러미 음영
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.beginPath();
+        ctx.moveTo(s*.05, -s*.34);
+        ctx.lineTo(s*.28, -s*.82);
+        ctx.bezierCurveTo(s*.34,-s*.74, s*.50,-s*.55, s*.52,-s*.34);
+        ctx.bezierCurveTo(s*.38,-s*.31, s*.18,-s*.34, s*.05,-s*.34);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3) 꼬리 앞 하엽지느러미 (몸통 아래쪽 작은 삼각형)
+        ctx.fillStyle = `hsl(${205+h},22%,35%)`;
+        ctx.beginPath();
+        ctx.moveTo(-s*.45,  s*.18);
+        ctx.lineTo(-s*.62,  s*.48);
+        ctx.lineTo(-s*.32,  s*.28);
+        ctx.closePath(); ctx.fill();
+
+        // 4) 가슴지느러미 (크고 납작한 삼각형, 몸통 앞쪽 아래)
+        ctx.fillStyle = `hsl(${205+h},24%,40%)`;
+        ctx.beginPath();
+        ctx.moveTo(s*.25, s*.22);
+        ctx.bezierCurveTo(s*.10, s*.50, -s*.22, s*.65, -s*.38, s*.46);
+        ctx.bezierCurveTo(-s*.18, s*.30, s*.10, s*.24, s*.25, s*.22);
+        ctx.fill();
+
+        // 5) 몸통 (방추형, 위는 어둡고 배는 흰색) — 높이 축소, 길이 확장
+        let bg = ctx.createLinearGradient(0, -s*.36, 0, s*.36);
+        bg.addColorStop(0,   `hsl(${210+h},30%,28%)`);  // 등: 진한 청회색
+        bg.addColorStop(0.45,`hsl(${207+h},26%,42%)`);  // 옆구리
+        bg.addColorStop(1,   `hsl(${200+h},8%, 88%)`);  // 배: 흰색
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        // 몸통 (앞이 뾰족, 뒤가 가늘어짐)
+        ctx.moveTo(s*1.18, 0);  // 주둥이
+        ctx.bezierCurveTo(s*.95,-s*.08, s*.4,-s*.32, -s*.05,-s*.30);
+        ctx.bezierCurveTo(-s*.48,-s*.28, -s*.82,-s*.14, -s*.88, 0);
+        ctx.bezierCurveTo(-s*.82, s*.14, -s*.48, s*.28, -s*.05, s*.30);
+        ctx.bezierCurveTo(s*.4,  s*.32, s*.95, s*.08, s*1.18, 0);
+        ctx.fill();
+
+        // 6) 등 → 배 경계 측선 (옆구리 줄)
+        ctx.strokeStyle = "rgba(150,170,180,0.35)";
+        ctx.lineWidth = s * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(s*.95, 0);
+        ctx.bezierCurveTo(s*.3, s*.06, -s*.3, s*.04, -s*.80, 0);
+        ctx.stroke();
+
+        // 7) 아가미 흔적 (3개의 날카로운 슬릿)
+        ctx.strokeStyle = "rgba(0,0,0,0.30)";
+        ctx.lineWidth = s * 0.025;
+        ctx.lineCap = "round";
+        for(let i=0; i<3; i++){
+            const gx = s*(0.72 - i*0.12);
+            ctx.beginPath();
+            ctx.moveTo(gx, -s*.15 - i*s*.02);
+            ctx.lineTo(gx,  s*.13 + i*s*.01);
+            ctx.stroke();
+        }
+
+        // 8) 몸통 테두리
+        ctx.strokeStyle = "rgba(0,0,0,0.22)";
+        ctx.lineWidth = s * 0.03;
+        ctx.beginPath();
+        ctx.moveTo(s*1.18, 0);
+        ctx.bezierCurveTo(s*.95,-s*.08, s*.4,-s*.32, -s*.05,-s*.30);
+        ctx.bezierCurveTo(-s*.48,-s*.28, -s*.82,-s*.14, -s*.88, 0);
+        ctx.bezierCurveTo(-s*.82, s*.14, -s*.48, s*.28, -s*.05, s*.30);
+        ctx.bezierCurveTo(s*.4,  s*.32, s*.95, s*.08, s*1.18, 0);
+        ctx.stroke();
+
+        // 9) 눈 (검고 작고 날카로운 느낌)
+        this._drawSharkEye(s*.82, -s*.08, s*.065);
+
+        // 10) 입 (주둥이 아랫면, 날카로운 호)
+        ctx.strokeStyle = "rgba(0,0,0,0.50)";
+        ctx.lineWidth = s * 0.035;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(s*1.14, s*.04);
+        ctx.bezierCurveTo(s*1.02, s*.13, s*.82, s*.15, s*.70, s*.10);
+        ctx.stroke();
+
+        // 이빨 (작은 삼각형들)
+        ctx.fillStyle = "rgba(255,255,255,0.88)";
+        const teethX = [s*1.10, s*1.02, s*.93, s*.84, s*.75];
+        const teethY =  s*.06;
+        for(let tx of teethX) {
+            ctx.beginPath();
+            ctx.moveTo(tx, teethY);
+            ctx.lineTo(tx - s*.022, teethY + s*.05);
+            ctx.lineTo(tx + s*.022, teethY + s*.05);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    _drawSharkEye(ex, ey, r) {
+        // 공막 없이 전체 검정 + 작은 하이라이트 → 냉혹한 인상
+        ctx.fillStyle = "#0a0a0a";
+        ctx.beginPath(); ctx.arc(ex, ey, r, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.beginPath(); ctx.arc(ex + r*0.3, ey - r*0.3, r*0.28, 0, Math.PI*2); ctx.fill();
+        // 눈 둘레 어두운 테두리
+        ctx.strokeStyle = "rgba(0,0,0,0.6)";
+        ctx.lineWidth = r * 0.4;
+        ctx.beginPath(); ctx.arc(ex, ey, r * 1.15, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // 남은 시간(초) 반환
+    getRemainingSeconds() {
+        if(this.huntQueue !== null || this.target) return -1; // 사냥 중
+        const elapsed = Date.now() - this.watchStart;
+        return Math.max(0, Math.ceil((this.HUNT_INTERVAL - elapsed) / 1000));
+    }
+}
+
+
+// ── 상어 토글 UI ──
+let shark = null; // null이면 상어 없음, 이게 분기의 전부
+let sharkTimerInterval = null;
+
+const sharkToggleEl  = document.getElementById("shark-toggle");
+const sharkTimerEl   = document.getElementById("shark-timer");
+
+function fmtTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2,"0");
+    const s = (sec % 60).toString().padStart(2,"0");
+    return `${m}:${s}`;
+}
+
+sharkToggleEl.addEventListener("click", () => {
+    if(shark === null) {
+        // 상어 ON
+        shark = new Shark();
+        sharkToggleEl.classList.add("on");
+        // 타이머 표시 업데이트 (1초마다)
+        sharkTimerInterval = setInterval(() => {
+            if(!shark) return;
+            const rem = shark.getRemainingSeconds();
+            if(rem === -1) {
+                sharkTimerEl.textContent = "🍖";
+            } else {
+                sharkTimerEl.textContent = fmtTime(rem);
+            }
+        }, 500);
+        sharkTimerEl.textContent = fmtTime(33);
+    } else {
+        // 상어 OFF
+        shark = null;
+        sharkToggleEl.classList.remove("on");
+        clearInterval(sharkTimerInterval);
+        sharkTimerInterval = null;
+        sharkTimerEl.textContent = "";
+    }
+});
+
+
 // 물고기 생성 (종류별 최소 1마리씩 보장)
 for(let i=0;i<FISH_TYPES.length;i++){
     fishes.push(new Fish(FISH_TYPES[i]));
@@ -1244,6 +1633,9 @@ function animate(){
         fish.draw();
 
     }
+
+    // ── 상어 (토글 ON일 때만) ──
+    if(shark) { shark.update(); shark.draw(); }
 
 
     requestAnimationFrame(animate);
