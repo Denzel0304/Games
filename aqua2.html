@@ -876,7 +876,7 @@ function buildMainScreen(){
         btn.dataset.type = type;
 
         const d = loadData(type);
-        const totalFry = d.fryGroups.reduce((s,g)=>s+g.fishes.length,0);
+        const totalFry = d.fryGroups.reduce((s,g)=>s+g.fishes.length,0) + (d.pendingFryCount||0);
 
         btn.innerHTML = `
             <canvas width="160" height="100"></canvas>
@@ -1858,7 +1858,7 @@ function updateSpawnUI(){
 }
 
 function updateFryCounter(){
-    const total = fryFishes.length + pendingFries.length;
+    const total = fryFishes.length;
     document.getElementById("fry-counter").textContent =
         total > 0 ? `치어 ${total}마리` : "";
 
