@@ -1074,10 +1074,10 @@ class Shark {
 
         this.angle = Math.atan2(canvas.height/2 - this.y, canvas.width/2 - this.x);
         this.size = 85 + Math.random() * 30;
-        this.baseSpeed = 1.8 + Math.random() * 0.8;
+        this.baseSpeed = 2.8 + Math.random() * 1.2;   // 더 빠르게
         this.speed = this.baseSpeed;
-        this.turnSpeed = 0.12 + Math.random() * 0.05;  // 빠른 방향전환
-        this.tailSpeed = 90 + Math.random() * 50;
+        this.turnSpeed = 0.015 + Math.random() * 0.010; // 거의 직선 — 벽에서만 회전
+        this.tailSpeed = 70 + Math.random() * 40;
 
         this.HUNT_INTERVAL = 33 * 1000; // 33초
         this.target = null;
@@ -1189,7 +1189,9 @@ class Shark {
         let diff = targetAngle - this.angle;
         while(diff >  Math.PI) diff -= Math.PI*2;
         while(diff < -Math.PI) diff += Math.PI*2;
-        this.angle += diff * this.turnSpeed;
+        // 사냥 중에는 기존처럼 빠르게 회전, 방랑 중에만 직선 유지
+        const activeTurn = this.target ? 0.15 : this.turnSpeed;
+        this.angle += diff * activeTurn;
 
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
@@ -1222,7 +1224,7 @@ class Shark {
     _drawShark(s, tw) {
         const h = this.hueShift;
 
-        // 1) 꼬리 (하나의 날카로운 삼각형 부채꼴)
+        // 1) 꼬리 — 단일 삼각 부채 (원래 형태로 복구)
         ctx.save();
         ctx.translate(-s*0.88, 0);
         ctx.rotate(tw * 1.5);
@@ -1236,108 +1238,172 @@ class Shark {
         ctx.fill();
         ctx.restore();
 
-        // 2) 등지느러미 (크고 날카로운 삼각형)
-        ctx.fillStyle = `hsl(${208+h},28%,32%)`;
+        // 2) 두 번째 등지느러미 (작고 날카로운 삼각형)
+        ctx.fillStyle = `hsl(${208+h},25%,22%)`;
         ctx.beginPath();
-        ctx.moveTo(-s*.05, -s*.30);
-        ctx.lineTo( s*.28, -s*.82);   // 뾰족한 끝
-        ctx.bezierCurveTo(s*.35,-s*.75, s*.52,-s*.55, s*.55,-s*.32);
-        ctx.bezierCurveTo(s*.38,-s*.28, s*.10,-s*.30, -s*.05,-s*.30);
-        ctx.closePath();
-        ctx.fill();
-        // 등지느러미 음영
-        ctx.fillStyle = "rgba(0,0,0,0.18)";
-        ctx.beginPath();
-        ctx.moveTo(s*.05, -s*.34);
-        ctx.lineTo(s*.28, -s*.82);
-        ctx.bezierCurveTo(s*.34,-s*.74, s*.50,-s*.55, s*.52,-s*.34);
-        ctx.bezierCurveTo(s*.38,-s*.31, s*.18,-s*.34, s*.05,-s*.34);
+        ctx.moveTo(-s*.50, -s*.26);
+        ctx.lineTo(-s*.40, -s*.58);
+        ctx.lineTo(-s*.30, -s*.26);
         ctx.closePath();
         ctx.fill();
 
-        // 3) 꼬리 앞 하엽지느러미 (몸통 아래쪽 작은 삼각형)
-        ctx.fillStyle = `hsl(${205+h},22%,35%)`;
+        // 3) 항문지느러미 (배 아래쪽 작은 삼각형)
+        ctx.fillStyle = `hsl(${205+h},22%,26%)`;
         ctx.beginPath();
-        ctx.moveTo(-s*.45,  s*.18);
-        ctx.lineTo(-s*.62,  s*.48);
-        ctx.lineTo(-s*.32,  s*.28);
-        ctx.closePath(); ctx.fill();
-
-        // 4) 가슴지느러미 (크고 납작한 삼각형, 몸통 앞쪽 아래)
-        ctx.fillStyle = `hsl(${205+h},24%,40%)`;
-        ctx.beginPath();
-        ctx.moveTo(s*.25, s*.22);
-        ctx.bezierCurveTo(s*.10, s*.50, -s*.22, s*.65, -s*.38, s*.46);
-        ctx.bezierCurveTo(-s*.18, s*.30, s*.10, s*.24, s*.25, s*.22);
+        ctx.moveTo(-s*.50, s*.20);
+        ctx.lineTo(-s*.40, s*.50);
+        ctx.lineTo(-s*.30, s*.24);
+        ctx.closePath();
         ctx.fill();
 
-        // 5) 몸통 (방추형, 위는 어둡고 배는 흰색) — 높이 축소, 길이 확장
-        let bg = ctx.createLinearGradient(0, -s*.36, 0, s*.36);
-        bg.addColorStop(0,   `hsl(${210+h},30%,28%)`);  // 등: 진한 청회색
-        bg.addColorStop(0.45,`hsl(${207+h},26%,42%)`);  // 옆구리
-        bg.addColorStop(1,   `hsl(${200+h},8%, 88%)`);  // 배: 흰색
+        // 4) 가슴지느러미 — 크고 날카로운 날개형
+        ctx.fillStyle = `hsl(${205+h},24%,32%)`;
+        ctx.beginPath();
+        ctx.moveTo(s*.12, s*.20);
+        ctx.bezierCurveTo(s*.02, s*.50, -s*.32, s*.85, -s*.58, s*.55);
+        ctx.bezierCurveTo(-s*.34, s*.38, -s*.08, s*.26, s*.12, s*.20);
+        ctx.fill();
+        // 가슴지느러미 그림자 (깊이감)
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.beginPath();
+        ctx.moveTo(s*.10, s*.22);
+        ctx.bezierCurveTo(s*.00, s*.44, -s*.22, s*.62, -s*.42, s*.52);
+        ctx.bezierCurveTo(-s*.26, s*.40, -s*.06, s*.28, s*.10, s*.22);
+        ctx.fill();
+
+        // 5) 몸통 — 더 길고 뾰족한 코, 방추형
+        let bg = ctx.createLinearGradient(0, -s*.40, 0, s*.40);
+        bg.addColorStop(0,    `hsl(${212+h},40%,18%)`);  // 등: 더 진한 검푸른
+        bg.addColorStop(0.42, `hsl(${207+h},32%,32%)`);  // 옆구리 위
+        bg.addColorStop(0.56, `hsl(${205+h},22%,52%)`);  // 경계선
+        bg.addColorStop(1,    `hsl(${200+h},4%, 94%)`);  // 배: 거의 순백
         ctx.fillStyle = bg;
         ctx.beginPath();
-        // 몸통 (앞이 뾰족, 뒤가 가늘어짐)
-        ctx.moveTo(s*1.18, 0);  // 주둥이
-        ctx.bezierCurveTo(s*.95,-s*.08, s*.4,-s*.32, -s*.05,-s*.30);
-        ctx.bezierCurveTo(-s*.48,-s*.28, -s*.82,-s*.14, -s*.88, 0);
-        ctx.bezierCurveTo(-s*.82, s*.14, -s*.48, s*.28, -s*.05, s*.30);
-        ctx.bezierCurveTo(s*.4,  s*.32, s*.95, s*.08, s*1.18, 0);
+        // 더 길고 날카로운 주둥이
+        ctx.moveTo(s*1.38, -s*.02);
+        ctx.bezierCurveTo(s*1.12, -s*.12, s*.55, -s*.30, -s*.10, -s*.34);
+        ctx.bezierCurveTo(-s*.55, -s*.32, -s*.85, -s*.18, -s*.95, 0);
+        ctx.bezierCurveTo(-s*.85, s*.18, -s*.55, s*.30, -s*.10, s*.32);
+        ctx.bezierCurveTo(s*.55, s*.30, s*1.12, s*.10, s*1.38, -s*.02);
         ctx.fill();
 
-        // 6) 등 → 배 경계 측선 (옆구리 줄)
-        ctx.strokeStyle = "rgba(150,170,180,0.35)";
-        ctx.lineWidth = s * 0.04;
+        // 6) 측선 (lateral line) — 더 두껝게, 또렷하게
+        ctx.strokeStyle = "rgba(150,175,195,0.50)";
+        ctx.lineWidth = s * 0.045;
         ctx.beginPath();
-        ctx.moveTo(s*.95, 0);
-        ctx.bezierCurveTo(s*.3, s*.06, -s*.3, s*.04, -s*.80, 0);
+        ctx.moveTo(s*1.22, 0);
+        ctx.bezierCurveTo(s*.30, s*.08, -s*.40, s*.06, -s*.90, 0);
         ctx.stroke();
 
-        // 7) 아가미 흔적 (3개의 날카로운 슬릿)
-        ctx.strokeStyle = "rgba(0,0,0,0.30)";
-        ctx.lineWidth = s * 0.025;
+        // 7) 아가미 — 5개의 크고 날카로운 슬릿 (현실적 상어)
+        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.lineWidth = s * 0.035;
         ctx.lineCap = "round";
-        for(let i=0; i<3; i++){
-            const gx = s*(0.72 - i*0.12);
+        for(let i=0; i<5; i++){
+            const gx = s*(0.82 - i*0.10);
+            const gyo = -s*.22 - i*s*.03;
             ctx.beginPath();
-            ctx.moveTo(gx, -s*.15 - i*s*.02);
-            ctx.lineTo(gx,  s*.13 + i*s*.01);
+            ctx.moveTo(gx, gyo);
+            ctx.bezierCurveTo(gx + s*.02, gyo + s*.18, gx + s*.02, gyo + s*.28, gx, gyo + s*.42);
             ctx.stroke();
         }
 
         // 8) 몸통 테두리
-        ctx.strokeStyle = "rgba(0,0,0,0.22)";
-        ctx.lineWidth = s * 0.03;
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = s * 0.035;
         ctx.beginPath();
-        ctx.moveTo(s*1.18, 0);
-        ctx.bezierCurveTo(s*.95,-s*.08, s*.4,-s*.32, -s*.05,-s*.30);
-        ctx.bezierCurveTo(-s*.48,-s*.28, -s*.82,-s*.14, -s*.88, 0);
-        ctx.bezierCurveTo(-s*.82, s*.14, -s*.48, s*.28, -s*.05, s*.30);
-        ctx.bezierCurveTo(s*.4,  s*.32, s*.95, s*.08, s*1.18, 0);
+        ctx.moveTo(s*1.38, -s*.02);
+        ctx.bezierCurveTo(s*1.12, -s*.12, s*.55, -s*.30, -s*.10, -s*.34);
+        ctx.bezierCurveTo(-s*.55, -s*.32, -s*.85, -s*.18, -s*.95, 0);
+        ctx.bezierCurveTo(-s*.85, s*.18, -s*.55, s*.30, -s*.10, s*.32);
+        ctx.bezierCurveTo(s*.55, s*.30, s*1.12, s*.10, s*1.38, -s*.02);
         ctx.stroke();
 
-        // 9) 눈 (검고 작고 날카로운 느낌)
-        this._drawSharkEye(s*.82, -s*.08, s*.065);
+        // 9) 등지느러미 — 거대하고 극도로 날카로운 삼각형
+        ctx.fillStyle = `hsl(${208+h},28%,20%)`;
+        ctx.beginPath();
+        ctx.moveTo(-s*.05, -s*.32);
+        ctx.lineTo( s*.22, -s*1.05);   // 극도로 뾰족한 끝
+        ctx.bezierCurveTo(s*.32, -s*.95, s*.55, -s*.65, s*.58, -s*.36);
+        ctx.bezierCurveTo(s*.40, -s*.32, s*.10, -s*.34, -s*.05, -s*.32);
+        ctx.closePath();
+        ctx.fill();
+        // 등지느러미 음영 (뒤쪽 면)
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.moveTo(s*.05, -s*.36);
+        ctx.lineTo(s*.22, -s*1.05);
+        ctx.bezierCurveTo(s*.30, -s*.95, s*.52, -s*.66, s*.55, -s*.36);
+        ctx.bezierCurveTo(s*.40, -s*.33, s*.18, -s*.36, s*.05, -s*.36);
+        ctx.closePath();
+        ctx.fill();
+        // 등지느러미 앞 모서리 강조선 (칼날 효과)
+        ctx.strokeStyle = "rgba(0,0,0,0.60)";
+        ctx.lineWidth = s * 0.045;
+        ctx.beginPath();
+        ctx.moveTo(-s*.05, -s*.32);
+        ctx.lineTo(s*.22, -s*1.05);
+        ctx.stroke();
 
-        // 10) 입 (주둥이 아랫면, 날카로운 호)
-        ctx.strokeStyle = "rgba(0,0,0,0.50)";
-        ctx.lineWidth = s * 0.035;
+        // 10) 눈 — 작고 사나운 붉은 눈 + 세로 동공
+        // 검은 안구 (외곽)
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(s*.85, -s*.08, s*.095, 0, Math.PI*2);
+        ctx.fill();
+        // 붉은 홍채
+        ctx.fillStyle = "rgba(180,25,25,0.92)";
+        ctx.beginPath();
+        ctx.arc(s*.85, -s*.08, s*.060, 0, Math.PI*2);
+        ctx.fill();
+        // 세로 동공 (살육자 인상)
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.ellipse(s*.85, -s*.08, s*.014, s*.052, 0, 0, Math.PI*2);
+        ctx.fill();
+        // 하이라이트
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.beginPath();
+        ctx.arc(s*.86, -s*.105, s*.018, 0, Math.PI*2);
+        ctx.fill();
+        // 어두운 눈 후광 (냉혹한 인상)
+        ctx.strokeStyle = "rgba(0,0,0,0.80)";
+        ctx.lineWidth = s * 0.055;
+        ctx.beginPath();
+        ctx.arc(s*.85, -s*.08, s*.120, 0, Math.PI*2);
+        ctx.stroke();
+
+        // 11) 입 — 더 깊고 길게
+        ctx.strokeStyle = "rgba(0,0,0,0.80)";
+        ctx.lineWidth = s * 0.045;
         ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(s*1.14, s*.04);
-        ctx.bezierCurveTo(s*1.02, s*.13, s*.82, s*.15, s*.70, s*.10);
+        ctx.moveTo(s*1.34, s*.06);
+        ctx.bezierCurveTo(s*1.18, s*.22, s*.82, s*.25, s*.52, s*.13);
         ctx.stroke();
 
-        // 이빨 (작은 삼각형들)
-        ctx.fillStyle = "rgba(255,255,255,0.88)";
-        const teethX = [s*1.10, s*1.02, s*.93, s*.84, s*.75];
-        const teethY =  s*.06;
+        // 12) 입 내부 어둠 (이빨이 배경에 박힌 느낌)
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.beginPath();
+        ctx.moveTo(s*1.34, s*.06);
+        ctx.bezierCurveTo(s*1.18, s*.22, s*.82, s*.25, s*.52, s*.13);
+        ctx.bezierCurveTo(s*.82, s*.10, s*1.18, s*.08, s*1.34, s*.06);
+        ctx.fill();
+
+        // 13) 이빨 — 9개의 크고 날카로운 송곳니
+        ctx.fillStyle = "rgba(255,255,255,0.96)";
+        const teethY = s * 0.09;
+        const teethW = s * 0.033;
+        const teethH = s * 0.090;
+        const teethX = [
+            s*1.32, s*1.25, s*1.17, s*1.09, s*1.00,
+            s*0.90, s*0.80, s*0.70, s*0.60
+        ];
         for(let tx of teethX) {
             ctx.beginPath();
             ctx.moveTo(tx, teethY);
-            ctx.lineTo(tx - s*.022, teethY + s*.05);
-            ctx.lineTo(tx + s*.022, teethY + s*.05);
+            ctx.lineTo(tx - teethW, teethY + teethH);
+            ctx.lineTo(tx + teethW, teethY + teethH);
             ctx.closePath();
             ctx.fill();
         }
