@@ -262,13 +262,82 @@
     border-color:#2a9d8f;
     box-shadow:0 0 16px rgba(42,157,143,0.7);
   }
+
+  /* 극한 모드 토글 */
+  .extreme-toggle-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .extreme-toggle{
+    position:relative;
+    width:36px;
+    height:20px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .extreme-toggle input{
+    opacity:0;
+    width:0;
+    height:0;
+    position:absolute;
+  }
+  .extreme-slider{
+    position:absolute;
+    inset:0;
+    background:#c26080;
+    border-radius:20px;
+    transition:background 0.2s;
+  }
+  .extreme-slider::before{
+    content:'';
+    position:absolute;
+    width:14px;
+    height:14px;
+    left:3px;
+    top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:transform 0.2s;
+  }
+  .extreme-toggle input:checked + .extreme-slider{
+    background:#e6161f;
+  }
+  .extreme-toggle input:checked + .extreme-slider::before{
+    transform:translateX(16px);
+  }
+
+  /* 극한 모드 확인 모달 */
+  #extremeModal{
+    position:fixed; inset:0;
+    background:rgba(6,10,15,0.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+  }
 </style>
 </head>
 <body>
 
 <div class="header-row">
   <div class="header-title">💧 워터 소트 퍼즐</div>
-  <div class="badge header-clear">클리어 <b id="levelLabel">0</b></div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <label class="extreme-toggle" title="극한 모드">
+      <input type="checkbox" id="extremeToggle">
+      <span class="extreme-slider"></span>
+    </label>
+    <div class="badge header-clear">클리어 <b id="levelLabel">0</b></div>
+  </div>
+</div>
+
+<div id="extremeModal">
+  <div class="modal-box">
+    <h2 id="extremeModalTitle">⚠️ 극한 모드</h2>
+    <p id="extremeModalText">지금부터는 극한 모드입니다.</p>
+    <button id="extremeModalOk">확인</button>
+  </div>
 </div>
 
 <div class="hud-wrap">
@@ -423,6 +492,66 @@
       osc.stop(start + 0.5);
     });
   }
+
+  // ===== 극한 모드 =====
+  let extremeMode = false;
+
+  // 삐삐삐삐삐 금지음 (5회 반복 비프)
+  function playBuzzSound(){
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    for(let i = 0; i < 5; i++){
+      const osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 440;
+      const gain = ctx.createGain();
+      const t = now + i * 0.18;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.35, t + 0.01);
+      gain.gain.setValueAtTime(0.35, t + 0.09);
+      gain.gain.linearRampToValueAtTime(0, t + 0.13);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    }
+  }
+
+  function setExtremeMode(on){
+    extremeMode = on;
+    document.getElementById('restartBtn').disabled = on;
+    document.getElementById('tutorialBtn').disabled = on;
+    // 극한 모드 활성화 시 튜토리얼 강제 종료
+    if(on && tutorial.active) toggleTutorial();
+  }
+
+  function showExtremeModal(title, text, onOk){
+    document.getElementById('extremeModalTitle').textContent = title;
+    document.getElementById('extremeModalText').textContent = text;
+    const modal = document.getElementById('extremeModal');
+    modal.style.display = 'flex';
+    const btn = document.getElementById('extremeModalOk');
+    const handler = () => {
+      modal.style.display = 'none';
+      btn.removeEventListener('click', handler);
+      onOk();
+    };
+    btn.addEventListener('click', handler);
+  }
+
+  document.getElementById('extremeToggle').addEventListener('change', function(){
+    if(this.checked){
+      // 토글 켜기: 체크박스는 이미 checked 상태 → 모달 확인 후 활성화
+      showExtremeModal('⚠️ 극한 모드', '지금부터는 극한 모드입니다.', () => {
+        setExtremeMode(true);
+      });
+    } else {
+      // 토글 끄기: 체크박스는 이미 unchecked → 모달 확인 후 비활성화 + 효과음
+      showExtremeModal('🚫 극한 모드 종료', '극한 모드를 중지합니다.', () => {
+        setExtremeMode(false);
+        playBuzzSound();
+      });
+    }
+  });
 
   let state = {
     level: 1,
