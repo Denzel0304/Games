@@ -216,7 +216,7 @@
   }
   #tutNavGroup{
     display:flex;
-    gap:6px;
+    gap:20px;
     align-items:center;
     flex:1;
     justify-content:center;
@@ -224,7 +224,7 @@
   @media (max-width:420px){
     #tutorialBar{ padding:0 4px; }
     #tutorialBar > *{ height:34px; }
-    #tutNavGroup{ gap:4px; }
+    #tutNavGroup{ gap:12px; }
   }
   #tutorialBtn.active{
     background:var(--accent);
@@ -235,7 +235,7 @@
   #tutNextBtn, #tutBackBtn{
     font-size:20px;
     color:var(--text);
-    width:60px;
+    width:44px;
   }
   #tutNextBtn:not(:disabled):hover, #tutBackBtn:not(:disabled):hover{
     background:var(--accent);
@@ -452,8 +452,11 @@
     const hud = document.getElementById('hud');
     if(tutorial.active){
       btn.classList.add('active');
-      // hud는 자리(높이)는 유지한 채 보이지 않게 하고, 그 위에 튜토리얼 바를 플로팅으로 덮는다.
-      // 이렇게 하면 튜토리얼 진입/종료 시 보드(비커) 위치가 위아래로 밀리지 않는다.
+      // 튜토리얼 진입 시 수동으로 진행한 내용을 초기 상태로 되돌린다
+      state.tubes = cloneTubes(state.initial);
+      state.selected = -1;
+      state.moves = 0;
+      state.history = [];
       hud.style.visibility = 'hidden';
       bar.style.display = 'flex';
       ensureTutorialSolution();
