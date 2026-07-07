@@ -32,12 +32,27 @@
     flex-direction:column;
     align-items:center;
     padding:20px 12px 60px;
+    width:100%;
   }
-  h1{
+  .header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    max-width:640px;
+    margin-bottom:20px;
+    padding:0 4px;
+  }
+  .header-title{
     font-size:22px;
     letter-spacing:2px;
-    margin:0 0 24px;
     color:var(--accent);
+    font-weight:bold;
+  }
+  .header-clear{
+    font-size:15px;
+    padding:0 16px;
+    height:40px;
   }
   .hud-wrap{
     position:relative;
@@ -47,7 +62,7 @@
   }
   .hud{
     display:flex;
-    gap:8px;
+    gap:16px;
     align-items:stretch;
     flex-wrap:nowrap;
     justify-content:center;
@@ -55,24 +70,25 @@
     width:100%;
   }
   .hud > *{
-    height:40px;
+    height:44px;
     box-sizing:border-box;
   }
   .icon-btn{
-    width:40px;
+    width:60px;
     padding:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:18px;
+    font-size:20px;
     flex-shrink:0;
   }
   @media (max-width:420px){
-    .hud{ gap:5px; }
-    .hud > *{ height:34px; }
+    .hud{ gap:10px; }
+    .hud > *{ height:40px; }
     .badge{ padding:0 8px; font-size:12px; gap:4px; }
-    .icon-btn{ width:34px; font-size:15px; }
-    #tutorialBtn{ width:34px; font-size:14px; }
+    .icon-btn{ width:50px; font-size:18px; }
+    #tutorialBtn{ width:50px; font-size:15px; }
+    .header-clear{ height:36px; font-size:13px; padding:0 12px; }
   }
   #undoBtn{
     font-size:22px;
@@ -112,12 +128,12 @@
   button:active{ transform:scale(0.95); }
   button:disabled{ opacity:0.4; cursor:default; }
   #tutorialBtn{
-    width:40px;
+    width:60px;
     padding:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:16px;
+    font-size:18px;
     flex-shrink:0;
   }
   #board{
@@ -250,12 +266,13 @@
 </head>
 <body>
 
-<h1>💧 워터 소트 퍼즐</h1>
+<div class="header-row">
+  <div class="header-title">💧 워터 소트 퍼즐</div>
+  <div class="badge header-clear">클리어 <b id="levelLabel">1</b></div>
+</div>
 
 <div class="hud-wrap">
   <div class="hud" id="hud">
-    <div class="badge">클리어 <b id="levelLabel">1</b></div>
-    <div class="badge">이동 <b id="moveLabel">0</b></div>
     <button id="undoBtn" class="icon-btn" title="한 칸 되돌리기">↩︎</button>
     <button id="resetBtn" class="icon-btn" title="이번 판 초기화">⟲</button>
     <button id="restartBtn" class="icon-btn" title="새 판">🔄</button>
@@ -695,7 +712,6 @@
 
   function render(){
     document.getElementById('levelLabel').textContent = state.level;
-    document.getElementById('moveLabel').textContent = state.moves;
     document.getElementById('undoBtn').disabled = state.history.length === 0;
 
     const board = document.getElementById('board');
@@ -756,7 +772,7 @@
     if(tutorial.active) return; // 튜토리얼은 보기 전용 모드이므로 클리어 모달을 띄우지 않는다
     playClearSound();
     document.getElementById('winText').textContent =
-      state.level + '번째 클리어! (이동 ' + state.moves + '회)';
+      state.level + '번째 클리어!';
     document.getElementById('winModal').style.display = 'flex';
   }
 
