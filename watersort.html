@@ -312,25 +312,62 @@
     return audioCtx;
   }
 
-  // 1) 이동 소리 - 뽁뽁이 파열음
+  // 1) 이동 소리 - 뽁뽁이 파열음 (크고 경쾌하게)
   function playPourSound(){
     const ctx = getCtx();
     const now = ctx.currentTime;
 
-    // 오실레이터: 높은 음에서 급하강 → 뽁 느낌
+    // 뽁뽁이 특유의 공기 파열음: 노이즈 버스트 + 저음 공명
+    // --- 화이트 노이즈 파열 (뽁 질감) ---
+    const bufLen = ctx.sampleRate * 0.06;
+    const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // 노이즈를 밴드패스로 필터링해 뽁 음색 만들기
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(420, now);
+    bpf.frequency.exponentialRampToValueAtTime(120, now + 0.055);
+    bpf.Q.value = 1.8;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(1.4, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+
+    noise.connect(bpf).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.07);
+
+    // --- 저주파 보디감 (뽁 울림) ---
     const osc = ctx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.06);
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
 
-    // 짧고 강하게 터졌다 바로 꺼짐
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.55, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    const oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(1.0, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(oscGain).connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.08);
+    osc.stop(now + 0.09);
+
+    // --- 귀여운 고음 틱 (뽁의 밝은 어택) ---
+    const tick = ctx.createOscillator();
+    tick.type = 'square';
+    tick.frequency.setValueAtTime(900, now);
+    tick.frequency.exponentialRampToValueAtTime(300, now + 0.025);
+
+    const tickGain = ctx.createGain();
+    tickGain.gain.setValueAtTime(0.3, now);
+    tickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+    tick.connect(tickGain).connect(ctx.destination);
+    tick.start(now);
+    tick.stop(now + 0.035);
   }
 
   // 2) 병 하나 채우기 완료 - 맑은 벨소리
