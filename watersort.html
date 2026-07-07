@@ -268,7 +268,7 @@
 
 <div class="header-row">
   <div class="header-title">💧 워터 소트 퍼즐</div>
-  <div class="badge header-clear">클리어 <b id="levelLabel">1</b></div>
+  <div class="badge header-clear">클리어 <b id="levelLabel">0</b></div>
 </div>
 
 <div class="hud-wrap">
@@ -308,13 +308,17 @@
   let audioCtx = null;
   function getCtx(){
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
+  }
+  async function getCtxReady(){
+    const ctx = getCtx();
+    if(ctx.state === 'suspended') await ctx.resume();
+    return ctx;
   }
 
   // 1) 이동 소리 - 뽁뽁이 파열음 (크고 경쾌하게)
-  function playPourSound(){
-    const ctx = getCtx();
+  async function playPourSound(){
+    const ctx = await getCtxReady();
     const now = ctx.currentTime;
 
     // 뽁뽁이 특유의 공기 파열음: 노이즈 버스트 + 저음 공명
@@ -371,8 +375,8 @@
   }
 
   // 2) 병 하나 채우기 완료 - 맑은 벨소리
-  function playFillSound(){
-    const ctx = getCtx();
+  async function playFillSound(){
+    const ctx = await getCtxReady();
     const now = ctx.currentTime;
     [880, 1318.5].forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -390,8 +394,8 @@
   }
 
   // 3) 클리어 - 상승하는 짧은 팡파레
-  function playClearSound(){
-    const ctx = getCtx();
+  async function playClearSound(){
+    const ctx = await getCtxReady();
     const now = ctx.currentTime;
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
@@ -411,6 +415,7 @@
 
   let state = {
     level: 1,
+    clearCount: 0,
     capacity: 4,
     tubes: [],
     initial: [],
@@ -570,12 +575,13 @@
       if(raw){
         const p = JSON.parse(raw);
         state.level = p.level || 1;
+        state.clearCount = p.clearCount || (state.level - 1);
       }
     }catch(e){}
   }
   function saveProgress(){
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({level: state.level}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({level: state.level, clearCount: state.clearCount}));
     }catch(e){}
   }
 
@@ -741,7 +747,7 @@
   }
 
   function render(){
-    document.getElementById('levelLabel').textContent = state.level;
+    document.getElementById('levelLabel').textContent = state.clearCount;
     document.getElementById('undoBtn').disabled = state.history.length === 0;
 
     const board = document.getElementById('board');
@@ -801,8 +807,11 @@
   function onWin(){
     if(tutorial.active) return; // 튜토리얼은 보기 전용 모드이므로 클리어 모달을 띄우지 않는다
     playClearSound();
+    state.clearCount++;
+    saveProgress();
+    document.getElementById('levelLabel').textContent = state.clearCount;
     document.getElementById('winText').textContent =
-      state.level + '번째 클리어!';
+      state.clearCount + '번째 클리어!';
     document.getElementById('winModal').style.display = 'flex';
   }
 
