@@ -200,23 +200,31 @@
     position:absolute;
     inset:0;
     display:flex;
-    gap:8px;
+    gap:0;
     align-items:center;
-    justify-content:center;
+    justify-content:space-between;
     flex-wrap:nowrap;
     background:#12202a;
-    border:1px solid var(--glass-edge);
+    border:none;
     border-radius:12px;
-    padding:0 12px;
+    padding:0 4px;
     z-index:5;
   }
   #tutorialBar > *{
     height:40px;
     box-sizing:border-box;
   }
+  #tutNavGroup{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    flex:1;
+    justify-content:center;
+  }
   @media (max-width:420px){
-    #tutorialBar{ gap:5px; padding:0 8px; }
+    #tutorialBar{ padding:0 4px; }
     #tutorialBar > *{ height:34px; }
+    #tutNavGroup{ gap:4px; }
   }
   #tutorialBtn.active{
     background:var(--accent);
@@ -227,6 +235,7 @@
   #tutNextBtn, #tutBackBtn{
     font-size:20px;
     color:var(--text);
+    width:60px;
   }
   #tutNextBtn:not(:disabled):hover, #tutBackBtn:not(:disabled):hover{
     background:var(--accent);
@@ -258,9 +267,11 @@
   </div>
 
   <div id="tutorialBar" style="display:none;">
-    <div class="badge">튜토리얼 <b id="tutStepLabel">0</b> / <b id="tutTotalLabel">0</b></div>
-    <button id="tutBackBtn" class="icon-btn" title="한 칸 뒤로">◀</button>
-    <button id="tutNextBtn" class="icon-btn" title="한 칸 가기">▶</button>
+    <div class="badge">진행 <b id="tutStepLabel">0</b> / <b id="tutTotalLabel">0</b></div>
+    <div id="tutNavGroup">
+      <button id="tutBackBtn" class="icon-btn" title="한 칸 뒤로">◀</button>
+      <button id="tutNextBtn" class="icon-btn" title="한 칸 가기">▶</button>
+    </div>
     <button id="tutExitBtn" title="튜토리얼 종료">종료</button>
   </div>
 </div>
