@@ -210,7 +210,7 @@
   }
   .modal-box h2{ margin-top:0; color:var(--accent); }
   .modal-box p{ color:var(--sub); font-size:14px; }
-  .modal-box button{ margin-top:10px; }
+  .modal-box button{ margin-top:10px; width:100%; justify-content:center; }
 
   #tutorialBar{
     position:absolute;
@@ -295,7 +295,7 @@
   <div class="modal-box">
     <h2>🎉 클리어!</h2>
     <p id="winText">클리어했습니다.</p>
-    <button id="nextLevelBtn">다음 판</button>
+    <button id="nextLevelBtn">확인</button>
   </div>
 </div>
 
@@ -312,32 +312,25 @@
     return audioCtx;
   }
 
-  // 1) 물 붓는 소리 - 노이즈 + 대역통과 필터로 '쪼르륵' 느낌
+  // 1) 이동 소리 - 뽁뽁이 파열음
   function playPourSound(){
     const ctx = getCtx();
-    const dur = 0.28;
-    const bufLen = Math.floor(ctx.sampleRate * dur);
-    const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for(let i=0;i<bufLen;i++) data[i] = (Math.random()*2-1);
+    const now = ctx.currentTime;
 
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
+    // 오실레이터: 높은 음에서 급하강 → 뽁 느낌
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.06);
 
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1800, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + dur);
-    filter.Q.value = 1.2;
-
+    // 짧고 강하게 터졌다 바로 꺼짐
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
-    noise.connect(filter).connect(gain).connect(ctx.destination);
-    noise.start();
-    noise.stop(ctx.currentTime + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
   }
 
   // 2) 병 하나 채우기 완료 - 맑은 벨소리
