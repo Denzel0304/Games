@@ -306,19 +306,30 @@
 
   // ===== 효과음 (Web Audio API 합성 - 외부 파일 없이 동작) =====
   let audioCtx = null;
+  let audioUnlocked = false;
+
+  // 모바일: 터치 이벤트 내 동기 흐름에서 무음 재생으로 AudioContext unlock
+  function unlockAudio(){
+    if(audioUnlocked) return;
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(0);
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    audioUnlocked = true;
+  }
+
   function getCtx(){
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
-  }
-  async function getCtxReady(){
-    const ctx = getCtx();
-    if(ctx.state === 'suspended') await ctx.resume();
-    return ctx;
   }
 
   // 1) 이동 소리 - 뽁뽁이 파열음 (크고 경쾌하게)
-  async function playPourSound(){
-    const ctx = await getCtxReady();
+  function playPourSound(){
+    const ctx = getCtx();
     const now = ctx.currentTime;
 
     // 뽁뽁이 특유의 공기 파열음: 노이즈 버스트 + 저음 공명
@@ -375,8 +386,8 @@
   }
 
   // 2) 병 하나 채우기 완료 - 맑은 벨소리
-  async function playFillSound(){
-    const ctx = await getCtxReady();
+  function playFillSound(){
+    const ctx = getCtx();
     const now = ctx.currentTime;
     [880, 1318.5].forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -394,8 +405,8 @@
   }
 
   // 3) 클리어 - 상승하는 짧은 팡파레
-  async function playClearSound(){
-    const ctx = await getCtxReady();
+  function playClearSound(){
+    const ctx = getCtx();
     const now = ctx.currentTime;
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
@@ -771,6 +782,7 @@
   }
 
   function onTubeClick(idx){
+    unlockAudio(); // 모바일: 첫 터치 시 동기 흐름 내에서 AudioContext unlock
     if(state.selected === -1){
       if(state.tubes[idx].length === 0) return;
       state.selected = idx;
