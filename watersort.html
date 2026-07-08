@@ -938,6 +938,7 @@
   }
 
   function onTubeClick(idx){
+    if(tutorial.active) return; // 튜토리얼 모드: 클릭 완전 차단
     unlockAudio(); // 모바일: 첫 터치 시 동기 흐름 내에서 AudioContext unlock
     if(state.selected === -1){
       if(state.tubes[idx].length === 0) return;
