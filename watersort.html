@@ -494,6 +494,7 @@
   }
 
   // ===== 극한 모드 =====
+  const EXTREME_KEY = 'watersort_extreme_v1';
   let extremeMode = false;
 
   // 삐삐삐삐삐 금지음 (5회 반복 비프)
@@ -516,10 +517,16 @@
     }
   }
 
+  function saveExtremeMode(on){
+    try{ localStorage.setItem(EXTREME_KEY, on ? '1' : '0'); }catch(e){}
+  }
+
   function setExtremeMode(on){
     extremeMode = on;
+    document.getElementById('extremeToggle').checked = on;
     document.getElementById('restartBtn').disabled = on;
     document.getElementById('tutorialBtn').disabled = on;
+    saveExtremeMode(on);
     // 극한 모드 활성화 시 튜토리얼 강제 종료
     if(on && tutorial.active) toggleTutorial();
   }
@@ -538,14 +545,34 @@
     btn.addEventListener('click', handler);
   }
 
+  // 극한 모드 ON 상태로 이탈했다가 복귀 시 비프음
+  function loadExtremeMode(){
+    try{
+      const saved = localStorage.getItem(EXTREME_KEY);
+      if(saved === '1'){
+        setExtremeMode(true);
+        // 첫 터치/클릭 시 비프음 (브라우저 autoplay 정책 우회)
+        let buzzFired = false;
+        const fireBuzz = () => {
+          if(buzzFired) return;
+          buzzFired = true;
+          unlockAudio();
+          playBuzzSound();
+          document.removeEventListener('click', fireBuzz);
+          document.removeEventListener('touchstart', fireBuzz);
+        };
+        document.addEventListener('click', fireBuzz);
+        document.addEventListener('touchstart', fireBuzz);
+      }
+    }catch(e){}
+  }
+
   document.getElementById('extremeToggle').addEventListener('change', function(){
     if(this.checked){
-      // 토글 켜기: 체크박스는 이미 checked 상태 → 모달 확인 후 활성화
       showExtremeModal('⚠️ 극한 모드', '지금부터는 극한 모드입니다.', () => {
         setExtremeMode(true);
       });
     } else {
-      // 토글 끄기: 체크박스는 이미 unchecked → 모달 확인 후 비활성화 + 효과음
       showExtremeModal('🚫 극한 모드 종료', '극한 모드를 중지합니다.', () => {
         setExtremeMode(false);
         playBuzzSound();
@@ -997,6 +1024,7 @@
   document.body.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
 
   loadProgress();
+  loadExtremeMode();
   newLevel(state.level);
 })();
 </script>
