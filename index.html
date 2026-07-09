@@ -32,7 +32,6 @@
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden;
         }
 
         body {
@@ -42,16 +41,18 @@
             flex-direction: column;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: hidden;
         }
 
         header {
             width: 100%;
             box-sizing: border-box;
-            padding-top: 20px;
-            padding-bottom: 10px;
+            padding-top: 40px;
+            padding-bottom: 15px;
             text-align: center;
-            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
             background-color: var(--bg-color);
         }
 
@@ -60,7 +61,7 @@
         p { font-size: 13px; color: var(--text-sub); margin-top: 6px; }
 
         .date-badge {
-            margin-top: 8px;
+            margin-top: 15px;
             background: white;
             padding: 5px 16px;
             border-radius: 20px;
@@ -73,20 +74,17 @@
         .container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 8px;
-            padding: 8px 14px 14px;
+            gap: 10px;
+            padding: 10px 14px 40px;
             width: 100%;
             max-width: 380px;
             box-sizing: border-box;
-            flex: 1;
-            min-height: 0;
         }
 
         .menu-card {
             background: var(--card-bg);
             border-radius: 20px;
-            height: auto;
+            height: 90px;
             display: flex;
             flex-direction: column;
             align-items: center;
