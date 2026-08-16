@@ -378,7 +378,7 @@
   let audioUnlocked = false;
 
   // 모바일: 터치 이벤트 내 동기 흐름에서 무음 재생으로 AudioContext unlock
-  function unlockAudio(){
+  async function unlockAudio(){
     if(audioUnlocked) return;
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
@@ -386,19 +386,19 @@
     src.buffer = buf;
     src.connect(audioCtx.destination);
     src.start(0);
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
     audioUnlocked = true;
   }
 
-  function getCtx(){
+  async function getCtx(){
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
     return audioCtx;
   }
 
   // 1) 이동 소리 - 뽁뽁이 파열음 (크고 경쾌하게)
-  function playPourSound(){
-    const ctx = getCtx();
+  async function playPourSound(){
+    const ctx = await getCtx();
     const now = ctx.currentTime;
 
     // 뽁뽁이 특유의 공기 파열음: 노이즈 버스트 + 저음 공명
@@ -455,8 +455,8 @@
   }
 
   // 2) 병 하나 채우기 완료 - 맑은 벨소리
-  function playFillSound(){
-    const ctx = getCtx();
+  async function playFillSound(){
+    const ctx = await getCtx();
     const now = ctx.currentTime;
     [880, 1318.5].forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -474,8 +474,8 @@
   }
 
   // 3) 클리어 - 상승하는 짧은 팡파레
-  function playClearSound(){
-    const ctx = getCtx();
+  async function playClearSound(){
+    const ctx = await getCtx();
     const now = ctx.currentTime;
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
@@ -498,8 +498,8 @@
   let extremeMode = false;
 
   // 삐삐삐삐삐 금지음 (5회 반복 비프)
-  function playBuzzSound(){
-    const ctx = getCtx();
+  async function playBuzzSound(){
+    const ctx = await getCtx();
     const now = ctx.currentTime;
     for(let i = 0; i < 5; i++){
       const osc = ctx.createOscillator();
@@ -553,10 +553,10 @@
         setExtremeMode(true);
         // 첫 터치/클릭 시 비프음 (브라우저 autoplay 정책 우회)
         let buzzFired = false;
-        const fireBuzz = () => {
+        const fireBuzz = async () => {
           if(buzzFired) return;
           buzzFired = true;
-          unlockAudio();
+          await unlockAudio();
           playBuzzSound();
           document.removeEventListener('click', fireBuzz);
           document.removeEventListener('touchstart', fireBuzz);
@@ -937,9 +937,9 @@
     renderTutorialBar();
   }
 
-  function onTubeClick(idx){
+  async function onTubeClick(idx){
     if(tutorial.active) return; // 튜토리얼 모드: 클릭 완전 차단
-    unlockAudio(); // 모바일: 첫 터치 시 동기 흐름 내에서 AudioContext unlock
+    await unlockAudio(); // 모바일: 첫 터치 시 AudioContext unlock 완료 대기
     if(state.selected === -1){
       if(state.tubes[idx].length === 0) return;
       state.selected = idx;
