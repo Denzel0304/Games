@@ -8,614 +8,342 @@
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
   :root {
-    --wood-dark: #3d1f0a;
-    --wood-mid: #6b3a1f;
-    --wood-light: #c8843a;
-    --wood-grain: #b5742e;
     --board-bg: #d4922f;
     --board-line: #8b5e1a;
     --gold: #f0c040;
     --gold-dim: #c9952a;
-    --stone-black: #1a1a1a;
-    --stone-white: #f5f2eb;
-    --stone-black-shine: rgba(255,255,255,0.25);
-    --stone-white-shine: rgba(255,255,255,0.7);
     --accent: #e84040;
-    --accent2: #4a90d9;
     --bg: #1c0f05;
     --panel: #2a1508;
     --panel2: #3a1e0c;
     --text: #f0dbb0;
     --text-dim: #a07840;
     --text-muted: #6b4a20;
-    --modal-bg: rgba(15,7,2,0.92);
-    --radius: 14px;
-    --shadow: 0 8px 32px rgba(0,0,0,0.6);
+    --modal-bg: rgba(15,7,2,0.93);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  body {
+  html, body {
+    height: 100%; height: 100dvh;
+    overflow: hidden;
     font-family: 'Noto Sans KR', sans-serif;
     background: var(--bg);
     color: var(--text);
-    min-height: 100dvh;
+  }
+
+  /* ── FULL-SCREEN LAYOUT ── */
+  #app {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
+    height: 100dvh;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    overflow: hidden;
   }
 
   /* ── HEADER ── */
   header {
-    width: 100%;
-    padding: 14px 18px 10px;
+    flex-shrink: 0;
+    padding: 10px 16px 6px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     background: linear-gradient(180deg, #0e0602 0%, transparent 100%);
   }
-  .logo {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    color: var(--gold);
-    text-shadow: 0 0 18px rgba(240,192,64,0.4);
-  }
+  .logo { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: var(--gold); text-shadow: 0 0 16px rgba(240,192,64,0.4); }
   .logo span { color: var(--text); font-weight: 300; }
-  .header-btns { display: flex; gap: 8px; }
+  .header-btns { display: flex; gap: 7px; }
   .icon-btn {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    border: 1px solid var(--text-muted);
-    background: var(--panel);
-    color: var(--text-dim);
-    font-size: 16px;
+    width: 34px; height: 34px; border-radius: 9px;
+    border: 1px solid var(--text-muted); background: var(--panel);
+    color: var(--text-dim); font-size: 15px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
+    cursor: pointer; transition: all 0.15s;
   }
-  .icon-btn:active { transform: scale(0.92); background: var(--panel2); }
+  .icon-btn:active { transform: scale(0.9); }
 
   /* ── STATUS BAR ── */
   .status-bar {
-    width: 100%;
-    padding: 8px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-shrink: 0;
+    padding: 5px 14px;
+    display: flex; align-items: center; gap: 7px;
   }
   .player-card {
-    flex: 1;
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1.5px solid transparent;
-    transition: all 0.2s;
-    min-width: 0;
+    flex: 1; background: var(--panel); border-radius: 10px;
+    padding: 6px 9px; display: flex; align-items: center; gap: 7px;
+    border: 1.5px solid transparent; transition: all 0.2s; min-width: 0;
   }
-  .player-card.active {
-    border-color: var(--gold);
-    background: var(--panel2);
-    box-shadow: 0 0 14px rgba(240,192,64,0.2);
-  }
-  .player-card.active.black-active { border-color: #777; box-shadow: 0 0 14px rgba(150,150,150,0.2); }
-  .stone-icon {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .stone-icon.black {
-    background: radial-gradient(circle at 38% 35%, #666, #1a1a1a 60%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.2);
-  }
-  .stone-icon.white {
-    background: radial-gradient(circle at 38% 35%, #fff, #d0c8b8 70%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.8);
-  }
+  .player-card.active { border-color: var(--gold); background: var(--panel2); box-shadow: 0 0 12px rgba(240,192,64,0.18); }
+  .player-card.active.black-active { border-color: #888; box-shadow: 0 0 12px rgba(180,180,180,0.15); }
+  .stone-icon { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
+  .stone-icon.black { background: radial-gradient(circle at 38% 35%, #777, #111 65%); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+  .stone-icon.white { background: radial-gradient(circle at 38% 35%, #fff, #ccc 70%); box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
   .player-info { min-width: 0; flex: 1; }
-  .player-name { font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px; }
-  .player-label { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .turn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: pulse 1s infinite; flex-shrink: 0; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
-  .vs-badge {
-    background: var(--panel2);
-    border-radius: 8px;
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    flex-shrink: 0;
-  }
+  .player-name { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.4px; }
+  .player-label { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .turn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 1s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
+  .vs-badge { background: var(--panel2); border-radius: 7px; padding: 3px 7px; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; flex-shrink: 0; }
 
-  /* ── BOARD WRAPPER ── */
-  .board-wrapper {
-    width: 100%;
-    padding: 4px 10px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
+  /* ── MOVE COUNTER ── */
   .move-counter {
+    flex-shrink: 0;
+    text-align: center;
     font-size: 11px;
     color: var(--text-muted);
-    letter-spacing: 0.5px;
+    padding: 1px 0 3px;
+    letter-spacing: 0.3px;
+    min-height: 18px;
   }
 
   /* ── BOARD ── */
+  .board-wrapper {
+    flex-shrink: 0;
+    padding: 0 10px;
+    display: flex;
+    justify-content: center;
+  }
   #board-container {
     width: 100%;
-    max-width: 420px;
     aspect-ratio: 1;
     position: relative;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.7), inset 0 0 0 2px var(--wood-mid);
-    touch-action: none;
-    cursor: pointer;
+    box-shadow: 0 3px 24px rgba(0,0,0,0.7), inset 0 0 0 2px #6b3a1f;
+    touch-action: none; cursor: pointer;
   }
   #board-bg {
     position: absolute; inset: 0;
     background:
-      repeating-linear-gradient(90deg, transparent 0, transparent calc(var(--cell) - 0.5px), var(--board-line) calc(var(--cell) - 0.5px), var(--board-line) var(--cell)),
-      repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--cell) - 0.5px), var(--board-line) calc(var(--cell) - 0.5px), var(--board-line) var(--cell)),
+      repeating-linear-gradient(90deg, transparent 0, transparent calc(var(--cell) - 0.5px), #8b5e1a calc(var(--cell) - 0.5px), #8b5e1a var(--cell)),
+      repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--cell) - 0.5px), #8b5e1a calc(var(--cell) - 0.5px), #8b5e1a var(--cell)),
       var(--board-bg);
     background-size: var(--cell) var(--cell), var(--cell) var(--cell), auto;
     background-position: calc(var(--pad)) calc(var(--pad));
   }
-  /* wood grain overlay */
   #board-bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      170deg,
-      transparent 0px, transparent 18px,
-      rgba(100,50,10,0.07) 18px, rgba(100,50,10,0.07) 19px
-    );
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(168deg, transparent 0px, transparent 16px, rgba(80,40,5,0.06) 16px, rgba(80,40,5,0.06) 17px);
     pointer-events: none;
   }
-  #board-canvas {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    touch-action: none;
-  }
-  #hint-overlay {
-    position: absolute; inset: 0;
-    pointer-events: none;
-  }
+  #board-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
 
-  /* ── INFO BAR ── */
-  .info-bar {
-    width: 100%;
-    padding: 4px 18px 8px;
-    display: flex;
-    gap: 8px;
+  /* ── THINKING BAR ── */
+  .thinking-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--panel); overflow: hidden; opacity: 0; transition: opacity 0.2s; }
+  .thinking-bar.active { opacity: 1; }
+  .thinking-fill { height: 100%; width: 35%; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: thinking 1s infinite; }
+  @keyframes thinking { 0%{transform:translateX(-200%)} 100%{transform:translateX(400%)} }
+
+  /* ── INFO ROW ── */
+  .info-row {
+    flex-shrink: 0;
+    display: flex; gap: 6px;
+    padding: 5px 14px 4px;
   }
-  .info-chip {
-    flex: 1;
-    background: var(--panel);
-    border-radius: 10px;
-    padding: 7px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .info-chip-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.8px; }
-  .info-chip-value { font-size: 15px; font-weight: 700; color: var(--gold); }
+  .info-chip { flex: 1; background: var(--panel); border-radius: 9px; padding: 5px 9px; }
+  .info-chip-label { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.7px; }
+  .info-chip-value { font-size: 13px; font-weight: 700; color: var(--gold); }
 
   /* ── CONTROLS ── */
   .controls {
-    width: 100%;
-    padding: 0 18px 12px;
-    display: flex;
-    gap: 8px;
-  }
-  .btn {
-    flex: 1;
-    padding: 12px 8px;
-    border-radius: 12px;
-    border: none;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: -0.3px;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-primary {
-    background: linear-gradient(135deg, #c87020 0%, #f0a030 100%);
-    color: #1a0a00;
-    box-shadow: 0 3px 12px rgba(200,112,32,0.4);
-  }
-  .btn-secondary {
-    background: var(--panel2);
-    color: var(--text-dim);
-    border: 1px solid var(--text-muted);
-  }
-  .btn-undo {
-    background: var(--panel);
-    color: var(--text-dim);
-    border: 1px solid var(--text-muted);
-    flex: 0 0 auto;
-    padding: 12px 16px;
-  }
-
-  /* ── DIFFICULTY TABS ── */
-  .diff-section {
-    width: 100%;
-    padding: 0 18px 14px;
-  }
-  .diff-label { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.8px; margin-bottom: 7px; }
-  .diff-tabs { display: flex; gap: 6px; }
-  .diff-tab {
-    flex: 1;
-    padding: 9px 4px;
-    border-radius: 10px;
-    border: 1.5px solid var(--text-muted);
-    background: var(--panel);
-    color: var(--text-dim);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .diff-tab.active {
-    background: var(--panel2);
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-  .diff-tab:active { transform: scale(0.95); }
-
-  /* ── RANK BADGE ── */
-  .rank-section {
-    width: 100%;
-    padding: 0 18px 18px;
-  }
-  .rank-card {
-    background: linear-gradient(135deg, var(--panel) 0%, var(--panel2) 100%);
-    border-radius: 14px;
-    padding: 14px 16px;
-    border: 1px solid var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .rank-emblem {
-    width: 54px; height: 54px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #3a2010, #1a0c05);
-    border: 2px solid var(--gold-dim);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
     flex-shrink: 0;
+    display: flex; gap: 7px;
+    padding: 4px 14px 10px;
   }
-  .rank-kyu { font-size: 22px; font-weight: 900; color: var(--gold); line-height: 1; }
-  .rank-unit { font-size: 10px; color: var(--gold-dim); font-weight: 700; margin-top: 1px; }
-  .rank-info { flex: 1; min-width: 0; }
-  .rank-title { font-size: 16px; font-weight: 700; color: var(--text); }
-  .rank-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-  .elo-bar { margin-top: 7px; height: 5px; background: var(--panel); border-radius: 3px; overflow: hidden; }
-  .elo-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius: 3px; transition: width 0.5s; }
-  .elo-txt { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+  .btn { flex: 1; padding: 11px 8px; border-radius: 11px; border: none; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: linear-gradient(135deg, #c87020, #f0a030); color: #1a0a00; box-shadow: 0 3px 10px rgba(200,112,32,0.4); }
+  .btn-secondary { background: var(--panel2); color: var(--text-dim); border: 1px solid var(--text-muted); flex: 0 0 auto; padding: 11px 16px; }
 
-  /* ── MODAL ── */
+  /* ── MODALS ── */
   .modal-overlay {
-    position: fixed; inset: 0;
-    background: var(--modal-bg);
-    z-index: 100;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
+    position: fixed; inset: 0; background: var(--modal-bg);
+    z-index: 100; display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.22s;
     backdrop-filter: blur(4px);
   }
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
   .modal {
-    width: 100%;
-    max-width: 500px;
-    background: #1e0f06;
-    border-radius: 22px 22px 0 0;
-    padding: 10px 20px 36px;
+    width: 100%; max-width: 480px;
+    background: #1e0f06; border-radius: 20px 20px 0 0;
+    padding: 8px 18px 34px;
     border-top: 1.5px solid var(--text-muted);
-    transform: translateY(60px);
-    transition: transform 0.3s cubic-bezier(.25,.8,.25,1);
+    transform: translateY(50px); transition: transform 0.28s cubic-bezier(.25,.8,.25,1);
+    max-height: 92dvh; overflow-y: auto;
   }
   .modal-overlay.open .modal { transform: translateY(0); }
-  .modal-handle {
-    width: 40px; height: 4px;
-    background: var(--text-muted);
-    border-radius: 2px;
-    margin: 10px auto 18px;
-  }
-  .modal-title {
-    font-size: 20px;
-    font-weight: 900;
-    color: var(--gold);
-    margin-bottom: 4px;
-  }
-  .modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
-  .modal-section { margin-bottom: 18px; }
-  .modal-section-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-  .color-choice { display: flex; gap: 10px; }
-  .color-btn {
-    flex: 1;
-    padding: 14px;
-    border-radius: 14px;
-    border: 2px solid var(--text-muted);
-    background: var(--panel);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-  }
+  .modal-handle { width: 38px; height: 4px; background: var(--text-muted); border-radius: 2px; margin: 8px auto 16px; }
+  .modal-title { font-size: 19px; font-weight: 900; color: var(--gold); margin-bottom: 3px; }
+  .modal-sub { font-size: 12px; color: var(--text-dim); margin-bottom: 18px; }
+  .modal-section { margin-bottom: 16px; }
+  .modal-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 7px; }
+
+  /* color choice */
+  .color-choice { display: flex; gap: 9px; }
+  .color-btn { flex: 1; padding: 13px 10px; border-radius: 13px; border: 2px solid var(--text-muted); background: var(--panel); cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .color-btn.selected { border-color: var(--gold); background: var(--panel2); }
   .color-btn:active { transform: scale(0.96); }
-  .color-btn .big-stone {
-    width: 40px; height: 40px; border-radius: 50%;
-  }
-  .big-stone.black { background: radial-gradient(circle at 38% 35%, #888, #111 65%); box-shadow: 0 4px 12px rgba(0,0,0,0.8); }
-  .big-stone.white { background: radial-gradient(circle at 38% 35%, #fff, #ccc 70%); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-  .color-btn span { font-size: 13px; font-weight: 700; color: var(--text); }
-  .color-note { font-size: 10px; color: var(--text-muted); text-align: center; }
-  .modal-start-btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: 14px;
-    border: none;
-    background: linear-gradient(135deg, #c87020, #f0a030);
-    color: #1a0a00;
-    font-family: inherit;
-    font-size: 17px;
-    font-weight: 900;
-    cursor: pointer;
-    box-shadow: 0 4px 18px rgba(200,112,32,0.5);
-    transition: all 0.15s;
-    letter-spacing: -0.3px;
-  }
+  .big-stone { width: 38px; height: 38px; border-radius: 50%; }
+  .big-stone.black { background: radial-gradient(circle at 38% 35%, #888, #111 65%); box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+  .big-stone.white { background: radial-gradient(circle at 38% 35%, #fff, #ccc 70%); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+  .color-btn span { font-size: 12px; font-weight: 700; color: var(--text); }
+  .color-note { font-size: 10px; color: var(--text-muted); }
+
+  /* diff tabs (in modal) */
+  .diff-tabs { display: flex; gap: 6px; }
+  .diff-tab { flex: 1; padding: 10px 4px; border-radius: 10px; border: 1.5px solid var(--text-muted); background: var(--panel); color: var(--text-dim); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .diff-tab.active { background: var(--panel2); border-color: var(--gold); color: var(--gold); }
+  .diff-tab:active { transform: scale(0.95); }
+
+  /* rank card in modal */
+  .rank-card { background: linear-gradient(135deg, var(--panel), var(--panel2)); border-radius: 13px; padding: 13px 14px; border: 1px solid var(--text-muted); display: flex; align-items: center; gap: 13px; }
+  .rank-emblem { width: 52px; height: 52px; border-radius: 11px; background: linear-gradient(135deg, #3a2010, #1a0c05); border: 2px solid var(--gold-dim); display: flex; align-items: center; justify-content: center; flex-direction: column; flex-shrink: 0; }
+  .rank-kyu { font-size: 20px; font-weight: 900; color: var(--gold); line-height: 1; }
+  .rank-unit { font-size: 9px; color: var(--gold-dim); font-weight: 700; margin-top: 1px; }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .rank-desc { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+  .elo-bar { margin-top: 6px; height: 4px; background: var(--panel); border-radius: 2px; overflow: hidden; }
+  .elo-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius: 2px; transition: width 0.5s; }
+  .elo-txt { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+
+  /* modal start btn */
+  .modal-start-btn { width: 100%; padding: 14px; border-radius: 13px; border: none; background: linear-gradient(135deg, #c87020, #f0a030); color: #1a0a00; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 16px rgba(200,112,32,0.45); transition: all 0.15s; margin-top: 4px; }
   .modal-start-btn:active { transform: scale(0.97); }
 
   /* result modal */
-  .result-icon { font-size: 52px; text-align: center; margin-bottom: 8px; }
-  .result-title { font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 6px; }
-  .result-sub { font-size: 14px; color: var(--text-dim); text-align: center; margin-bottom: 20px; }
-  .result-stats {
-    display: flex; gap: 8px; margin-bottom: 20px;
-  }
-  .stat-box {
-    flex: 1;
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 12px 8px;
-    text-align: center;
-  }
-  .stat-box-value { font-size: 22px; font-weight: 900; color: var(--gold); }
-  .stat-box-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-top: 2px; }
-  .rank-change {
-    background: var(--panel2);
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid var(--text-muted);
-  }
-  .rank-change-icon { font-size: 24px; }
-  .rank-change-text { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
+  .result-icon { font-size: 48px; text-align: center; margin-bottom: 6px; }
+  .result-title { font-size: 24px; font-weight: 900; text-align: center; margin-bottom: 4px; }
+  .result-sub { font-size: 13px; color: var(--text-dim); text-align: center; margin-bottom: 16px; }
+  .result-stats { display: flex; gap: 7px; margin-bottom: 14px; }
+  .stat-box { flex: 1; background: var(--panel); border-radius: 11px; padding: 11px 7px; text-align: center; }
+  .stat-box-value { font-size: 20px; font-weight: 900; color: var(--gold); }
+  .stat-box-label { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.4px; margin-top: 2px; }
+  .rank-change { background: var(--panel2); border-radius: 11px; padding: 11px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--text-muted); }
+  .rank-change-icon { font-size: 22px; }
+  .rank-change-text { flex: 1; font-size: 13px; font-weight: 700; color: var(--text); }
   .rank-change-delta { font-size: 14px; font-weight: 900; }
   .delta-up { color: #4dcc88; }
   .delta-down { color: var(--accent); }
-  .result-btns { display: flex; gap: 8px; }
-  .result-btn {
-    flex: 1; padding: 14px;
-    border-radius: 12px;
-    border: none;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
+  .result-btns { display: flex; gap: 7px; }
+  .result-btn { flex: 1; padding: 13px; border-radius: 11px; border: none; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
   .result-btn:active { transform: scale(0.96); }
   .result-btn-main { background: linear-gradient(135deg, #c87020, #f0a030); color: #1a0a00; }
   .result-btn-sub { background: var(--panel2); color: var(--text-dim); border: 1px solid var(--text-muted); }
 
-  /* feedback modal */
-  .feedback-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-  .feedback-item {
-    background: var(--panel);
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 13px;
-    color: var(--text);
-    border-left: 3px solid var(--gold-dim);
-    line-height: 1.5;
-  }
+  /* feedback */
+  .feedback-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+  .feedback-item { background: var(--panel); border-radius: 9px; padding: 9px 11px; font-size: 12px; color: var(--text); border-left: 3px solid var(--gold-dim); line-height: 1.5; }
   .feedback-item.warn { border-color: var(--accent); }
   .feedback-item.good { border-color: #4dcc88; }
 
   /* stats modal */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-  .stats-cell {
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 14px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .stats-cell-v { font-size: 26px; font-weight: 900; color: var(--gold); }
-  .stats-cell-l { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
-  .rank-history { display: flex; flex-direction: column; gap: 6px; }
-  .rank-row {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--panel);
-    border-radius: 10px;
-    padding: 10px 12px;
-  }
-  .rank-row-label { font-size: 13px; color: var(--text-dim); }
-  .rank-row-val { font-size: 14px; font-weight: 700; color: var(--gold); }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 16px; }
+  .stats-cell { background: var(--panel); border-radius: 11px; padding: 12px 11px; }
+  .stats-cell-v { font-size: 24px; font-weight: 900; color: var(--gold); }
+  .stats-cell-l { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.4px; }
+  .rank-history { display: flex; flex-direction: column; gap: 5px; }
+  .rank-row { display: flex; align-items: center; justify-content: space-between; background: var(--panel); border-radius: 9px; padding: 9px 11px; }
+  .rank-row-label { font-size: 12px; color: var(--text-dim); }
+  .rank-row-val { font-size: 13px; font-weight: 700; color: var(--gold); }
 
-  /* thinking indicator */
-  .thinking-bar {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--panel);
-    overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .thinking-bar.active { opacity: 1; }
-  .thinking-fill {
-    height: 100%;
-    width: 40%;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    animation: thinking 1.2s infinite;
-  }
-  @keyframes thinking { 0%{transform:translateX(-200%)} 100%{transform:translateX(350%)} }
+  /* info modal */
+  .info-item { background: var(--panel); border-radius: 9px; padding: 9px 11px; font-size: 12px; color: var(--text); border-left: 3px solid var(--gold-dim); line-height: 1.5; margin-bottom: 5px; }
+  .info-item.warn { border-color: var(--accent); }
+  .info-item.good { border-color: #4dcc88; }
 
-  /* ripple */
-  .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(240,192,64,0.3);
-    transform: scale(0);
-    animation: ripple-anim 0.6s ease-out forwards;
-    pointer-events: none;
-  }
+  /* ripple / forbidden */
+  .ripple { position: absolute; border-radius: 50%; background: rgba(240,192,64,0.28); transform: scale(0); animation: ripple-anim 0.55s ease-out forwards; pointer-events: none; }
   @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
-
-  /* forbidden mark */
-  .forbidden-flash {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(232,64,64,0.5);
-    transform: scale(0);
-    animation: forbidden-anim 0.4s ease-out forwards;
-    pointer-events: none;
-  }
+  .forbidden-flash { position: absolute; border-radius: 50%; background: rgba(232,64,64,0.5); transform: scale(0); animation: forbidden-anim 0.4s ease-out forwards; pointer-events: none; }
   @keyframes forbidden-anim { 50%{transform:scale(1.5);opacity:1} 100%{transform:scale(2.5);opacity:0} }
-
-  /* scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--panel); }
-  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
 </style>
 </head>
 <body>
+<div id="app">
 
-<header>
-  <div class="logo">오목 <span>하게</span></div>
-  <div class="header-btns">
-    <button class="icon-btn" id="btn-stats" title="기록">📊</button>
-    <button class="icon-btn" id="btn-info" title="규칙">📖</button>
-  </div>
-</header>
-
-<div class="status-bar">
-  <div class="player-card" id="card-black">
-    <div class="stone-icon black"></div>
-    <div class="player-info">
-      <div class="player-name">흑 (선수)</div>
-      <div class="player-label" id="black-label">나</div>
+  <header>
+    <div class="logo">오목 <span>하게</span></div>
+    <div class="header-btns">
+      <button class="icon-btn" id="btn-stats">📊</button>
+      <button class="icon-btn" id="btn-info">📖</button>
     </div>
-    <div class="turn-dot" id="dot-black" style="display:none"></div>
-  </div>
-  <div class="vs-badge">VS</div>
-  <div class="player-card" id="card-white">
-    <div class="stone-icon white"></div>
-    <div class="player-info">
-      <div class="player-name">백 (후수)</div>
-      <div class="player-label" id="white-label">AI</div>
+  </header>
+
+  <div class="status-bar">
+    <div class="player-card" id="card-black">
+      <div class="stone-icon black"></div>
+      <div class="player-info">
+        <div class="player-name">흑 (선수)</div>
+        <div class="player-label" id="black-label">나</div>
+      </div>
+      <div class="turn-dot" id="dot-black" style="display:none"></div>
     </div>
-    <div class="turn-dot" id="dot-white" style="display:none"></div>
-  </div>
-</div>
-
-<div class="board-wrapper">
-  <div class="move-counter" id="move-counter">게임 시작 전</div>
-  <div id="board-container">
-    <div id="board-bg"></div>
-    <canvas id="board-canvas"></canvas>
-    <div id="hint-overlay"></div>
-    <div class="thinking-bar" id="thinking-bar"><div class="thinking-fill"></div></div>
-  </div>
-</div>
-
-<div class="info-bar">
-  <div class="info-chip">
-    <div class="info-chip-label">난이도</div>
-    <div class="info-chip-value" id="diff-display">보통</div>
-  </div>
-  <div class="info-chip">
-    <div class="info-chip-label">룰</div>
-    <div class="info-chip-value">렌주룰</div>
-  </div>
-  <div class="info-chip">
-    <div class="info-chip-label">전적</div>
-    <div class="info-chip-value" id="record-display">0승 0패</div>
-  </div>
-</div>
-
-<div class="controls">
-  <button class="btn btn-primary" id="btn-new">새 게임</button>
-  <button class="btn btn-undo" id="btn-undo">↩ 무르기</button>
-</div>
-
-<div class="diff-section">
-  <div class="diff-label">AI 난이도</div>
-  <div class="diff-tabs">
-    <button class="diff-tab" data-diff="1">보통</button>
-    <button class="diff-tab active" data-diff="2">어려움</button>
-    <button class="diff-tab" data-diff="3">최고</button>
-  </div>
-</div>
-
-<div class="rank-section">
-  <div class="rank-card">
-    <div class="rank-emblem">
-      <div class="rank-kyu" id="rank-kyu">15</div>
-      <div class="rank-unit" id="rank-unit">급</div>
-    </div>
-    <div class="rank-info">
-      <div class="rank-title" id="rank-title">입문자</div>
-      <div class="rank-desc" id="rank-desc">첫 게임을 시작해보세요!</div>
-      <div class="elo-bar"><div class="elo-fill" id="elo-fill" style="width:5%"></div></div>
-      <div class="elo-txt" id="elo-txt">ELO: 800</div>
+    <div class="vs-badge">VS</div>
+    <div class="player-card" id="card-white">
+      <div class="stone-icon white"></div>
+      <div class="player-info">
+        <div class="player-name">백 (후수)</div>
+        <div class="player-label" id="white-label">AI</div>
+      </div>
+      <div class="turn-dot" id="dot-white" style="display:none"></div>
     </div>
   </div>
+
+  <div class="move-counter" id="move-counter">새 게임을 시작하세요</div>
+
+  <div class="board-wrapper">
+    <div id="board-container">
+      <div id="board-bg"></div>
+      <canvas id="board-canvas"></canvas>
+      <div class="thinking-bar" id="thinking-bar"><div class="thinking-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <div class="info-chip">
+      <div class="info-chip-label">난이도</div>
+      <div class="info-chip-value" id="diff-display">어려움</div>
+    </div>
+    <div class="info-chip">
+      <div class="info-chip-label">룰</div>
+      <div class="info-chip-value">렌주룰</div>
+    </div>
+    <div class="info-chip">
+      <div class="info-chip-label">전적</div>
+      <div class="info-chip-value" id="record-display">0승 0패</div>
+    </div>
+    <div class="info-chip" id="rank-chip" style="cursor:pointer" onclick="openModal('modal-stats')">
+      <div class="info-chip-label">기력</div>
+      <div class="info-chip-value" id="rank-chip-val">15급</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="btn-new">새 게임</button>
+    <button class="btn btn-secondary" id="btn-undo">↩ 무르기</button>
+  </div>
+
 </div>
 
-<!-- New Game Modal -->
+<!-- ── NEW GAME MODAL ── -->
 <div class="modal-overlay" id="modal-new">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">새 게임 🎮</div>
-    <div class="modal-sub">색상을 선택하고 시작하세요</div>
+    <div class="modal-sub">난이도와 색상을 선택하세요</div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">AI 난이도</div>
+      <div class="diff-tabs">
+        <button class="diff-tab" data-diff="1">보통</button>
+        <button class="diff-tab active" data-diff="2">어려움</button>
+        <button class="diff-tab" data-diff="3">최고</button>
+      </div>
+    </div>
+
     <div class="modal-section">
       <div class="modal-section-label">내 돌 색상</div>
       <div class="color-choice">
@@ -631,37 +359,29 @@
         </button>
       </div>
     </div>
-    <button class="modal-start-btn" id="modal-start-btn" onclick="startGame()">게임 시작</button>
+
+    <button class="modal-start-btn" onclick="startGame()">게임 시작</button>
   </div>
 </div>
 
-<!-- Result Modal -->
+<!-- ── RESULT MODAL ── -->
 <div class="modal-overlay" id="modal-result">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="result-icon" id="result-icon">🎉</div>
     <div class="result-title" id="result-title">승리!</div>
-    <div class="result-sub" id="result-sub">훌륭한 한 판이었습니다</div>
+    <div class="result-sub" id="result-sub">훌륭했습니다</div>
     <div class="result-stats">
-      <div class="stat-box">
-        <div class="stat-box-value" id="r-moves">0</div>
-        <div class="stat-box-label">수</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-box-value" id="r-time">0</div>
-        <div class="stat-box-label">초</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-box-value" id="r-quality">-</div>
-        <div class="stat-box-label">플레이 질</div>
-      </div>
+      <div class="stat-box"><div class="stat-box-value" id="r-moves">0</div><div class="stat-box-label">수</div></div>
+      <div class="stat-box"><div class="stat-box-value" id="r-time">0</div><div class="stat-box-label">초</div></div>
+      <div class="stat-box"><div class="stat-box-value" id="r-quality">-</div><div class="stat-box-label">플레이 질</div></div>
     </div>
     <div class="rank-change" id="rank-change-box">
       <div class="rank-change-icon">⚡</div>
       <div class="rank-change-text" id="rank-change-text">ELO 변화</div>
       <div class="rank-change-delta" id="rank-change-delta">+0</div>
     </div>
-    <div id="feedback-section" class="modal-section">
+    <div class="modal-section">
       <div class="modal-section-label">이번 게임 피드백</div>
       <div class="feedback-list" id="feedback-list"></div>
     </div>
@@ -672,792 +392,705 @@
   </div>
 </div>
 
-<!-- Stats Modal -->
+<!-- ── STATS MODAL ── -->
 <div class="modal-overlay" id="modal-stats">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">내 기록 📊</div>
-    <div class="modal-sub">누적 성적과 기력 추이</div>
+    <div class="modal-sub">누적 성적과 기력</div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">현재 기력</div>
+      <div class="rank-card">
+        <div class="rank-emblem">
+          <div class="rank-kyu" id="rank-kyu">15</div>
+          <div class="rank-unit" id="rank-unit">급</div>
+        </div>
+        <div class="rank-info">
+          <div class="rank-title" id="rank-title">입문자</div>
+          <div class="rank-desc" id="rank-desc">첫 게임을 시작해보세요!</div>
+          <div class="elo-bar"><div class="elo-fill" id="elo-fill" style="width:5%"></div></div>
+          <div class="elo-txt" id="elo-txt">ELO: 800</div>
+        </div>
+      </div>
+    </div>
+
     <div class="stats-grid">
       <div class="stats-cell"><div class="stats-cell-v" id="s-total">0</div><div class="stats-cell-l">총 게임</div></div>
       <div class="stats-cell"><div class="stats-cell-v" id="s-wins">0</div><div class="stats-cell-l">승리</div></div>
       <div class="stats-cell"><div class="stats-cell-v" id="s-wr">0%</div><div class="stats-cell-l">승률</div></div>
-      <div class="stats-cell"><div class="stats-cell-v" id="s-elo">800</div><div class="stats-cell-l">현재 ELO</div></div>
+      <div class="stats-cell"><div class="stats-cell-v" id="s-elo">800</div><div class="stats-cell-l">ELO</div></div>
     </div>
-    <div class="modal-section-label" style="margin-bottom:8px">난이도별 전적</div>
+
+    <div class="modal-section-label" style="margin-bottom:7px">난이도별 전적</div>
     <div class="rank-history" id="diff-history"></div>
-    <div style="height:18px"></div>
+    <div style="height:14px"></div>
     <button class="modal-start-btn" onclick="closeModal('modal-stats')">닫기</button>
   </div>
 </div>
 
-<!-- Info Modal -->
+<!-- ── INFO MODAL ── -->
 <div class="modal-overlay" id="modal-info">
-  <div class="modal" style="overflow-y:auto;max-height:85dvh">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">렌주룰 📖</div>
-    <div class="modal-sub">공식 오목 규칙</div>
+    <div class="modal-sub">공식 오목 규칙 안내</div>
     <div class="modal-section">
       <div class="modal-section-label">기본 규칙</div>
-      <div class="feedback-list">
-        <div class="feedback-item good">5목: 돌 5개가 가로·세로·대각선으로 연속되면 승리</div>
-        <div class="feedback-item">번갈아 돌을 놓으며, 흑이 항상 선수</div>
-      </div>
+      <div class="info-item good">5목: 돌 5개가 가로·세로·대각선으로 연속되면 승리</div>
+      <div class="info-item">흑(선수)과 백(후수)이 번갈아 한 수씩 둡니다</div>
     </div>
     <div class="modal-section">
       <div class="modal-section-label">흑(선수) 금수 🚫</div>
-      <div class="feedback-list">
-        <div class="feedback-item warn">쌍삼(3-3): 열린 3을 동시에 2개 만드는 수 금지</div>
-        <div class="feedback-item warn">쌍사(4-4): 4를 동시에 2개 만드는 수 금지</div>
-        <div class="feedback-item warn">장목: 6개 이상 연속은 승리 불인정 (무효)</div>
-      </div>
+      <div class="info-item warn">쌍삼(3-3): 열린 3을 동시에 2개 만드는 수 금지</div>
+      <div class="info-item warn">쌍사(4-4): 4를 동시에 2개 만드는 수 금지</div>
+      <div class="info-item warn">장목: 6개 이상 연속은 승리 불인정</div>
     </div>
     <div class="modal-section">
       <div class="modal-section-label">기력 체계</div>
-      <div class="feedback-list">
-        <div class="feedback-item">15~10급: 보통 AI와 겨루는 단계</div>
-        <div class="feedback-item">9~5급: 어려움 AI와 대등한 실력</div>
-        <div class="feedback-item">4~1급: 어려움 AI를 꾸준히 이김</div>
-        <div class="feedback-item good">1단 이상: 최고 AI에게 승리</div>
-      </div>
+      <div class="info-item">15~10급: 보통 AI 단계</div>
+      <div class="info-item">9~5급: 어려움 AI와 대등</div>
+      <div class="info-item">4~1급: 어려움 AI 꾸준히 이김</div>
+      <div class="info-item good">1단 이상: 최고 AI에게 승리</div>
     </div>
     <button class="modal-start-btn" onclick="closeModal('modal-info')">확인</button>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-//  CONSTANTS & STATE
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════
 const SIZE = 15;
 const EMPTY = 0, BLACK = 1, WHITE = 2;
-const DIFF_DEPTH = { 1: 2, 2: 4, 3: 6 };
+// 깊이: 보통2, 어려움3, 최고4 — 후보 제한으로 최고도 빠름
+const DIFF_DEPTH = { 1: 2, 2: 3, 3: 4 };
+const DIFF_NAMES = { 1: '보통', 2: '어려움', 3: '최고' };
+const DIFF_ELO   = { 1: 1000, 2: 1300, 3: 1600 };
 
-let board = [], history = [], gameOver = false, currentTurn = BLACK;
-let playerColor = BLACK, aiColor = WHITE;
-let difficulty = 2;
-let gameStarted = false;
-let startTime = 0, moveCount = 0;
-let playerMistakes = 0, playerGoodMoves = 0;
-let selectedColor = 'black';
-let thinking = false;
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let board = [], gameHistory = [], gameOver = false;
+let currentTurn = BLACK, playerColor = BLACK, aiColor = WHITE;
+let difficulty = 2, gameStarted = false;
+let startTime = 0, moveCount = 0, playerMistakes = 0;
+let selectedColor = 'black', thinking = false;
+let aiTimeoutId = null;
 
-// Stats
-let stats = JSON.parse(localStorage.getItem('omok_stats') || JSON.stringify({
-  elo: 800, wins: 0, losses: 0, draws: 0,
-  diffStats: { 1: {w:0,l:0}, 2: {w:0,l:0}, 3: {w:0,l:0} }
+let stats = JSON.parse(localStorage.getItem('omok_stats2') || JSON.stringify({
+  elo: 800, wins: 0, losses: 0,
+  diffStats: { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0} }
 }));
 
-// Modal stack for back button
 let modalStack = [];
 
-// ═══════════════════════════════════════════════
-//  BOARD SETUP
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  BOARD CANVAS
+// ═══════════════════════════════════════
 const container = document.getElementById('board-container');
-const canvas = document.getElementById('board-canvas');
-const ctx = canvas.getContext('2d');
-let cellSize, padX, padY, boardW;
+const canvas    = document.getElementById('board-canvas');
+const ctx       = canvas.getContext('2d');
+let cellSize, padX, boardW;
 
 function setupBoard() {
   const cw = container.clientWidth;
   canvas.width = cw; canvas.height = cw;
   boardW = cw;
   cellSize = cw / SIZE;
-  padX = cellSize / 2; padY = cellSize / 2;
+  padX = cellSize / 2;
   container.style.setProperty('--cell', cellSize + 'px');
   container.style.setProperty('--pad', padX + 'px');
   drawBoard();
 }
 
-function initGame() {
-  board = Array.from({length: SIZE}, () => Array(SIZE).fill(EMPTY));
-  history = [];
-  gameOver = false;
-  moveCount = 0;
-  playerMistakes = 0;
-  playerGoodMoves = 0;
-  gameStarted = true;
-  startTime = Date.now();
-  currentTurn = BLACK;
-  updateUI();
-  drawBoard();
-  document.getElementById('move-counter').textContent = '흑의 차례 — 첫 수를 놓으세요';
-  if (playerColor === WHITE) {
-    setTimeout(() => aiMove(), 500);
-  }
-}
-
-// ═══════════════════════════════════════════════
-//  DRAW
-// ═══════════════════════════════════════════════
 function gx(c) { return padX + c * cellSize; }
-function gy(r) { return padY + r * cellSize; }
+function gy(r) { return padX + r * cellSize; }
 
 function drawBoard() {
   if (!canvas.width) return;
   ctx.clearRect(0, 0, boardW, boardW);
-
-  // Star points (화점)
-  const stars = [[3,3],[3,11],[7,7],[11,3],[11,11]];
-  stars.forEach(([r,c]) => {
+  // Star points
+  [[3,3],[3,11],[7,7],[11,3],[11,11]].forEach(([r,c]) => {
     ctx.fillStyle = '#7a4a10';
-    ctx.beginPath();
-    ctx.arc(gx(c), gy(r), cellSize * 0.09, 0, Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(gx(c), gy(r), cellSize*0.09, 0, Math.PI*2); ctx.fill();
   });
-
   // Stones
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      if (board[r][c] !== EMPTY) {
-        drawStone(r, c, board[r][c], false);
-      }
-    }
-  }
-
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (board[r] && board[r][c]) drawStone(r, c, board[r][c]);
   // Last move marker
-  if (history.length > 0) {
-    const last = history[history.length - 1];
-    const cx2 = gx(last.c), cy2 = gy(last.r);
-    ctx.strokeStyle = last.color === BLACK ? 'rgba(255,220,60,0.9)' : 'rgba(80,60,20,0.8)';
+  if (gameHistory.length) {
+    const last = gameHistory[gameHistory.length-1];
+    ctx.strokeStyle = last.color===BLACK ? 'rgba(255,220,60,0.9)' : 'rgba(80,60,20,0.85)';
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(cx2, cy2, cellSize * 0.18, 0, Math.PI*2);
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(gx(last.c), gy(last.r), cellSize*0.17, 0, Math.PI*2); ctx.stroke();
   }
 }
 
-function drawStone(r, c, color, animate) {
-  const x = gx(c), y = gy(r);
-  const radius = cellSize * 0.44;
+function drawStone(r, c, color) {
+  const x = gx(c), y = gy(r), rad = cellSize * 0.44;
   ctx.save();
+  let grad;
   if (color === BLACK) {
-    const grad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.35, radius*0.05, x, y, radius);
-    grad.addColorStop(0, '#888');
-    grad.addColorStop(0.4, '#2a2a2a');
-    grad.addColorStop(1, '#0a0a0a');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 3;
+    grad = ctx.createRadialGradient(x-rad*.3, y-rad*.35, rad*.05, x, y, rad);
+    grad.addColorStop(0,'#888'); grad.addColorStop(.4,'#2a2a2a'); grad.addColorStop(1,'#0a0a0a');
+    ctx.shadowColor='rgba(0,0,0,.7)'; ctx.shadowBlur=8; ctx.shadowOffsetY=3;
   } else {
-    const grad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.35, radius*0.05, x, y, radius);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.5, '#e8e0d0');
-    grad.addColorStop(1, '#c0b8a8');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
+    grad = ctx.createRadialGradient(x-rad*.3, y-rad*.35, rad*.05, x, y, rad);
+    grad.addColorStop(0,'#fff'); grad.addColorStop(.5,'#e8e0d0'); grad.addColorStop(1,'#c0b8a8');
+    ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=6; ctx.shadowOffsetY=2;
   }
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI*2);
-  ctx.fill();
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  GAME LOGIC
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 function placeStone(r, c, color) {
   board[r][c] = color;
-  history.push({ r, c, color });
+  gameHistory.push({r, c, color});
+}
+function undoMove() {
+  if (!gameHistory.length) return;
+  const m = gameHistory.pop();
+  board[m.r][m.c] = EMPTY;
 }
 
-function undoStone() {
-  if (!history.length) return null;
-  const m = history.pop();
-  board[m.r][m.c] = EMPTY;
-  return m;
+function countLine(bd, r, c, color, dr, dc) {
+  let n = 1, r2=r+dr, c2=c+dc;
+  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){n++;r2+=dr;c2+=dc;}
+  r2=r-dr; c2=c-dc;
+  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){n++;r2-=dr;c2-=dc;}
+  return n;
 }
 
 function checkWin(bd, color) {
   const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      if (bd[r][c] !== color) continue;
-      for (const [dr,dc] of dirs) {
-        let cnt = 1;
-        let r2=r+dr, c2=c+dc;
-        while (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2+=dr;c2+=dc;}
-        r2=r-dr; c2=c-dc;
-        while (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2-=dr;c2-=dc;}
-        if (cnt === 5) return true; // exactly 5 counts as win (overline doesn't for black via forbidden check)
-      }
+  for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+    if (bd[r][c]!==color) continue;
+    for (const [dr,dc] of dirs) {
+      // For black: must be exactly 5
+      const n = countLine(bd,r,c,color,dr,dc);
+      if (color===BLACK && n===5) return true;
+      if (color===WHITE && n>=5) return true;
     }
   }
   return false;
 }
 
-function countLine(bd, r, c, color, dr, dc) {
-  let cnt = 1;
-  let r2=r+dr, c2=c+dc;
-  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2+=dr;c2+=dc;}
+// Overline check (장목: >=6 for black)
+function isOverline(bd,r,c) {
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs) if (countLine(bd,r,c,BLACK,dr,dc)>5) return true;
+  return false;
+}
+
+// Open-3 in one axis
+function isOpen3Axis(bd,r,c,color,dr,dc) {
+  // pattern: _XXX_ where total stones = 3, both ends empty
+  let stones=1, r2=r+dr, c2=c+dc, end1=false, end2=false;
+  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){stones++;r2+=dr;c2+=dc;}
+  if(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===EMPTY) end1=true;
   r2=r-dr; c2=c-dc;
-  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2-=dr;c2-=dc;}
+  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){stones++;r2-=dr;c2-=dc;}
+  if(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===EMPTY) end2=true;
+  return stones===3 && end1 && end2;
+}
+
+function countDoubleOpen3(bd,r,c) {
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  let cnt=0;
+  for (const [dr,dc] of dirs) if (isOpen3Axis(bd,r,c,BLACK,dr,dc)) cnt++;
   return cnt;
 }
 
-function isOverline(bd, r, c, color) {
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+function countDouble4(bd,r,c) {
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  let cnt=0;
   for (const [dr,dc] of dirs) {
-    if (countLine(bd,r,c,color,dr,dc) > 5) return true;
+    const n=countLine(bd,r,c,BLACK,dr,dc);
+    if (n===4) cnt++;
   }
-  return false;
+  return cnt;
 }
 
-// Count open-3 (열린 3) in a direction
-function countOpen3(bd, r, c, color) {
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-  let open3 = 0;
-  for (const [dr,dc] of dirs) {
-    // Check patterns for open 3: _XXX_, _XX_X_, _X_XX_
-    if (isOpen3InDir(bd, r, c, color, dr, dc)) open3++;
-  }
-  return open3;
-}
-
-function isOpen3InDir(bd, r, c, color, dr, dc) {
-  // Count stones and check both ends open
-  let cnt = 1, blocked = 0, gaps = 0;
-  let r2=r+dr, c2=c+dc, end1Open=false, end2Open=false;
-  let chain1=0, chain2=0, gap1=false, gap2=false;
-
-  // Forward
-  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE) {
-    if (bd[r2][c2] === color) { chain1++; r2+=dr; c2+=dc; }
-    else if (bd[r2][c2] === EMPTY && !gap1 && chain1 > 0) { gap1=true; r2+=dr; c2+=dc; }
-    else break;
-  }
-  if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE && bd[r2][c2]===EMPTY) end1Open=true;
-  else if (r2<0||r2>=SIZE||c2<0||c2>=SIZE) end1Open=false;
-
-  r2=r-dr; c2=c-dc;
-  while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE) {
-    if (bd[r2][c2] === color) { chain2++; r2-=dr; c2-=dc; }
-    else if (bd[r2][c2] === EMPTY && !gap2 && chain2 > 0) { gap2=true; r2-=dr; c2-=dc; }
-    else break;
-  }
-  if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE && bd[r2][c2]===EMPTY) end2Open=true;
-  else if (r2<0||r2>=SIZE||c2<0||c2>=SIZE) end2Open=false;
-
-  const total = 1 + chain1 + chain2;
-  return total === 3 && end1Open && end2Open;
-}
-
-function countOpen4(bd, r, c, color) {
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-  let open4 = 0;
-  for (const [dr,dc] of dirs) {
-    let cnt = 1;
-    let r2=r+dr, c2=c+dc;
-    while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2+=dr;c2+=dc;}
-    r2=r-dr; c2=c-dc;
-    while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2-=dr;c2-=dc;}
-    if (cnt === 4) open4++;
-  }
-  return open4;
-}
-
-function isForbidden(bd, r, c) {
-  // Only for BLACK (color=1)
-  bd[r][c] = BLACK;
-  // Overline (장목)
-  if (isOverline(bd, r, c, BLACK)) { bd[r][c] = EMPTY; return 'overline'; }
-  // Win (5목) — not forbidden
-  if (checkWin(bd, BLACK)) { bd[r][c] = EMPTY; return null; }
-  // 쌍삼 (double open-3)
-  const o3 = countOpen3(bd, r, c, BLACK);
-  if (o3 >= 2) { bd[r][c] = EMPTY; return 'double3'; }
-  // 쌍사 (double 4)
-  const o4 = countOpen4(bd, r, c, BLACK);
-  if (o4 >= 2) { bd[r][c] = EMPTY; return 'double4'; }
-  bd[r][c] = EMPTY;
+function isForbidden(bd,r,c) {
+  // Only applies to BLACK
+  bd[r][c]=BLACK;
+  if (isOverline(bd,r,c)) { bd[r][c]=EMPTY; return 'overline'; }
+  // 5목이면 금수 아님
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs) { if (countLine(bd,r,c,BLACK,dr,dc)===5) { bd[r][c]=EMPTY; return null; } }
+  if (countDoubleOpen3(bd,r,c)>=2) { bd[r][c]=EMPTY; return 'double3'; }
+  if (countDouble4(bd,r,c)>=2) { bd[r][c]=EMPTY; return 'double4'; }
+  bd[r][c]=EMPTY;
   return null;
 }
 
-// ═══════════════════════════════════════════════
-//  AI (Minimax + Alpha-Beta)
-// ═══════════════════════════════════════════════
-const SCORES = { five:1e8, open4:1e5, half4:1e4, open3:5000, half3:500, open2:200, half2:50 };
-
-function evaluate(bd, color) {
-  let score = 0;
-  const opp = color === BLACK ? WHITE : BLACK;
-  score += evalColor(bd, color) - evalColor(bd, opp) * 0.9;
-  return score;
-}
+// ═══════════════════════════════════════
+//  AI — fast minimax with candidate limit
+// ═══════════════════════════════════════
+const SC = { five:1e7, open4:8e4, half4:8e3, open3:3000, half3:300, open2:100 };
+let aiDeadline = 0;
 
 function evalColor(bd, color) {
-  let score = 0;
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      if (bd[r][c] !== color) continue;
-      for (const [dr,dc] of dirs) {
-        // Only count from start of line
-        const pr = r-dr, pc = c-dc;
-        if (pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE&&bd[pr][pc]===color) continue;
-        let cnt=1, openL=false, openR=false;
-        let r2=r+dr, c2=c+dc;
-        while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){cnt++;r2+=dr;c2+=dc;}
-        if(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===EMPTY) openR=true;
-        if(pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE&&bd[pr][pc]===EMPTY) openL=true;
-        else if(pr<0||pr>=SIZE||pc<0||pc>=SIZE) openL=false;
-        else openL=false;
-        const ro = r-dr, co = c-dc;
-        if(ro>=0&&ro<SIZE&&co>=0&&co<SIZE&&bd[ro][co]===EMPTY) openL=true;
-
-        if (cnt >= 5) score += SCORES.five * 10;
-        else if (cnt === 4) score += (openL&&openR) ? SCORES.open4 : SCORES.half4;
-        else if (cnt === 3) score += (openL&&openR) ? SCORES.open3 : SCORES.half3;
-        else if (cnt === 2) score += (openL&&openR) ? SCORES.open2 : SCORES.half2;
-      }
+  let score=0;
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+    if (bd[r][c]!==color) continue;
+    for (const [dr,dc] of dirs) {
+      const pr=r-dr, pc=c-dc;
+      if (pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE&&bd[pr][pc]===color) continue;
+      let n=1, r2=r+dr, c2=c+dc;
+      while(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===color){n++;r2+=dr;c2+=dc;}
+      const eR=r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===EMPTY;
+      const eL=pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE&&bd[pr][pc]===EMPTY;
+      if(n>=5) score+=SC.five;
+      else if(n===4) score+=(eL&&eR)?SC.open4:SC.half4;
+      else if(n===3) score+=(eL&&eR)?SC.open3:SC.half3;
+      else if(n===2) score+=(eL&&eR)?SC.open2:SC.open2*0.3;
     }
   }
   return score;
 }
 
-function getCandidates(bd) {
-  const visited = new Set();
-  const candidates = [];
-  const range = 2;
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      if (bd[r][c] === EMPTY) continue;
-      for (let dr = -range; dr <= range; dr++) {
-        for (let dc = -range; dc <= range; dc++) {
-          const nr = r+dr, nc = c+dc;
-          if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
-          if (bd[nr][nc] !== EMPTY) continue;
-          const key = nr*SIZE+nc;
-          if (!visited.has(key)) { visited.add(key); candidates.push([nr,nc]); }
-        }
-      }
-    }
-  }
-  if (!candidates.length) { candidates.push([7,7]); }
-  return candidates;
+function evaluate(bd,aiCol) {
+  const opp=aiCol===BLACK?WHITE:BLACK;
+  return evalColor(bd,aiCol)-evalColor(bd,opp)*1.1;
 }
 
-function minimax(bd, depth, alpha, beta, maximizing, aiCol, playerCol) {
-  if (checkWin(bd, aiCol)) return SCORES.five;
-  if (checkWin(bd, playerCol)) return -SCORES.five;
-  if (depth === 0) return evaluate(bd, aiCol);
+// 후보 제한: 상위 N개만 탐색
+function getCandidates(bd, limit) {
+  const visited=new Set(), cands=[];
+  for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+    if (bd[r][c]===EMPTY) continue;
+    for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+      const nr=r+dr,nc=c+dc;
+      if(nr<0||nr>=SIZE||nc<0||nc>=SIZE||bd[nr][nc]!==EMPTY) continue;
+      const k=nr*SIZE+nc;
+      if(!visited.has(k)){visited.add(k);cands.push([nr,nc]);}
+    }
+  }
+  if(!cands.length) return [[7,7]];
+  if(!limit || cands.length<=limit) return cands;
+  // Quick-score each candidate to pick top N
+  const scored=cands.map(([r,c])=>{
+    let s=0;
+    bd[r][c]=WHITE; s+=evalColor(bd,WHITE)*2; bd[r][c]=EMPTY;
+    bd[r][c]=BLACK; s+=evalColor(bd,BLACK);   bd[r][c]=EMPTY;
+    return {r,c,s};
+  });
+  scored.sort((a,b)=>b.s-a.s);
+  return scored.slice(0,limit).map(({r,c})=>[r,c]);
+}
 
-  const candidates = getCandidates(bd);
-  if (!candidates.length) return 0;
+function minimax(bd, depth, alpha, beta, maximizing, aiCol, plCol) {
+  if (Date.now()>aiDeadline) return evaluate(bd,aiCol);
+  if (checkWin(bd,aiCol))  return SC.five+(depth*1000);
+  if (checkWin(bd,plCol))  return -SC.five-(depth*1000);
+  if (depth===0)           return evaluate(bd,aiCol);
+
+  // 후보 제한: 깊이가 깊을수록 더 좁게
+  const limit = depth>=3 ? 8 : depth===2 ? 12 : 20;
+  const cands=getCandidates(bd,limit);
 
   if (maximizing) {
-    let best = -Infinity;
-    for (const [r,c] of candidates) {
-      if (aiCol === BLACK && isForbidden(bd,r,c)) continue;
-      bd[r][c] = aiCol;
-      const val = minimax(bd, depth-1, alpha, beta, false, aiCol, playerCol);
-      bd[r][c] = EMPTY;
-      best = Math.max(best, val);
-      alpha = Math.max(alpha, best);
-      if (beta <= alpha) break;
+    let best=-Infinity;
+    for (const [r,c] of cands) {
+      if (aiCol===BLACK&&isForbidden(bd,r,c)) continue;
+      bd[r][c]=aiCol;
+      const v=minimax(bd,depth-1,alpha,beta,false,aiCol,plCol);
+      bd[r][c]=EMPTY;
+      if(v>best) best=v;
+      alpha=Math.max(alpha,best);
+      if(beta<=alpha) break;
     }
-    return best;
+    return best===-Infinity ? 0 : best;
   } else {
-    let best = Infinity;
-    for (const [r,c] of candidates) {
-      if (playerCol === BLACK && isForbidden(bd,r,c)) continue;
-      bd[r][c] = playerCol;
-      const val = minimax(bd, depth-1, alpha, beta, true, aiCol, playerCol);
-      bd[r][c] = EMPTY;
-      best = Math.min(best, val);
-      beta = Math.min(beta, best);
-      if (beta <= alpha) break;
+    let best=Infinity;
+    for (const [r,c] of cands) {
+      if (plCol===BLACK&&isForbidden(bd,r,c)) continue;
+      bd[r][c]=plCol;
+      const v=minimax(bd,depth-1,alpha,beta,true,aiCol,plCol);
+      bd[r][c]=EMPTY;
+      if(v<best) best=v;
+      beta=Math.min(beta,best);
+      if(beta<=alpha) break;
     }
-    return best;
+    return best===Infinity ? 0 : best;
   }
 }
 
-function getBestMove(bd, aiCol, playerCol, depth) {
-  // Immediate win
-  const candidates = getCandidates(bd);
-  for (const [r,c] of candidates) {
-    if (aiCol === BLACK && isForbidden(bd,r,c)) continue;
-    bd[r][c] = aiCol;
-    if (checkWin(bd, aiCol)) { bd[r][c]=EMPTY; return [r,c]; }
-    bd[r][c] = EMPTY;
+function getBestMove(bd, aiCol, plCol, depth) {
+  const cands=getCandidates(bd, null);
+
+  // 즉시 이기는 수
+  for (const [r,c] of cands) {
+    if(aiCol===BLACK&&isForbidden(bd,r,c)) continue;
+    bd[r][c]=aiCol;
+    if(checkWin(bd,aiCol)){bd[r][c]=EMPTY;return[r,c];}
+    bd[r][c]=EMPTY;
   }
-  // Block player win
-  for (const [r,c] of candidates) {
-    bd[r][c] = playerCol;
-    if (checkWin(bd, playerCol)) { bd[r][c]=EMPTY; return [r,c]; }
-    bd[r][c] = EMPTY;
+  // 플레이어 승리 막기
+  for (const [r,c] of cands) {
+    bd[r][c]=plCol;
+    if(checkWin(bd,plCol)){bd[r][c]=EMPTY;return[r,c];}
+    bd[r][c]=EMPTY;
   }
 
-  let best = -Infinity, bestMove = candidates[0];
-  for (const [r,c] of candidates) {
-    if (aiCol === BLACK && isForbidden(bd,r,c)) continue;
-    bd[r][c] = aiCol;
-    const val = minimax(bd, depth-1, -Infinity, Infinity, false, aiCol, playerCol);
-    bd[r][c] = EMPTY;
-    if (val > best) { best = val; bestMove = [r,c]; }
+  const topCands=getCandidates(bd, depth>=4?10:16);
+  let best=-Infinity, bestMove=topCands[0]||[7,7];
+  for (const [r,c] of topCands) {
+    if(aiCol===BLACK&&isForbidden(bd,r,c)) continue;
+    bd[r][c]=aiCol;
+    const v=minimax(bd,depth-1,-Infinity,Infinity,false,aiCol,plCol);
+    bd[r][c]=EMPTY;
+    if(v>best){best=v;bestMove=[r,c];}
+    if(Date.now()>aiDeadline) break; // 시간 초과 시 즉시 반환
   }
   return bestMove;
 }
 
+// AI 타임아웃: 난이도별 제한 시간
+const AI_TIME = { 1:1500, 2:2500, 3:4000 };
+
 async function aiMove() {
-  if (gameOver || currentTurn !== aiColor) return;
-  thinking = true;
+  if(gameOver||currentTurn!==aiColor) return;
+  thinking=true;
   document.getElementById('thinking-bar').classList.add('active');
-  document.getElementById('move-counter').textContent = 'AI가 생각 중...';
+  document.getElementById('move-counter').textContent='AI가 생각 중...';
 
-  await new Promise(r => setTimeout(r, 80));
+  await new Promise(res=>setTimeout(res,30));
 
-  const depth = DIFF_DEPTH[difficulty];
-  const bd = board.map(r => [...r]);
+  const depth=DIFF_DEPTH[difficulty];
+  const bd=board.map(r=>[...r]);
+  aiDeadline=Date.now()+AI_TIME[difficulty];
 
   let move;
-  if (history.length === 0) {
-    move = [7, 7];
-  } else if (history.length === 1) {
-    // Second move: near center
-    const last = history[0];
-    const offsets = [[-2,-2],[-2,0],[-2,2],[0,-2],[0,2],[2,-2],[2,0],[2,2],[-1,-1],[-1,1],[1,-1],[1,1]];
-    const shuffled = offsets.sort(() => Math.random()-0.5);
-    move = null;
-    for (const [dr,dc] of shuffled) {
-      const nr = last.r+dr, nc = last.c+dc;
-      if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&bd[nr][nc]===EMPTY) { move=[nr,nc]; break; }
-    }
-    if (!move) move = getBestMove(bd, aiColor, playerColor, depth);
+  const hlen=gameHistory.length;
+  if(hlen===0) {
+    move=[7,7];
+  } else if(hlen===1) {
+    const last=gameHistory[0];
+    const opts=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1],[-2,0],[0,-2],[0,2],[2,0]];
+    opts.sort(()=>Math.random()-.5);
+    move=null;
+    for(const[dr,dc]of opts){const nr=last.r+dr,nc=last.c+dc;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&bd[nr][nc]===EMPTY){move=[nr,nc];break;}}
+    if(!move) move=getBestMove(bd,aiColor,playerColor,depth);
   } else {
-    move = getBestMove(bd, aiColor, playerColor, depth);
+    move=getBestMove(bd,aiColor,playerColor,depth);
   }
 
-  thinking = false;
+  thinking=false;
   document.getElementById('thinking-bar').classList.remove('active');
 
-  if (move) {
-    placeStone(move[0], move[1], aiColor);
-    moveCount++;
-    drawBoard();
-    rippleEffect(move[0], move[1]);
+  if(!move) move=[7,7]; // 안전장치
+  placeStone(move[0],move[1],aiColor);
+  moveCount++;
+  drawBoard();
+  rippleEffect(move[0],move[1]);
 
-    if (checkWin(board, aiColor)) {
-      endGame(false);
-    } else {
-      currentTurn = playerColor;
-      updateUI();
-      const stone = currentTurn === BLACK ? '흑' : '백';
-      document.getElementById('move-counter').textContent = `${stone}의 차례 — ${moveCount+1}수째`;
-    }
-  }
+  if(checkWin(board,aiColor)) { endGame(false); return; }
+  currentTurn=playerColor;
+  updateUI();
+  const s=currentTurn===BLACK?'흑':'백';
+  document.getElementById('move-counter').textContent=`${s}의 차례 — ${moveCount+1}수째`;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  PLAYER INPUT
-// ═══════════════════════════════════════════════
-function getCell(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
-  const x = (clientX - rect.left) * (canvas.width / rect.width);
-  const y = (clientY - rect.top) * (canvas.height / rect.height);
-  const c = Math.round((x - padX) / cellSize);
-  const r = Math.round((y - padY) / cellSize);
-  return [r, c];
+// ═══════════════════════════════════════
+function getCell(cx,cy) {
+  const rect=canvas.getBoundingClientRect();
+  const x=(cx-rect.left)*(canvas.width/rect.width);
+  const y=(cy-rect.top)*(canvas.height/rect.height);
+  return [Math.round((y-padX)/cellSize), Math.round((x-padX)/cellSize)];
 }
 
-canvas.addEventListener('click', async (e) => {
-  if (!gameStarted || gameOver || thinking || currentTurn !== playerColor) return;
-  const [r, c] = getCell(e.clientX, e.clientY);
-  if (r<0||r>=SIZE||c<0||c>=SIZE||board[r][c]!==EMPTY) return;
+canvas.addEventListener('click', async(e)=>{
+  if(!gameStarted||gameOver||thinking||currentTurn!==playerColor) return;
+  const[r,c]=getCell(e.clientX,e.clientY);
+  if(r<0||r>=SIZE||c<0||c>=SIZE||board[r][c]!==EMPTY) return;
 
-  // Forbidden check
-  if (playerColor === BLACK) {
-    const forbidden = isForbidden(board, r, c);
-    if (forbidden) {
-      forbiddenEffect(r, c);
-      const msgs = { overline:'장목 금수! (6목 이상)', double3:'쌍삼 금수!', double4:'쌍사 금수!' };
-      document.getElementById('move-counter').textContent = '⛔ ' + msgs[forbidden];
+  if(playerColor===BLACK) {
+    const f=isForbidden(board,r,c);
+    if(f) {
+      forbiddenEffect(r,c);
+      const msgs={overline:'⛔ 장목 금수!',double3:'⛔ 쌍삼 금수!',double4:'⛔ 쌍사 금수!'};
+      document.getElementById('move-counter').textContent=msgs[f];
       playerMistakes++;
       return;
     }
   }
 
-  placeStone(r, c, playerColor);
+  placeStone(r,c,playerColor);
   moveCount++;
   drawBoard();
-  rippleEffect(r, c);
+  rippleEffect(r,c);
 
-  if (checkWin(board, playerColor)) {
-    endGame(true);
-    return;
-  }
+  if(checkWin(board,playerColor)){endGame(true);return;}
 
-  // Check if overline (for white - no win but place is fine)
-  currentTurn = aiColor;
+  currentTurn=aiColor;
   updateUI();
-  const stone = currentTurn === BLACK ? '흑' : '백';
-  document.getElementById('move-counter').textContent = `${stone}의 차례...`;
-
-  await new Promise(r => setTimeout(r, 150));
+  document.getElementById('move-counter').textContent='AI가 생각 중...';
+  await new Promise(res=>setTimeout(res,80));
   aiMove();
 });
 
-function rippleEffect(r, c) {
-  const x = gx(c), y = gy(r);
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = rect.width / canvas.width;
-  const el = document.createElement('div');
-  el.className = 'ripple';
-  const size = cellSize * scaleX * 0.7;
-  el.style.cssText = `width:${size}px;height:${size}px;left:${gx(c)*scaleX - size/2}px;top:${gy(r)*scaleX - size/2}px`;
+function rippleEffect(r,c) {
+  const rect=canvas.getBoundingClientRect();
+  const sc=rect.width/canvas.width;
+  const el=document.createElement('div');
+  el.className='ripple';
+  const sz=cellSize*sc*.7;
+  el.style.cssText=`width:${sz}px;height:${sz}px;left:${gx(c)*sc-sz/2}px;top:${gy(r)*sc-sz/2}px`;
   container.appendChild(el);
-  setTimeout(() => el.remove(), 700);
+  setTimeout(()=>el.remove(),650);
+}
+function forbiddenEffect(r,c) {
+  const rect=canvas.getBoundingClientRect();
+  const sc=rect.width/canvas.width;
+  const el=document.createElement('div');
+  el.className='forbidden-flash';
+  const sz=cellSize*sc*.7;
+  el.style.cssText=`width:${sz}px;height:${sz}px;left:${gx(c)*sc-sz/2}px;top:${gy(r)*sc-sz/2}px`;
+  container.appendChild(el);
+  setTimeout(()=>el.remove(),500);
 }
 
-function forbiddenEffect(r, c) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = rect.width / canvas.width;
-  const el = document.createElement('div');
-  el.className = 'forbidden-flash';
-  const size = cellSize * scaleX * 0.7;
-  el.style.cssText = `width:${size}px;height:${size}px;left:${gx(c)*scaleX - size/2}px;top:${gy(r)*scaleX - size/2}px`;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 500);
+// ═══════════════════════════════════════
+//  GAME FLOW
+// ═══════════════════════════════════════
+function initGame() {
+  board=Array.from({length:SIZE},()=>Array(SIZE).fill(EMPTY));
+  gameHistory=[]; gameOver=false; moveCount=0; playerMistakes=0;
+  gameStarted=true; startTime=Date.now();
+  currentTurn=BLACK;
+  updateUI(); drawBoard();
+  const s=playerColor===BLACK?'흑':'백';
+  document.getElementById('move-counter').textContent=`흑의 차례 — 첫 수를 놓으세요`;
+  if(playerColor===WHITE) setTimeout(()=>aiMove(),400);
 }
-
-// ═══════════════════════════════════════════════
-//  GAME END & RATING
-// ═══════════════════════════════════════════════
-const DIFF_NAMES = { 1: '보통', 2: '어려움', 3: '최고' };
-const DIFF_ELO = { 1: 1000, 2: 1300, 3: 1600 };
 
 function getRankInfo(elo) {
-  if (elo >= 2200) return { kyu: '3', unit: '단', title: '오목 명인', desc: '최고 경지에 도달했습니다!' };
-  if (elo >= 2000) return { kyu: '2', unit: '단', title: '오목 고수', desc: '거의 완벽에 가까운 실력' };
-  if (elo >= 1800) return { kyu: '1', unit: '단', title: '유단자', desc: '최고 AI도 버거워합니다' };
-  if (elo >= 1650) return { kyu: '1', unit: '급', title: '준유단', desc: '어려움 AI를 꾸준히 이깁니다' };
-  if (elo >= 1500) return { kyu: '2', unit: '급', title: '강급자', desc: '어려움 AI와 互角을 다툽니다' };
-  if (elo >= 1380) return { kyu: '3', unit: '급', title: '중급자', desc: '어려움 AI에 도전할 수 있습니다' };
-  if (elo >= 1270) return { kyu: '4', unit: '급', title: '중급자', desc: '보통 AI를 꾸준히 이깁니다' };
-  if (elo >= 1170) return { kyu: '5', unit: '급', title: '초중급', desc: '보통 AI와 互角입니다' };
-  if (elo >= 1080) return { kyu: '6', unit: '급', title: '초급자', desc: '기초가 잡히기 시작했습니다' };
-  if (elo >= 1000) return { kyu: '7', unit: '급', title: '초급자', desc: '승리 패턴을 익히세요' };
-  if (elo >= 930)  return { kyu: '8', unit: '급', title: '초심자', desc: '방어와 공격을 연습하세요' };
-  if (elo >= 870)  return { kyu: '9', unit: '급', title: '초심자', desc: '3목, 4목을 의식하세요' };
-  if (elo >= 820)  return { kyu: '10', unit: '급', title: '입문자', desc: '연속된 돌 만들기를 연습하세요' };
-  return { kyu: '15', unit: '급', title: '입문자', desc: '첫 게임을 시작해보세요!' };
+  if(elo>=2200) return{kyu:'3',unit:'단',title:'오목 명인',desc:'최고 경지!'};
+  if(elo>=2000) return{kyu:'2',unit:'단',title:'오목 고수',desc:'거의 완벽한 실력'};
+  if(elo>=1800) return{kyu:'1',unit:'단',title:'유단자',desc:'최고 AI도 버거워합니다'};
+  if(elo>=1650) return{kyu:'1',unit:'급',title:'준유단',desc:'어려움 AI를 꾸준히 이김'};
+  if(elo>=1500) return{kyu:'2',unit:'급',title:'강급자',desc:'어려움 AI와 互角'};
+  if(elo>=1380) return{kyu:'3',unit:'급',title:'중급자',desc:'어려움 AI에 도전 가능'};
+  if(elo>=1270) return{kyu:'4',unit:'급',title:'중급자',desc:'보통 AI를 꾸준히 이김'};
+  if(elo>=1170) return{kyu:'5',unit:'급',title:'초중급',desc:'보통 AI와 互角'};
+  if(elo>=1080) return{kyu:'6',unit:'급',title:'초급자',desc:'기초가 잡히기 시작'};
+  if(elo>=1000) return{kyu:'7',unit:'급',title:'초급자',desc:'승리 패턴을 익히세요'};
+  if(elo>=930)  return{kyu:'8',unit:'급',title:'초심자',desc:'방어와 공격 연습'};
+  if(elo>=870)  return{kyu:'9',unit:'급',title:'초심자',desc:'3목 4목을 의식하세요'};
+  if(elo>=820)  return{kyu:'10',unit:'급',title:'입문자',desc:'연속 돌 만들기 연습'};
+  return{kyu:'15',unit:'급',title:'입문자',desc:'첫 게임을 시작해보세요!'};
 }
 
-function calcEloChange(win, playerElo, aiElo) {
-  const K = 32;
-  const expected = 1 / (1 + Math.pow(10, (aiElo - playerElo) / 400));
-  const actual = win ? 1 : 0;
-  return Math.round(K * (actual - expected));
+function calcElo(win,myElo,oppElo) {
+  const K=32, ex=1/(1+Math.pow(10,(oppElo-myElo)/400));
+  return Math.round(K*((win?1:0)-ex));
 }
 
 function getQuality() {
-  const total = moveCount;
-  const ratio = playerMistakes / Math.max(1, Math.floor(total / 2));
-  if (ratio === 0) return 'S';
-  if (ratio < 0.1) return 'A';
-  if (ratio < 0.25) return 'B';
-  if (ratio < 0.5) return 'C';
-  return 'D';
+  const r=playerMistakes/Math.max(1,Math.floor(moveCount/2));
+  if(r===0)    return'S';
+  if(r<0.1)    return'A';
+  if(r<0.25)   return'B';
+  if(r<0.5)    return'C';
+  return'D';
 }
 
 function endGame(playerWon) {
-  gameOver = true;
-  const elapsed = Math.round((Date.now() - startTime) / 1000);
-  const aiElo = DIFF_ELO[difficulty];
-  const delta = calcEloChange(playerWon, stats.elo, aiElo);
-  const prevElo = stats.elo;
+  gameOver=true;
+  const elapsed=Math.round((Date.now()-startTime)/1000);
+  const delta=calcElo(playerWon,stats.elo,DIFF_ELO[difficulty]);
+  const prev=stats.elo;
+  if(playerWon){stats.wins++;stats.diffStats[difficulty].w++;}
+  else{stats.losses++;stats.diffStats[difficulty].l++;}
+  stats.elo=Math.max(600,stats.elo+delta);
+  saveStats(); updateRankUI(); updateRecordUI();
 
-  if (playerWon) { stats.wins++; stats.diffStats[difficulty].w++; }
-  else { stats.losses++; stats.diffStats[difficulty].l++; }
-  stats.elo = Math.max(600, stats.elo + delta);
-  saveStats();
+  document.getElementById('result-icon').textContent=playerWon?'🎉':'😞';
+  document.getElementById('result-title').textContent=playerWon?'승리!':'패배...';
+  document.getElementById('result-sub').textContent=playerWon?`${DIFF_NAMES[difficulty]} AI를 이겼습니다!`:`${DIFF_NAMES[difficulty]} AI에게 졌습니다.`;
+  document.getElementById('r-moves').textContent=moveCount;
+  document.getElementById('r-time').textContent=elapsed;
+  document.getElementById('r-quality').textContent=getQuality();
+  const de=document.getElementById('rank-change-delta');
+  de.textContent=(delta>=0?'+':'')+delta;
+  de.className='rank-change-delta '+(delta>=0?'delta-up':'delta-down');
+  document.getElementById('rank-change-text').textContent=`ELO ${prev} → ${stats.elo}`;
 
-  updateRankUI();
-  updateRecordUI();
+  const fbs=[];
+  if(playerWon&&delta>20) fbs.push({t:'good',m:'🏆 ELO가 크게 올랐어요!'});
+  if(playerMistakes>=3)   fbs.push({t:'warn',m:`⚠️ 금수를 ${playerMistakes}번 시도했어요. 금수 위치를 미리 확인하세요.`});
+  if(playerMistakes===0&&playerWon) fbs.push({t:'good',m:'✨ 금수 없이 완벽한 플레이!'});
+  if(!playerWon&&difficulty>=2) fbs.push({t:'',m:'💡 어려운 AI에 도전하면 실력이 빨리 늡니다!'});
+  if(!fbs.length) fbs.push({t:'',m:'📝 꾸준히 플레이할수록 기력이 오릅니다!'});
+  document.getElementById('feedback-list').innerHTML=fbs.map(f=>`<div class="feedback-item ${f.t}">${f.m}</div>`).join('');
 
-  // Fill result modal
-  document.getElementById('result-icon').textContent = playerWon ? '🎉' : '😞';
-  document.getElementById('result-title').textContent = playerWon ? '승리!' : '패배...';
-  document.getElementById('result-sub').textContent = playerWon
-    ? `${DIFF_NAMES[difficulty]} AI를 이겼습니다!`
-    : `${DIFF_NAMES[difficulty]} AI에게 졌습니다.`;
-  document.getElementById('r-moves').textContent = moveCount;
-  document.getElementById('r-time').textContent = elapsed;
-  document.getElementById('r-quality').textContent = getQuality();
-
-  const deltaEl = document.getElementById('rank-change-delta');
-  deltaEl.textContent = (delta >= 0 ? '+' : '') + delta;
-  deltaEl.className = 'rank-change-delta ' + (delta >= 0 ? 'delta-up' : 'delta-down');
-  document.getElementById('rank-change-text').textContent =
-    `ELO ${prevElo} → ${stats.elo}`;
-
-  // Feedback
-  const feedbacks = [];
-  if (playerWon && delta > 20) feedbacks.push({ type:'good', msg: '🏆 ELO가 크게 올랐습니다! 훌륭한 플레이!' });
-  if (playerMistakes >= 3) feedbacks.push({ type:'warn', msg: `⚠️ 금수를 ${playerMistakes}번 시도했습니다. 금수 위치를 미리 확인하세요.` });
-  if (playerMistakes === 0 && playerWon) feedbacks.push({ type:'good', msg: '✨ 금수 없이 완벽한 플레이!' });
-  if (moveCount > 40 && playerWon) feedbacks.push({ type:'good', msg: '💪 긴 게임을 끝까지 집중해서 이겼습니다!' });
-  if (!playerWon && difficulty === 1) feedbacks.push({ type:'', msg: '💡 보통 AI에게 졌어도 괜찮아요. 방어 패턴을 연습해보세요.' });
-  if (!playerWon && difficulty >= 2) feedbacks.push({ type:'', msg: '💡 어려운 난이도에 도전한 것만으로도 실력이 늡니다!' });
-  if (feedbacks.length === 0) feedbacks.push({ type:'', msg: '📝 꾸준히 플레이할수록 기력이 오릅니다!' });
-
-  const fl = document.getElementById('feedback-list');
-  fl.innerHTML = feedbacks.map(f => `<div class="feedback-item ${f.type}">${f.msg}</div>`).join('');
-
-  setTimeout(() => openModal('modal-result'), 600);
-
-  const stone = playerWon ? (playerColor === BLACK ? '흑' : '백') : (aiColor === BLACK ? '흑' : '백');
-  document.getElementById('move-counter').textContent = playerWon ? '🎉 승리!' : '😞 패배...';
+  document.getElementById('move-counter').textContent=playerWon?'🎉 승리!':'😞 패배...';
+  setTimeout(()=>openModal('modal-result'),500);
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  UI
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 function updateUI() {
-  const isBlackTurn = currentTurn === BLACK;
-  document.getElementById('card-black').className = 'player-card' + (isBlackTurn ? ' active black-active' : '');
-  document.getElementById('card-white').className = 'player-card' + (!isBlackTurn ? ' active' : '');
-  document.getElementById('dot-black').style.display = isBlackTurn ? 'block' : 'none';
-  document.getElementById('dot-white').style.display = !isBlackTurn ? 'block' : 'none';
+  const isBlack=currentTurn===BLACK;
+  document.getElementById('card-black').className='player-card'+(isBlack?' active black-active':'');
+  document.getElementById('card-white').className='player-card'+(!isBlack?' active':'');
+  document.getElementById('dot-black').style.display=isBlack?'block':'none';
+  document.getElementById('dot-white').style.display=!isBlack?'block':'none';
 }
 
 function updateRankUI() {
-  const ri = getRankInfo(stats.elo);
-  document.getElementById('rank-kyu').textContent = ri.kyu;
-  document.getElementById('rank-unit').textContent = ri.unit;
-  document.getElementById('rank-title').textContent = ri.title;
-  document.getElementById('rank-desc').textContent = ri.desc;
-  const minElo = 600, maxElo = 2400;
-  const pct = Math.min(100, Math.max(0, (stats.elo - minElo) / (maxElo - minElo) * 100));
-  document.getElementById('elo-fill').style.width = pct + '%';
-  document.getElementById('elo-txt').textContent = `ELO: ${stats.elo}`;
+  const ri=getRankInfo(stats.elo);
+  document.getElementById('rank-kyu').textContent=ri.kyu;
+  document.getElementById('rank-unit').textContent=ri.unit;
+  document.getElementById('rank-title').textContent=ri.title;
+  document.getElementById('rank-desc').textContent=ri.desc;
+  const pct=Math.min(100,Math.max(0,(stats.elo-600)/(2400-600)*100));
+  document.getElementById('elo-fill').style.width=pct+'%';
+  document.getElementById('elo-txt').textContent='ELO: '+stats.elo;
+  document.getElementById('rank-chip-val').textContent=ri.kyu+ri.unit;
 }
 
 function updateRecordUI() {
-  document.getElementById('record-display').textContent = `${stats.wins}승 ${stats.losses}패`;
+  document.getElementById('record-display').textContent=`${stats.wins}승 ${stats.losses}패`;
 }
 
-function saveStats() {
-  localStorage.setItem('omok_stats', JSON.stringify(stats));
-}
+function saveStats() { localStorage.setItem('omok_stats2',JSON.stringify(stats)); }
 
-// ═══════════════════════════════════════════════
-//  MODALS (with History API)
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  MODAL (History API)
+// ═══════════════════════════════════════
 function openModal(id) {
   document.getElementById(id).classList.add('open');
-  history.pushState({ modal: id }, '', location.pathname);
+  history.pushState({modal:id},'',location.pathname);
   modalStack.push(id);
 }
-
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
-  if (modalStack[modalStack.length-1] === id) {
-    modalStack.pop();
-  }
+  if(modalStack[modalStack.length-1]===id) modalStack.pop();
 }
-
-window.addEventListener('popstate', (e) => {
-  if (modalStack.length > 0) {
-    const id = modalStack[modalStack.length-1];
-    closeModal(id);
-  }
+window.addEventListener('popstate',()=>{
+  if(modalStack.length) closeModal(modalStack[modalStack.length-1]);
+});
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{
+    if(e.target===o){
+      const id=o.id; closeModal(id);
+      if(window.history.state?.modal===id) window.history.back();
+    }
+  });
 });
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  CONTROLS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 function chooseColor(c) {
-  selectedColor = c;
-  document.getElementById('choose-black').className = 'color-btn' + (c==='black'?' selected':'');
-  document.getElementById('choose-white').className = 'color-btn' + (c==='white'?' selected':'');
+  selectedColor=c;
+  document.getElementById('choose-black').className='color-btn'+(c==='black'?' selected':'');
+  document.getElementById('choose-white').className='color-btn'+(c==='white'?' selected':'');
 }
 
 function startGame() {
   closeModal('modal-new');
-  playerColor = selectedColor === 'black' ? BLACK : WHITE;
-  aiColor = playerColor === BLACK ? WHITE : BLACK;
-  document.getElementById('black-label').textContent = playerColor === BLACK ? '나' : 'AI';
-  document.getElementById('white-label').textContent = playerColor === WHITE ? '나' : 'AI';
+  playerColor=selectedColor==='black'?BLACK:WHITE;
+  aiColor=playerColor===BLACK?WHITE:BLACK;
+  document.getElementById('black-label').textContent=playerColor===BLACK?'나':'AI';
+  document.getElementById('white-label').textContent=playerColor===WHITE?'나':'AI';
   initGame();
 }
 
 function rematch() {
   closeModal('modal-result');
   initGame();
-  if (playerColor === WHITE) {
-    setTimeout(() => aiMove(), 500);
-  }
 }
 
-document.getElementById('btn-new').addEventListener('click', () => openModal('modal-new'));
-document.getElementById('btn-stats').addEventListener('click', () => {
-  document.getElementById('s-total').textContent = stats.wins + stats.losses;
-  document.getElementById('s-wins').textContent = stats.wins;
-  const wr = stats.wins + stats.losses > 0 ? Math.round(stats.wins/(stats.wins+stats.losses)*100) : 0;
-  document.getElementById('s-wr').textContent = wr + '%';
-  document.getElementById('s-elo').textContent = stats.elo;
-  const dh = document.getElementById('diff-history');
-  dh.innerHTML = [1,2,3].map(d => `
-    <div class="rank-row">
-      <div class="rank-row-label">${DIFF_NAMES[d]}</div>
-      <div class="rank-row-val">${stats.diffStats[d].w}승 ${stats.diffStats[d].l}패</div>
-    </div>
+document.getElementById('btn-new').addEventListener('click',()=>openModal('modal-new'));
+
+document.getElementById('btn-stats').addEventListener('click',()=>{
+  document.getElementById('s-total').textContent=stats.wins+stats.losses;
+  document.getElementById('s-wins').textContent=stats.wins;
+  const wr=stats.wins+stats.losses>0?Math.round(stats.wins/(stats.wins+stats.losses)*100):0;
+  document.getElementById('s-wr').textContent=wr+'%';
+  document.getElementById('s-elo').textContent=stats.elo;
+  document.getElementById('diff-history').innerHTML=[1,2,3].map(d=>`
+    <div class="rank-row"><div class="rank-row-label">${DIFF_NAMES[d]}</div><div class="rank-row-val">${stats.diffStats[d].w}승 ${stats.diffStats[d].l}패</div></div>
   `).join('');
   openModal('modal-stats');
 });
-document.getElementById('btn-info').addEventListener('click', () => openModal('modal-info'));
 
-document.getElementById('btn-undo').addEventListener('click', () => {
-  if (!gameStarted || gameOver || thinking) return;
-  if (history.length < 2) return;
-  // Undo AI + player move
-  undoStone(); undoStone();
-  moveCount = Math.max(0, moveCount - 2);
-  currentTurn = playerColor;
-  updateUI();
-  drawBoard();
-  const stone = currentTurn === BLACK ? '흑' : '백';
-  document.getElementById('move-counter').textContent = `${stone}의 차례 — ${moveCount+1}수째`;
+document.getElementById('btn-info').addEventListener('click',()=>openModal('modal-info'));
+
+document.getElementById('btn-undo').addEventListener('click',()=>{
+  if(!gameStarted||gameOver||thinking) return;
+  if(gameHistory.length<2) return;
+  undoMove(); undoMove();
+  moveCount=Math.max(0,moveCount-2);
+  currentTurn=playerColor;
+  updateUI(); drawBoard();
+  const s=currentTurn===BLACK?'흑':'백';
+  document.getElementById('move-counter').textContent=`${s}의 차례 — 무르기 완료`;
 });
 
-document.querySelectorAll('.diff-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.diff-tab').forEach(t => t.classList.remove('active'));
+// diff tabs in modal
+document.querySelectorAll('.diff-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.diff-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
-    difficulty = parseInt(tab.dataset.diff);
-    document.getElementById('diff-display').textContent = DIFF_NAMES[difficulty];
+    difficulty=parseInt(tab.dataset.diff);
+    document.getElementById('diff-display').textContent=DIFF_NAMES[difficulty];
   });
 });
 
-// Click outside modal
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      const id = overlay.id;
-      closeModal(id);
-      if (window.history.state?.modal === id) window.history.back();
-    }
-  });
-});
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════════
-window.addEventListener('resize', () => { setupBoard(); });
-window.addEventListener('DOMContentLoaded', () => {
+// ═══════════════════════════════════════
+function resizeHandler() {
+  setupBoard();
+}
+window.addEventListener('resize', resizeHandler);
+
+// 보드 크기를 화면에 맞게 계산
+function calcBoardSize() {
+  const app = document.getElementById('app');
+  const appH = app.clientHeight;
+  const header = document.querySelector('header').offsetHeight;
+  const statusBar = document.querySelector('.status-bar').offsetHeight;
+  const moveCounter = document.querySelector('.move-counter').offsetHeight;
+  const infoRow = document.querySelector('.info-row').offsetHeight;
+  const controls = document.querySelector('.controls').offsetHeight;
+  const padding = 24; // board-wrapper padding
+  const available = appH - header - statusBar - moveCounter - infoRow - controls - padding;
+  const appW = app.clientWidth - 20; // 10px padding each side
+  const size = Math.min(available, appW);
+  document.querySelector('.board-wrapper').style.height = size + 'px';
+  document.getElementById('board-container').style.width = size + 'px';
+  document.getElementById('board-container').style.height = size + 'px';
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  calcBoardSize();
   setupBoard();
   updateRankUI();
   updateRecordUI();
-  document.getElementById('diff-display').textContent = DIFF_NAMES[difficulty];
-
-  // Show initial board state hint
-  board = Array.from({length: SIZE}, () => Array(SIZE).fill(EMPTY));
+  document.getElementById('diff-display').textContent=DIFF_NAMES[difficulty];
+  board=Array.from({length:SIZE},()=>Array(SIZE).fill(EMPTY));
   drawBoard();
+});
+
+window.addEventListener('resize',()=>{
+  calcBoardSize();
+  setupBoard();
 });
 </script>
 </body>
