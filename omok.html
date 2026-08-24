@@ -994,20 +994,30 @@ function initGame() {
 }
 
 function getRankInfo(elo) {
-  if(elo>=2200) return{kyu:'3',unit:'단',title:'오목 명인',desc:'최고 경지!'};
-  if(elo>=2000) return{kyu:'2',unit:'단',title:'오목 고수',desc:'거의 완벽한 실력'};
-  if(elo>=1800) return{kyu:'1',unit:'단',title:'유단자',desc:'최고 AI도 버거워합니다'};
-  if(elo>=1650) return{kyu:'1',unit:'급',title:'준유단',desc:'어려움 AI를 꾸준히 이김'};
-  if(elo>=1500) return{kyu:'2',unit:'급',title:'강급자',desc:'어려움 AI와 互角'};
-  if(elo>=1380) return{kyu:'3',unit:'급',title:'중급자',desc:'어려움 AI에 도전 가능'};
-  if(elo>=1270) return{kyu:'4',unit:'급',title:'중급자',desc:'보통 AI를 꾸준히 이김'};
-  if(elo>=1170) return{kyu:'5',unit:'급',title:'초중급',desc:'보통 AI와 互角'};
-  if(elo>=1080) return{kyu:'6',unit:'급',title:'초급자',desc:'기초가 잡히기 시작'};
-  if(elo>=1000) return{kyu:'7',unit:'급',title:'초급자',desc:'승리 패턴을 익히세요'};
-  if(elo>=930)  return{kyu:'8',unit:'급',title:'초심자',desc:'방어와 공격 연습'};
-  if(elo>=870)  return{kyu:'9',unit:'급',title:'초심자',desc:'3목 4목을 의식하세요'};
-  if(elo>=820)  return{kyu:'10',unit:'급',title:'입문자',desc:'연속 돌 만들기 연습'};
-  return{kyu:'15',unit:'급',title:'입문자',desc:'첫 게임을 시작해보세요!'};
+  if(elo>=3400) return{kyu:'9',unit:'단',title:'오목 전설',desc:'인류 최고 경지'};
+  if(elo>=3100) return{kyu:'8',unit:'단',title:'그랜드마스터',desc:'세계 정상급 실력'};
+  if(elo>=2850) return{kyu:'7',unit:'단',title:'오목 마스터',desc:'국제 대회 우승권'};
+  if(elo>=2620) return{kyu:'6',unit:'단',title:'오목 명인',desc:'최고 AI를 압도합니다'};
+  if(elo>=2400) return{kyu:'5',unit:'단',title:'고단자',desc:'최고 AI를 꾸준히 이깁니다'};
+  if(elo>=2200) return{kyu:'4',unit:'단',title:'강단자',desc:'최고 AI와 互角입니다'};
+  if(elo>=2000) return{kyu:'3',unit:'단',title:'유단자',desc:'최고 AI에 도전할 수 있습니다'};
+  if(elo>=1850) return{kyu:'2',unit:'단',title:'유단자',desc:'어려움 AI를 압도합니다'};
+  if(elo>=1700) return{kyu:'1',unit:'단',title:'초단',desc:'어려움 AI를 꾸준히 이깁니다'};
+  if(elo>=1560) return{kyu:'1',unit:'급',title:'준유단',desc:'단 승급이 눈앞입니다'};
+  if(elo>=1430) return{kyu:'2',unit:'급',title:'강급자',desc:'어려움 AI와 互角입니다'};
+  if(elo>=1310) return{kyu:'3',unit:'급',title:'중상급자',desc:'어려움 AI에 도전 가능'};
+  if(elo>=1200) return{kyu:'4',unit:'급',title:'중급자',desc:'보통 AI를 압도합니다'};
+  if(elo>=1100) return{kyu:'5',unit:'급',title:'중급자',desc:'보통 AI를 꾸준히 이깁니다'};
+  if(elo>=1010) return{kyu:'6',unit:'급',title:'초중급',desc:'보통 AI와 互角입니다'};
+  if(elo>=930)  return{kyu:'7',unit:'급',title:'초급자',desc:'승리 패턴을 익혀가세요'};
+  if(elo>=860)  return{kyu:'8',unit:'급',title:'초급자',desc:'방어와 공격을 연습하세요'};
+  if(elo>=800)  return{kyu:'9',unit:'급',title:'초심자',desc:'3목 4목을 의식하세요'};
+  if(elo>=748)  return{kyu:'10',unit:'급',title:'초심자',desc:'연속 돌 만들기 연습'};
+  if(elo>=702)  return{kyu:'11',unit:'급',title:'입문자',desc:'기본 연결을 익혀보세요'};
+  if(elo>=660)  return{kyu:'12',unit:'급',title:'입문자',desc:'돌의 방향을 생각해보세요'};
+  if(elo>=622)  return{kyu:'13',unit:'급',title:'입문자',desc:'상대 돌도 잘 살피세요'};
+  if(elo>=600)  return{kyu:'14',unit:'급',title:'입문자',desc:'첫 승리를 목표로!'};
+  return        {kyu:'15',unit:'급',title:'입문자',desc:'첫 게임을 시작해보세요!'};
 }
 
 function calcElo(win,myElo,oppElo) {
@@ -1075,7 +1085,7 @@ function updateRankUI() {
   document.getElementById('rank-unit').textContent=ri.unit;
   document.getElementById('rank-title').textContent=ri.title;
   document.getElementById('rank-desc').textContent=ri.desc;
-  const pct=Math.min(100,Math.max(0,(stats.elo-600)/(2400-600)*100));
+  const pct=Math.min(100,Math.max(0,(stats.elo-600)/(3400-600)*100));
   document.getElementById('elo-fill').style.width=pct+'%';
   document.getElementById('elo-txt').textContent='ELO: '+stats.elo;
   document.getElementById('rank-chip-val').textContent=ri.kyu+ri.unit;
