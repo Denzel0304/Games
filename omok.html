@@ -305,7 +305,7 @@
   <div class="info-row">
     <div class="info-chip">
       <div class="info-chip-label">난이도</div>
-      <div class="info-chip-value" id="diff-display">어려움</div>
+      <div class="info-chip-value">최고</div>
     </div>
     <div class="info-chip">
       <div class="info-chip-label">룰</div>
@@ -333,16 +333,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">새 게임 🎮</div>
-    <div class="modal-sub">난이도와 색상을 선택하세요</div>
-
-    <div class="modal-section">
-      <div class="modal-section-label">AI 난이도</div>
-      <div class="diff-tabs">
-        <button class="diff-tab" data-diff="1">보통</button>
-        <button class="diff-tab active" data-diff="2">어려움</button>
-        <button class="diff-tab" data-diff="3">최고</button>
-      </div>
-    </div>
+    <div class="modal-sub">색상을 선택하고 최고 AI에 도전하세요</div>
 
     <div class="modal-section">
       <div class="modal-section-label">내 돌 색상</div>
@@ -426,6 +417,7 @@
     <div class="rank-history" id="diff-history"></div>
     <div style="height:14px"></div>
     <button class="modal-start-btn" onclick="closeModal('modal-stats')">닫기</button>
+    <button id="btn-reset-stats" style="width:100%;margin-top:9px;padding:12px;border-radius:11px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;">🗑 전적 &amp; 기력 초기화</button>
   </div>
 </div>
 
@@ -468,6 +460,23 @@ function getAudioCtx() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
+
+// 브라우저 자동재생 정책 해제: 첫 사용자 제스처(터치/클릭)에서 AudioContext를 미리 생성·resume
+function unlockAudio() {
+  const ac = getAudioCtx();
+  // 무음 버퍼 재생으로 정책 해제
+  const buf = ac.createBuffer(1, 1, ac.sampleRate);
+  const src = ac.createBufferSource();
+  src.buffer = buf;
+  src.connect(ac.destination);
+  src.start(0);
+  document.removeEventListener('touchstart', unlockAudio, true);
+  document.removeEventListener('touchend',   unlockAudio, true);
+  document.removeEventListener('click',      unlockAudio, true);
+}
+document.addEventListener('touchstart', unlockAudio, true);
+document.addEventListener('touchend',   unlockAudio, true);
+document.addEventListener('click',      unlockAudio, true);
 
 // 돌 놓는 소리 — 짧고 딱딱한 타격음 (나무+돌)
 function playStoneSound(isPlayer) {
@@ -579,7 +588,7 @@ const DIFF_ELO   = { 1: 1000, 2: 1300, 3: 1600 };
 // ═══════════════════════════════════════
 let board = [], gameHistory = [], gameOver = false;
 let currentTurn = BLACK, playerColor = BLACK, aiColor = WHITE;
-let difficulty = 2, gameStarted = false;
+let difficulty = 3, gameStarted = false;
 let startTime = 0, moveCount = 0, playerMistakes = 0;
 let selectedColor = 'black', thinking = false;
 let aiTimeoutId = null;
@@ -1046,7 +1055,7 @@ function endGame(playerWon) {
 
   document.getElementById('result-icon').textContent=playerWon?'🎉':'😞';
   document.getElementById('result-title').textContent=playerWon?'승리!':'패배...';
-  document.getElementById('result-sub').textContent=playerWon?`${DIFF_NAMES[difficulty]} AI를 이겼습니다!`:`${DIFF_NAMES[difficulty]} AI에게 졌습니다.`;
+  document.getElementById('result-sub').textContent=playerWon?`최고 AI를 이겼습니다! 🏆`:`최고 AI에게 졌습니다.`;
   document.getElementById('r-moves').textContent=moveCount;
   document.getElementById('r-time').textContent=elapsed;
   document.getElementById('r-quality').textContent=getQuality();
@@ -1059,7 +1068,7 @@ function endGame(playerWon) {
   if(playerWon&&delta>20) fbs.push({t:'good',m:'🏆 ELO가 크게 올랐어요!'});
   if(playerMistakes>=3)   fbs.push({t:'warn',m:`⚠️ 금수를 ${playerMistakes}번 시도했어요. 금수 위치를 미리 확인하세요.`});
   if(playerMistakes===0&&playerWon) fbs.push({t:'good',m:'✨ 금수 없이 완벽한 플레이!'});
-  if(!playerWon&&difficulty>=2) fbs.push({t:'',m:'💡 어려운 AI에 도전하면 실력이 빨리 늡니다!'});
+  if(!playerWon) fbs.push({t:'',m:'💡 패턴을 분석하고 다시 도전해보세요!'});
   if(!fbs.length) fbs.push({t:'',m:'📝 꾸준히 플레이할수록 기력이 오릅니다!'});
   document.getElementById('feedback-list').innerHTML=fbs.map(f=>`<div class="feedback-item ${f.t}">${f.m}</div>`).join('');
 
@@ -1101,22 +1110,34 @@ function saveStats() { localStorage.setItem('omok_stats2',JSON.stringify(stats))
 //  MODAL (History API)
 // ═══════════════════════════════════════
 function openModal(id) {
+  // 이미 열려 있으면 스택/히스토리 중복 추가 방지
+  if(modalStack.includes(id)) return;
   document.getElementById(id).classList.add('open');
   history.pushState({modal:id},'',location.pathname);
   modalStack.push(id);
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
-  if(modalStack[modalStack.length-1]===id) modalStack.pop();
+  const idx = modalStack.lastIndexOf(id);
+  if(idx !== -1) modalStack.splice(idx, 1);
 }
-window.addEventListener('popstate',()=>{
-  if(modalStack.length) closeModal(modalStack[modalStack.length-1]);
+// 뒤로가기 → 모달 닫기(back()은 이미 브라우저가 처리)
+window.addEventListener('popstate', ()=>{
+  if(modalStack.length) {
+    const id = modalStack[modalStack.length-1];
+    document.getElementById(id).classList.remove('open');
+    modalStack.pop();
+  }
 });
+// 모달 바깥 클릭 → 닫기 + 히스토리 1칸 뒤로
 document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click',e=>{
+  o.addEventListener('click', e=>{
     if(e.target===o){
-      const id=o.id; closeModal(id);
-      if(window.history.state?.modal===id) window.history.back();
+      const id = o.id;
+      if(modalStack.includes(id)){
+        closeModal(id);
+        window.history.back();
+      }
     }
   });
 });
@@ -1160,6 +1181,22 @@ document.getElementById('btn-stats').addEventListener('click',()=>{
 
 document.getElementById('btn-info').addEventListener('click',()=>openModal('modal-info'));
 
+document.getElementById('btn-reset-stats').addEventListener('click',()=>{
+  if(!confirm('전적과 기력을 모두 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  stats = { elo:800, wins:0, losses:0, diffStats:{1:{w:0,l:0},2:{w:0,l:0},3:{w:0,l:0}} };
+  saveStats();
+  // stats 모달 UI 갱신
+  document.getElementById('s-total').textContent='0';
+  document.getElementById('s-wins').textContent='0';
+  document.getElementById('s-wr').textContent='0%';
+  document.getElementById('s-elo').textContent='800';
+  document.getElementById('diff-history').innerHTML=[1,2,3].map(d=>`
+    <div class="rank-row"><div class="rank-row-label">${DIFF_NAMES[d]}</div><div class="rank-row-val">0승 0패</div></div>
+  `).join('');
+  updateRankUI();
+  updateRecordUI();
+});
+
 document.getElementById('btn-undo').addEventListener('click',()=>{
   if(!gameStarted||gameOver||thinking) return;
   if(gameHistory.length<2) return;
@@ -1171,15 +1208,7 @@ document.getElementById('btn-undo').addEventListener('click',()=>{
   document.getElementById('move-counter').textContent=`${s}의 차례 — 무르기 완료`;
 });
 
-// diff tabs in modal
-document.querySelectorAll('.diff-tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.diff-tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    difficulty=parseInt(tab.dataset.diff);
-    document.getElementById('diff-display').textContent=DIFF_NAMES[difficulty];
-  });
-});
+// 난이도는 항상 최고(3)으로 고정 — 탭 이벤트 불필요
 
 // ═══════════════════════════════════════
 //  INIT
@@ -1212,7 +1241,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   setupBoard();
   updateRankUI();
   updateRecordUI();
-  document.getElementById('diff-display').textContent=DIFF_NAMES[difficulty];
+  // 난이도 항상 최고 고정
   board=Array.from({length:SIZE},()=>Array(SIZE).fill(EMPTY));
   drawBoard();
 });
