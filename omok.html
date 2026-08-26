@@ -1107,38 +1107,54 @@ function updateRecordUI() {
 function saveStats() { localStorage.setItem('omok_stats2',JSON.stringify(stats)); }
 
 // ═══════════════════════════════════════
-//  MODAL (History API)
+//  MODAL — History API 완전 미사용
 // ═══════════════════════════════════════
-function openModal(id) {
-  // 이미 열려 있으면 스택/히스토리 중복 추가 방지
-  if(modalStack.includes(id)) return;
-  document.getElementById(id).classList.add('open');
-  history.pushState({modal:id},'',location.pathname);
-  modalStack.push(id);
+// pushState/back을 전혀 쓰지 않는다.
+// 뒤로가기(popstate)가 발생하면:
+//   - 열린 모달이 있으면 모두 닫고 앱에 머문다(re-push로 제자리 복귀)
+//   - 열린 모달이 없으면 그냥 통과 → 브라우저가 실제로 뒤로 간다
+
+let _sentinelPushed = false;
+
+function _ensureSentinel() {
+  if(!_sentinelPushed) {
+    history.pushState({omokModal:true}, '', location.pathname);
+    _sentinelPushed = true;
+  }
 }
+
+function openModal(id) {
+  if(document.getElementById(id).classList.contains('open')) return;
+  document.getElementById(id).classList.add('open');
+  modalStack.push(id);
+  _ensureSentinel();
+}
+
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   const idx = modalStack.lastIndexOf(id);
   if(idx !== -1) modalStack.splice(idx, 1);
+  // sentinel은 건드리지 않음 — popstate가 처리
 }
-// 뒤로가기 → 모달 닫기(back()은 이미 브라우저가 처리)
-window.addEventListener('popstate', ()=>{
-  if(modalStack.length) {
-    const id = modalStack[modalStack.length-1];
-    document.getElementById(id).classList.remove('open');
-    modalStack.pop();
+
+window.addEventListener('popstate', function(e) {
+  if(modalStack.length > 0) {
+    // 열린 모달이 있으면: 모두 닫고 sentinel을 다시 push해서 제자리 유지
+    modalStack.slice().reverse().forEach(function(id) {
+      document.getElementById(id).classList.remove('open');
+    });
+    modalStack.length = 0;
+    // 다시 sentinel push → 앱이 뒤로 가지 않음
+    history.pushState({omokModal:true}, '', location.pathname);
+  } else {
+    // 열린 모달 없음 → sentinel이 소비됨 → 브라우저가 실제 뒤로 감
+    _sentinelPushed = false;
   }
 });
-// 모달 바깥 클릭 → 닫기 + 히스토리 1칸 뒤로
-document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click', e=>{
-    if(e.target===o){
-      const id = o.id;
-      if(modalStack.includes(id)){
-        closeModal(id);
-        window.history.back();
-      }
-    }
+
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) {
+    if(e.target === o) closeModal(o.id);
   });
 });
 
