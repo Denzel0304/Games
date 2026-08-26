@@ -413,11 +413,23 @@
       <div class="stats-cell"><div class="stats-cell-v" id="s-elo">800</div><div class="stats-cell-l">ELO</div></div>
     </div>
 
-    <div class="modal-section-label" style="margin-bottom:7px">난이도별 전적</div>
-    <div class="rank-history" id="diff-history"></div>
     <div style="height:14px"></div>
     <button class="modal-start-btn" onclick="closeModal('modal-stats')">닫기</button>
     <button id="btn-reset-stats" style="width:100%;margin-top:9px;padding:12px;border-radius:11px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;">🗑 전적 &amp; 기력 초기화</button>
+  </div>
+</div>
+
+<!-- ── CONFIRM (초기화 확인) MODAL ── -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="padding-bottom:28px">
+    <div class="modal-handle"></div>
+    <div style="font-size:32px;text-align:center;margin-bottom:10px">🗑</div>
+    <div class="modal-title" style="text-align:center">전적 초기화</div>
+    <div class="modal-sub" style="text-align:center;margin-bottom:22px">승패 기록과 기력(ELO)이 모두 삭제됩니다.<br>이 작업은 되돌릴 수 없습니다.</div>
+    <div style="display:flex;gap:9px">
+      <button onclick="closeModal('modal-confirm')" style="flex:1;padding:13px;border-radius:11px;border:1.5px solid var(--text-muted);background:var(--panel2);color:var(--text-dim);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s">취소</button>
+      <button id="btn-confirm-reset" style="flex:1;padding:13px;border-radius:11px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s">초기화</button>
+    </div>
   </div>
 </div>
 
@@ -1189,28 +1201,25 @@ document.getElementById('btn-stats').addEventListener('click',()=>{
   const wr=stats.wins+stats.losses>0?Math.round(stats.wins/(stats.wins+stats.losses)*100):0;
   document.getElementById('s-wr').textContent=wr+'%';
   document.getElementById('s-elo').textContent=stats.elo;
-  document.getElementById('diff-history').innerHTML=[1,2,3].map(d=>`
-    <div class="rank-row"><div class="rank-row-label">${DIFF_NAMES[d]}</div><div class="rank-row-val">${stats.diffStats[d].w}승 ${stats.diffStats[d].l}패</div></div>
-  `).join('');
   openModal('modal-stats');
 });
 
 document.getElementById('btn-info').addEventListener('click',()=>openModal('modal-info'));
 
 document.getElementById('btn-reset-stats').addEventListener('click',()=>{
-  if(!confirm('전적과 기력을 모두 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  openModal('modal-confirm');
+});
+
+document.getElementById('btn-confirm-reset').addEventListener('click',()=>{
   stats = { elo:800, wins:0, losses:0, diffStats:{1:{w:0,l:0},2:{w:0,l:0},3:{w:0,l:0}} };
   saveStats();
-  // stats 모달 UI 갱신
   document.getElementById('s-total').textContent='0';
   document.getElementById('s-wins').textContent='0';
   document.getElementById('s-wr').textContent='0%';
   document.getElementById('s-elo').textContent='800';
-  document.getElementById('diff-history').innerHTML=[1,2,3].map(d=>`
-    <div class="rank-row"><div class="rank-row-label">${DIFF_NAMES[d]}</div><div class="rank-row-val">0승 0패</div></div>
-  `).join('');
   updateRankUI();
   updateRecordUI();
+  closeModal('modal-confirm');
 });
 
 document.getElementById('btn-undo').addEventListener('click',()=>{
