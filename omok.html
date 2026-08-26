@@ -1151,15 +1151,17 @@ function closeModal(id) {
 
 window.addEventListener('popstate', function(e) {
   if(modalStack.length > 0) {
-    // 열린 모달이 있으면: 모두 닫고 sentinel을 다시 push해서 제자리 유지
-    modalStack.slice().reverse().forEach(function(id) {
-      document.getElementById(id).classList.remove('open');
-    });
-    modalStack.length = 0;
-    // 다시 sentinel push → 앱이 뒤로 가지 않음
-    history.pushState({omokModal:true}, '', location.pathname);
+    // 가장 위의 모달 1개만 닫기
+    var id = modalStack[modalStack.length - 1];
+    document.getElementById(id).classList.remove('open');
+    modalStack.pop();
+    // 아직 열린 모달이 남아있으면 sentinel 유지, 없으면 소비
+    if(modalStack.length > 0) {
+      history.pushState({omokModal:true}, '', location.pathname);
+    } else {
+      _sentinelPushed = false;
+    }
   } else {
-    // 열린 모달 없음 → sentinel이 소비됨 → 브라우저가 실제 뒤로 감
     _sentinelPushed = false;
   }
 });
