@@ -413,23 +413,23 @@
     position: absolute;
     inset: 8%;
     border-radius: 50%;
-    transform: translateY(-120%);
-    transition: none;
+    opacity: 0;
   }
   .disc.red {
     background: radial-gradient(circle at 35% 30%, var(--red-light), #b02020);
     box-shadow: 0 3px 12px rgba(232,65,58,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    opacity: 1;
   }
   .disc.yellow {
     background: radial-gradient(circle at 35% 30%, var(--yellow-light), #c07010);
     box-shadow: 0 3px 12px rgba(240,180,41,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+    opacity: 1;
   }
   .disc.drop {
-    animation: dropDisc var(--drop-dur, 0.28s) cubic-bezier(0.55, 0, 1, 0.45) forwards,
-               bounce var(--drop-dur, 0.28s) cubic-bezier(0.55, 0, 1, 0.45) forwards;
+    animation: dropDisc var(--drop-dur, 0.28s) cubic-bezier(0.55, 0, 1, 0.6) forwards;
   }
   @keyframes dropDisc {
-    from { transform: translateY(var(--drop-from, -200%)); }
+    from { transform: translateY(var(--drop-from, -300%)); }
     to   { transform: translateY(0); }
   }
 
@@ -997,16 +997,20 @@ function renderDisc(r, c, color, animate, dropFrom) {
   const disc = document.getElementById(`disc-${r}-${c}`);
   if (!disc) return;
   const cls = color === R ? 'red' : 'yellow';
-  disc.className = 'disc ' + cls;
   if (animate) {
-    // calculate drop duration based on distance
-    const dur = Math.max(0.18, Math.min(0.38, 0.1 + dropFrom * 0.045));
+    const dur = Math.max(0.18, Math.min(0.42, 0.12 + dropFrom * 0.05));
+    const fromPct = Math.round((dropFrom + 1) * 120);
     disc.style.setProperty('--drop-dur', dur + 's');
-    disc.style.setProperty('--drop-from', `-${Math.round(dropFrom * 110 + 20)}%`);
-    disc.classList.add('drop');
-    disc.addEventListener('animationend', () => disc.classList.remove('drop'), { once: true });
+    disc.style.setProperty('--drop-from', `-${fromPct}%`);
+    // force reflow so animation restarts
+    disc.className = 'disc';
+    void disc.offsetWidth;
+    disc.className = 'disc ' + cls + ' drop';
+    disc.addEventListener('animationend', () => {
+      disc.classList.remove('drop');
+    }, { once: true });
   } else {
-    disc.style.transform = 'translateY(0)';
+    disc.className = 'disc ' + cls;
   }
 }
 
@@ -1014,7 +1018,7 @@ function clearBoard() {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++) {
       const disc = document.getElementById(`disc-${r}-${c}`);
-      if (disc) { disc.className = 'disc'; disc.style.transform = ''; }
+      if (disc) { disc.className = 'disc'; disc.style.removeProperty('--drop-dur'); disc.style.removeProperty('--drop-from'); }
     }
 }
 
