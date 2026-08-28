@@ -819,8 +819,12 @@ window.addEventListener('popstate', () => {
 
 function enterGameScreen() {
   onGameScreen = true;
-  // 게임 진입은 항상 replaceState — push 안 함
-  history.replaceState({ cf: 'game' }, '');
+  // 최초 진입만 pushState, 재시작은 replaceState
+  if (history.state && history.state.cf === 'game') {
+    history.replaceState({ cf: 'game' }, '');
+  } else {
+    history.pushState({ cf: 'game' }, '');
+  }
 }
 
 function openModal(id) {
@@ -913,8 +917,10 @@ function startGame() {
 }
 
 function restartGame() {
+  // 결과 모달 DOM 닫기
   _closeModal('modal-result');
-  // modal pushState entry를 game으로 덮어써서 스택 증가 방지
+  // 결과 모달이 pushState한 entry를 game entry로 덮어씀
+  // → 스택에 modal entry 안 남고, game entry는 유지됨 (뒤로가기 → 메인 보장)
   history.replaceState({ cf: 'game' }, '');
   startGame();
 }
