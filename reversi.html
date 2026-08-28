@@ -746,25 +746,106 @@ const B = 1, W = -1, E = 0;
 let board, turn, myColor, aiColor, depth, gameActive;
 let selectedDiff = 2, selectedColor = 'B';
 let modalStack = [];   // open modal ids
+let onGameScreen = false;
 
 const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 
 // ══════════════════════════════════
+//  WEB AUDIO SOUND ENGINE
+// ══════════════════════════════════
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playPlace() {
+  try {
+    const ctx = getAudioCtx();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      // 짧고 둔탁한 클릭 — 나무 위에 돌 놓는 느낌
+      const t = i / ctx.sampleRate;
+      data[i] = Math.exp(-t * 80) * (Math.random() * 2 - 1) * 0.55
+               + Math.exp(-t * 30) * Math.sin(2 * Math.PI * 180 * t) * 0.4;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    src.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+function playFlip() {
+  try {
+    const ctx = getAudioCtx();
+    const dur = 0.06;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      // 얇고 가벼운 틱 — 돌 뒤집히는 느낌
+      data[i] = Math.exp(-t * 120) * Math.sin(2 * Math.PI * 320 * t) * 0.3
+               + Math.exp(-t * 60) * (Math.random() * 2 - 1) * 0.15;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.7, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    src.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+function playFlipSeries(count) {
+  // 뒤집히는 돌 수에 따라 연속 틱
+  const times = Math.min(count, 6);
+  for (let i = 0; i < times; i++) {
+    setTimeout(playFlip, i * 55);
+  }
+}
+
+// ══════════════════════════════════
 //  HISTORY API (back-button control)
 // ══════════════════════════════════
+// 전략:
+//  - 메인화면: history에 아무것도 안 쌓음 → 뒤로가기 = 사이트 이탈
+//  - 게임화면 진입 시: pushState 2개 쌓음
+//      [0] base  ← 이 entry가 pop되면 = "게임에서 뒤로가기" → goMain()
+//      [1] top   ← 모달용 여분 (모달 열릴 때마다 push)
+//  - 모달 open: pushState 1개
+//  - 모달 close(back): popstate → 모달만 닫고 끝
+//  - 게임화면에서 모달 없이 back: popstate → onGameScreen=true이면 goMain()
+
 window.addEventListener('popstate', e => {
   if (modalStack.length > 0) {
-    // close top modal, push state again so stack stays consistent
+    // 열린 모달이 있으면 최상단 모달만 닫기
     const id = modalStack[modalStack.length - 1];
     _closeModal(id);
-    history.pushState({ reversi: true }, '');
+    // 스택 유지를 위해 다시 push
+    history.pushState({ reversi: 'modal' }, '');
+    return;
   }
-  // If no modal open, popstate exits normally — no extra push needed
+  if (onGameScreen) {
+    // 게임 화면에서 모달 없이 뒤로가기 → 메인으로
+    goMain();
+    return;
+  }
+  // 메인화면 → 자연스럽게 이탈 허용 (popstate를 가로채지 않음)
 });
 
-function pushHistoryOnce() {
-  // Called once when game screen opens; a single state entry for modals to pop
-  history.pushState({ reversi: true }, '');
+function enterGameScreen() {
+  onGameScreen = true;
+  // 2개 push: [base, top]
+  // base가 pop되면 onGameScreen 분기에서 goMain() 처리
+  history.pushState({ reversi: 'base' }, '');
+  history.pushState({ reversi: 'top' }, '');
 }
 
 // ══════════════════════════════════
@@ -775,13 +856,12 @@ function openModal(id) {
   if (!el) return;
   el.classList.add('open');
   modalStack.push(id);
-  // Push state so back-button can close this modal
-  history.pushState({ reversi: true }, '');
+  history.pushState({ reversi: 'modal' }, '');
 }
 
 function closeModal(id) {
+  // 버튼으로 직접 닫을 때: history도 1개 pop
   _closeModal(id);
-  // Remove one history entry to stay aligned
   history.go(-1);
 }
 
@@ -811,12 +891,13 @@ function showScreen(id) {
 }
 
 function goMain() {
-  // Close all open modals without popping history for each
+  // 열린 모달 모두 강제 닫기 (history pop 없이 DOM만)
   modalStack.forEach(id => document.getElementById(id)?.classList.remove('open'));
   modalStack = [];
   gameActive = false;
+  onGameScreen = false;
   showScreen('screen-main');
-  // Replace current history so back from main exits the page
+  // 히스토리를 완전히 비워서 메인에서 뒤로가기 = 사이트 이탈
   history.replaceState(null, '');
 }
 
@@ -847,9 +928,8 @@ function startGame() {
   depth = depthForDiff(selectedDiff);
   initBoard();
   showScreen('screen-game');
-  // Push one state entry so modals in-game can pop without leaving
   history.replaceState(null, '');
-  pushHistoryOnce();
+  enterGameScreen();
   renderAll();
   if (turn === aiColor) scheduleAI();
 }
@@ -1006,9 +1086,13 @@ function onCellClick(e) {
   const { board: nb } = applyMove(board, r, c, myColor);
   board = nb;
 
+  playPlace();
   renderBoard();
   animatePlace(r, c);
-  setTimeout(() => animateFlips(flips, myColor), 40);
+  setTimeout(() => {
+    animateFlips(flips, myColor);
+    playFlipSeries(flips.length);
+  }, 40);
 
   setTimeout(() => {
     turn = aiColor;
@@ -1054,9 +1138,13 @@ function doAIMove() {
   const { board: nb } = applyMove(board, r, c, aiColor);
   board = nb;
 
+  playPlace();
   renderBoard();
   animatePlace(r, c);
-  setTimeout(() => animateFlips(flips, aiColor), 40);
+  setTimeout(() => {
+    animateFlips(flips, aiColor);
+    playFlipSeries(flips.length);
+  }, 40);
 
   setTimeout(() => {
     turn = myColor;
