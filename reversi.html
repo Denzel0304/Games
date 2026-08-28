@@ -815,37 +815,26 @@ function playFlipSeries(count) {
 //  HISTORY API (back-button control)
 // ══════════════════════════════════
 // 전략:
-//  - 메인화면: history에 아무것도 안 쌓음 → 뒤로가기 = 사이트 이탈
-//  - 게임화면 진입 시: pushState 2개 쌓음
-//      [0] base  ← 이 entry가 pop되면 = "게임에서 뒤로가기" → goMain()
-//      [1] top   ← 모달용 여분 (모달 열릴 때마다 push)
-//  - 모달 open: pushState 1개
-//  - 모달 close(back): popstate → 모달만 닫고 끝
-//  - 게임화면에서 모달 없이 back: popstate → onGameScreen=true이면 goMain()
+//  - 메인화면: 히스토리에 아무것도 안 쌓음 → 뒤로가기 = 사이트 이탈
+//  - 게임화면 진입 시: pushState 1개 ({ reversi: 'game' })
+//  - 모달 open: pushState 1개 ({ reversi: 'modal' })
+//  - 모달 버튼 닫기: history.back() → popstate에서 모달 닫기
+//  - popstate: 모달 있으면 닫기만 / 없고 게임화면이면 goMain()
 
-window.addEventListener('popstate', e => {
+window.addEventListener('popstate', () => {
   if (modalStack.length > 0) {
-    // 열린 모달이 있으면 최상단 모달만 닫기
     const id = modalStack[modalStack.length - 1];
     _closeModal(id);
-    // 스택 유지를 위해 다시 push
-    history.pushState({ reversi: 'modal' }, '');
     return;
   }
   if (onGameScreen) {
-    // 게임 화면에서 모달 없이 뒤로가기 → 메인으로
     goMain();
-    return;
   }
-  // 메인화면 → 자연스럽게 이탈 허용 (popstate를 가로채지 않음)
 });
 
 function enterGameScreen() {
   onGameScreen = true;
-  // 2개 push: [base, top]
-  // base가 pop되면 onGameScreen 분기에서 goMain() 처리
-  history.pushState({ reversi: 'base' }, '');
-  history.pushState({ reversi: 'top' }, '');
+  history.pushState({ reversi: 'game' }, '');
 }
 
 // ══════════════════════════════════
@@ -860,9 +849,8 @@ function openModal(id) {
 }
 
 function closeModal(id) {
-  // 버튼으로 직접 닫을 때: history도 1개 pop
-  _closeModal(id);
-  history.go(-1);
+  // 버튼으로 직접 닫을 때: history.back() → popstate가 _closeModal 처리
+  history.back();
 }
 
 function _closeModal(id) {
@@ -943,7 +931,6 @@ function startGame() {
   depth = depthForDiff(selectedDiff);
   initBoard();
   showScreen('screen-game');
-  history.replaceState(null, '');
   enterGameScreen();
   renderAll();
   if (turn === aiColor) scheduleAI();
@@ -951,8 +938,9 @@ function startGame() {
 
 function restartGame() {
   _closeModal('modal-result');
-  // realign history (result modal closed without history.go)
-  startGame();
+  // modal entry를 back으로 제거한 뒤 startGame
+  history.back();
+  setTimeout(startGame, 50);
 }
 
 function initBoard() {
