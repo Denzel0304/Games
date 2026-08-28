@@ -603,7 +603,6 @@
 
   <div class="section-label">난이도</div>
   <div class="difficulty-row">
-    <button class="diff-btn" data-diff="1" onclick="selectDiff(1)">Easy</button>
     <button class="diff-btn selected" data-diff="2" onclick="selectDiff(2)">Normal</button>
     <button class="diff-btn" data-diff="3" onclick="selectDiff(3)">Hard</button>
     <button class="diff-btn" data-diff="4" onclick="selectDiff(4)">Expert</button>
@@ -891,8 +890,8 @@ function selectColor(c) {
 //  GAME INIT
 // ══════════════════════════════════
 function depthForDiff(d) {
-  // Easy: instant-win/block only, Normal: d2+20%noise, Hard: d4, Expert: d8
-  return [0, 0, 2, 4, 8][d];
+  // Easy: d2 + noise, Normal: d4, Hard: d6, Expert: d8
+  return [0, 2, 4, 6, 8][d];
 }
 
 function startGame() {
@@ -1124,13 +1123,7 @@ function setAIHoverCol(c) {
 function doAIMove() {
   if (!gameActive) return;
   let col;
-  if (selectedDiff === 1) {
-    col = getEasyMove(board, aiColor);
-  } else if (selectedDiff === 2) {
-    col = getBestMoveWithNoise(board, aiColor, depth, 0.20);
-  } else {
-    col = getBestMove(board, aiColor, depth);
-  }
+  col = getBestMove(board, aiColor, depth);
   const result = applyMove(board, col, aiColor);
   if (!result) return;
 
@@ -1238,43 +1231,6 @@ function getBestMove(bd, color, d) {
     if (s > bestScore) { bestScore = s; bestCol = c; }
   }
   return bestCol;
-}
-
-// Easy: 즉시 이기거나 막기만 하고, 그 외엔 랜덤
-function getEasyMove(bd, color) {
-  const opp = -color;
-  const valid = getValidCols(bd);
-  // 1. 즉시 이길 수 있으면 둠
-  for (const c of valid) {
-    const res = applyMove(bd, c, color);
-    if (res && checkWin(res.board, color)) return c;
-  }
-  // 2. 상대가 즉시 이기는 수 막기
-  for (const c of valid) {
-    const res = applyMove(bd, c, opp);
-    if (res && checkWin(res.board, opp)) return c;
-  }
-  // 3. 그 외엔 완전 랜덤
-  return valid[Math.floor(Math.random() * valid.length)];
-}
-
-// Normal: 20% 확률로 랜덤, 나머지는 minimax
-function getBestMoveWithNoise(bd, color, d, noisePct) {
-  const valid = getValidCols(bd);
-  const opp = -color;
-  // 즉시 이기거나 막는 수는 노이즈 무관하게 항상 처리
-  for (const c of valid) {
-    const res = applyMove(bd, c, color);
-    if (res && checkWin(res.board, color)) return c;
-  }
-  for (const c of valid) {
-    const res = applyMove(bd, c, opp);
-    if (res && checkWin(res.board, opp)) return c;
-  }
-  if (Math.random() < noisePct) {
-    return valid[Math.floor(Math.random() * valid.length)];
-  }
-  return getBestMove(bd, color, d);
 }
 
 // ══════════════════════════════════
