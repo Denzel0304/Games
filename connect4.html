@@ -65,14 +65,14 @@
 
   .main-logo {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     position: relative;
     z-index: 1;
   }
 
   .main-logo .wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(26px, 7.5vw, 50px);
+    font-size: clamp(32px, 9vw, 58px);
     font-weight: 300;
     letter-spacing: 0.14em;
     color: var(--cream);
@@ -95,23 +95,23 @@
     display: flex;
     gap: 5px;
     justify-content: center;
-    margin: 14px auto 0;
+    margin: 20px auto 0;
   }
-  .bp-col { display:flex; flex-direction:column; gap:4px; }
+  .bp-col { display:flex; flex-direction:column; gap:5px; }
   .bp-cell {
-    width: 14px; height: 14px;
+    width: 20px; height: 20px;
     background: #0b1628;
     border-radius: 50%;
     display: flex; align-items:center; justify-content:center;
   }
-  .bp-disc { width:9px; height:9px; border-radius:50%; }
+  .bp-disc { width:13px; height:13px; border-radius:50%; }
   .bp-disc.r { background: var(--red); }
   .bp-disc.y { background: var(--yellow); }
 
   .main-actions {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
     max-width: 320px;
     position: relative;
@@ -126,7 +126,7 @@
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.08em;
-    padding: 15px 24px;
+    padding: 17px 24px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -150,7 +150,7 @@
     font-size: 14px;
     font-weight: 400;
     letter-spacing: 0.06em;
-    padding: 13px 24px;
+    padding: 15px 24px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -164,8 +164,8 @@
     text-transform: uppercase;
     color: var(--muted);
     text-align: center;
-    margin-top: 14px;
-    margin-bottom: 6px;
+    margin-top: 20px;
+    margin-bottom: 8px;
     position: relative;
     z-index: 1;
   }
@@ -609,7 +609,7 @@
     <button class="diff-btn" data-diff="4" onclick="selectDiff(4)">Expert</button>
   </div>
 
-  <div class="section-label" style="margin-top:10px;">내 색상</div>
+  <div class="section-label" style="margin-top:20px;">내 색상</div>
   <div class="color-row">
     <button class="color-btn selected" data-color="R" onclick="selectColor('R')">
       <div class="swatch red"></div> 빨강
@@ -619,7 +619,7 @@
     </button>
   </div>
 
-  <div class="main-actions" style="margin-top:18px;">
+  <div class="main-actions" style="margin-top:24px;">
     <button class="btn-primary" onclick="startGame()">게임 시작</button>
     <button class="btn-secondary" onclick="openModal('modal-rules')">규칙 보기</button>
   </div>
