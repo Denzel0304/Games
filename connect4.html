@@ -47,9 +47,10 @@
   /* ══════════════ MAIN SCREEN ══════════════ */
   #screen-main {
     justify-content: center;
-    padding: 40px 24px;
+    padding: 24px 24px;
     position: relative;
     overflow: hidden;
+    gap: 0;
   }
 
   #screen-main::before {
@@ -64,19 +65,20 @@
 
   .main-logo {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 24px;
     position: relative;
     z-index: 1;
   }
 
   .main-logo .wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(42px, 11vw, 68px);
+    font-size: clamp(26px, 7.5vw, 50px);
     font-weight: 300;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: var(--cream);
     line-height: 1;
     display: block;
+    white-space: nowrap;
   }
 
   .main-logo .sub {
@@ -84,7 +86,7 @@
     letter-spacing: 0.35em;
     text-transform: uppercase;
     color: var(--gold);
-    margin-top: 10px;
+    margin-top: 8px;
     display: block;
   }
 
@@ -93,23 +95,23 @@
     display: flex;
     gap: 5px;
     justify-content: center;
-    margin: 22px auto 0;
+    margin: 14px auto 0;
   }
   .bp-col { display:flex; flex-direction:column; gap:4px; }
   .bp-cell {
-    width: 16px; height: 16px;
+    width: 14px; height: 14px;
     background: #0b1628;
     border-radius: 50%;
     display: flex; align-items:center; justify-content:center;
   }
-  .bp-disc { width:11px; height:11px; border-radius:50%; }
+  .bp-disc { width:9px; height:9px; border-radius:50%; }
   .bp-disc.r { background: var(--red); }
   .bp-disc.y { background: var(--yellow); }
 
   .main-actions {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     width: 100%;
     max-width: 320px;
     position: relative;
@@ -124,7 +126,7 @@
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.08em;
-    padding: 18px 24px;
+    padding: 15px 24px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -148,7 +150,7 @@
     font-size: 14px;
     font-weight: 400;
     letter-spacing: 0.06em;
-    padding: 16px 24px;
+    padding: 13px 24px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -162,8 +164,8 @@
     text-transform: uppercase;
     color: var(--muted);
     text-align: center;
-    margin-top: 20px;
-    margin-bottom: 8px;
+    margin-top: 14px;
+    margin-bottom: 6px;
     position: relative;
     z-index: 1;
   }
@@ -607,7 +609,7 @@
     <button class="diff-btn" data-diff="4" onclick="selectDiff(4)">Expert</button>
   </div>
 
-  <div class="section-label" style="margin-top:16px;">내 색상</div>
+  <div class="section-label" style="margin-top:10px;">내 색상</div>
   <div class="color-row">
     <button class="color-btn selected" data-color="R" onclick="selectColor('R')">
       <div class="swatch red"></div> 빨강
@@ -617,7 +619,7 @@
     </button>
   </div>
 
-  <div class="main-actions" style="margin-top:28px;">
+  <div class="main-actions" style="margin-top:18px;">
     <button class="btn-primary" onclick="startGame()">게임 시작</button>
     <button class="btn-secondary" onclick="openModal('modal-rules')">규칙 보기</button>
   </div>
