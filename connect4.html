@@ -1103,6 +1103,15 @@ function scheduleAI() {
   setTimeout(doAIMove, thinkTime);
 }
 
+function setAIHoverCol(c) {
+  document.querySelectorAll('.col-arrow').forEach((el, i) => {
+    el.classList.toggle('active', i === c);
+  });
+  document.querySelectorAll('.cell').forEach(el => {
+    el.classList.toggle('col-hover', +el.dataset.c === c);
+  });
+}
+
 function doAIMove() {
   if (!gameActive) return;
   let col;
@@ -1114,10 +1123,13 @@ function doAIMove() {
   const result = applyMove(board, col, aiColor);
   if (!result) return;
 
+  setAIHoverCol(col);
   board = result.board;
   playPlace();
   renderDisc(result.row, col, aiColor, true, result.row);
   updateStatus('');
+
+  setTimeout(() => setAIHoverCol(-1), 350);
 
   setTimeout(() => {
     const win = checkWin(board, aiColor);
