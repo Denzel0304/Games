@@ -922,7 +922,22 @@ function selectColor(c) {
 // ══════════════════════════════════
 function depthForDiff(d) { return [0, 2, 4, 6, 8][d]; }
 
+function warmUpAudio() {
+  try {
+    const ctx = getAudioCtx();
+    // suspend 상태면 resume (모바일 정책)
+    if (ctx.state === 'suspended') ctx.resume();
+    // 무음 버퍼 1개 재생 → 엔진 미리 깨우기
+    const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch(e) {}
+}
+
 function startGame() {
+  warmUpAudio();
   myColor = selectedColor === 'B' ? B : W;
   aiColor = -myColor;
   depth = depthForDiff(selectedDiff);
