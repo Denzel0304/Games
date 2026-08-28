@@ -490,48 +490,31 @@ document.addEventListener('touchstart', unlockAudio, true);
 document.addEventListener('touchend',   unlockAudio, true);
 document.addEventListener('click',      unlockAudio, true);
 
-// 돌 놓는 소리 — 짧고 딱딱한 타격음 (나무+돌)
+// 돌 놓는 소리 — 리버시에서 이식한 방식 (노이즈 버스트 + 저음 바디)
 function playStoneSound(isPlayer) {
-  const ac = getAudioCtx();
-  const t = ac.currentTime;
+  try {
+    const ac = getAudioCtx();
+    const t = ac.currentTime;
 
-  // 노이즈 버스트 (타격 느낌)
-  const bufSize = ac.sampleRate * 0.04;
-  const buf = ac.createBuffer(1, bufSize, ac.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/bufSize, 6);
-  const noise = ac.createBufferSource();
-  noise.buffer = buf;
+    // 짧고 둔탁한 클릭 — 나무 위에 돌 놓는 느낌
+    const dur = 0.08;
+    const buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const s = i / ac.sampleRate;
+      data[i] = Math.exp(-s * 80) * (Math.random() * 2 - 1) * 0.55
+               + Math.exp(-s * 30) * Math.sin(2 * Math.PI * (isPlayer ? 200 : 160) * s) * 0.4;
+    }
+    const src = ac.createBufferSource();
+    src.buffer = buf;
 
-  // 밴드패스 필터 — 돌 소리 주파수
-  const bpf = ac.createBiquadFilter();
-  bpf.type = 'bandpass';
-  bpf.frequency.value = isPlayer ? 1800 : 1400;
-  bpf.Q.value = 1.5;
+    const gain = ac.createGain();
+    gain.gain.setValueAtTime(1.0, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
-  // 메인 톤 — 짧은 클릭
-  const osc = ac.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(isPlayer ? 900 : 700, t);
-  osc.frequency.exponentialRampToValueAtTime(200, t + 0.06);
-
-  const oscGain = ac.createGain();
-  oscGain.gain.setValueAtTime(0.18, t);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-
-  const noiseGain = ac.createGain();
-  noiseGain.gain.setValueAtTime(0.35, t);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-
-  const master = ac.createGain();
-  master.gain.value = 0.7;
-
-  noise.connect(bpf); bpf.connect(noiseGain); noiseGain.connect(master);
-  osc.connect(oscGain); oscGain.connect(master);
-  master.connect(ac.destination);
-
-  noise.start(t); noise.stop(t + 0.05);
-  osc.start(t); osc.stop(t + 0.1);
+    src.connect(gain); gain.connect(ac.destination);
+    src.start(t);
+  } catch(e) {}
 }
 
 // 금수 소리 — 낮고 둔한 버저
@@ -785,9 +768,9 @@ function evalColor(bd, color) {
       const eR=r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&bd[r2][c2]===EMPTY;
       const eL=pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE&&bd[pr][pc]===EMPTY;
       if(n>=5) score+=SC.five;
-      else if(n===4) score+=(eL&&eR)?SC.open4:SC.half4;
-      else if(n===3) score+=(eL&&eR)?SC.open3:SC.half3;
-      else if(n===2) score+=(eL&&eR)?SC.open2:SC.open2*0.3;
+      else if(n===4) { if(eL&&eR) score+=SC.open4; else if(eL||eR) score+=SC.half4; }
+      else if(n===3) { if(eL&&eR) score+=SC.open3; else if(eL||eR) score+=SC.half3; }
+      else if(n===2) { if(eL&&eR) score+=SC.open2; else if(eL||eR) score+=SC.open2*0.3; }
     }
   }
   return score;
@@ -799,7 +782,7 @@ function evaluate(bd,aiCol) {
 }
 
 // 후보 제한: 상위 N개만 탐색
-function getCandidates(bd, limit) {
+function getCandidates(bd, limit, aiCol, plCol) {
   const visited=new Set(), cands=[];
   for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
     if (bd[r][c]===EMPTY) continue;
@@ -812,11 +795,11 @@ function getCandidates(bd, limit) {
   }
   if(!cands.length) return [[7,7]];
   if(!limit || cands.length<=limit) return cands;
-  // Quick-score each candidate to pick top N
+  // Quick-score each candidate to pick top N — evaluate() 기준으로 통일
   const scored=cands.map(([r,c])=>{
     let s=0;
-    bd[r][c]=WHITE; s+=evalColor(bd,WHITE)*2; bd[r][c]=EMPTY;
-    bd[r][c]=BLACK; s+=evalColor(bd,BLACK);   bd[r][c]=EMPTY;
+    bd[r][c]=aiCol; s+=evaluate(bd,aiCol)*2; bd[r][c]=EMPTY;
+    bd[r][c]=plCol; s+=evaluate(bd,aiCol);   bd[r][c]=EMPTY;
     return {r,c,s};
   });
   scored.sort((a,b)=>b.s-a.s);
@@ -831,7 +814,7 @@ function minimax(bd, depth, alpha, beta, maximizing, aiCol, plCol) {
 
   // 후보 제한: 깊이가 깊을수록 더 좁게
   const limit = depth>=3 ? 8 : depth===2 ? 12 : 20;
-  const cands=getCandidates(bd,limit);
+  const cands=getCandidates(bd,limit,aiCol,plCol);
 
   if (maximizing) {
     let best=-Infinity;
@@ -861,7 +844,7 @@ function minimax(bd, depth, alpha, beta, maximizing, aiCol, plCol) {
 }
 
 function getBestMove(bd, aiCol, plCol, depth) {
-  const cands=getCandidates(bd, null);
+  const cands=getCandidates(bd, null, aiCol, plCol);
 
   // 즉시 이기는 수
   for (const [r,c] of cands) {
@@ -877,7 +860,7 @@ function getBestMove(bd, aiCol, plCol, depth) {
     bd[r][c]=EMPTY;
   }
 
-  const topCands=getCandidates(bd, depth>=4?10:16);
+  const topCands=getCandidates(bd, depth>=4?10:16, aiCol, plCol);
   let best=-Infinity, bestMove=topCands[0]||[7,7];
   for (const [r,c] of topCands) {
     if(aiCol===BLACK&&isForbidden(bd,r,c)) continue;
