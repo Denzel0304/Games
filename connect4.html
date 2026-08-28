@@ -736,6 +736,7 @@ let selectedDiff = 2, selectedColor = 'R';
 let depth = 4;
 let wins = { my: 0, ai: 0 };
 let hoverCol = -1;
+let boardListenerController = null;
 
 let modalStack = [];
 let onGameScreen = false;
@@ -819,7 +820,12 @@ window.addEventListener('popstate', () => {
 
 function enterGameScreen() {
   onGameScreen = true;
-  history.pushState({ cf: 'game' }, '');
+  // pushState only once per main→game transition; restarts reuse the same entry
+  if (history.state && history.state.cf === 'game') {
+    history.replaceState({ cf: 'game' }, '');
+  } else {
+    history.pushState({ cf: 'game' }, '');
+  }
 }
 
 function openModal(id) {
@@ -906,8 +912,7 @@ function startGame() {
 
 function restartGame() {
   _closeModal('modal-result');
-  history.back();
-  setTimeout(startGame, 50);
+  startGame();
 }
 
 function initBoard() {
@@ -949,16 +954,20 @@ function buildArrows() {
     arrow.addEventListener('mouseleave', () => setHoverCol(-1));
     arrowsEl.appendChild(arrow);
   }
-  // board cell clicks
-  document.getElementById('board').addEventListener('click', e => {
+  // board cell clicks — abort previous listeners before adding new ones
+  if (boardListenerController) boardListenerController.abort();
+  boardListenerController = new AbortController();
+  const sig = { signal: boardListenerController.signal };
+  const boardEl = document.getElementById('board');
+  boardEl.addEventListener('click', e => {
     const cell = e.target.closest('.cell');
     if (cell) onColClick(+cell.dataset.c);
-  });
-  document.getElementById('board').addEventListener('mousemove', e => {
+  }, sig);
+  boardEl.addEventListener('mousemove', e => {
     const cell = e.target.closest('.cell');
     if (cell) setHoverCol(+cell.dataset.c);
-  });
-  document.getElementById('board').addEventListener('mouseleave', () => setHoverCol(-1));
+  }, sig);
+  boardEl.addEventListener('mouseleave', () => setHoverCol(-1), sig);
 }
 
 function setHoverCol(c) {
