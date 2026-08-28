@@ -782,7 +782,7 @@ function evaluate(bd,aiCol) {
 }
 
 // 후보 제한: 상위 N개만 탐색
-function getCandidates(bd, limit, aiCol, plCol) {
+function getCandidates(bd, limit) {
   const visited=new Set(), cands=[];
   for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
     if (bd[r][c]===EMPTY) continue;
@@ -795,11 +795,11 @@ function getCandidates(bd, limit, aiCol, plCol) {
   }
   if(!cands.length) return [[7,7]];
   if(!limit || cands.length<=limit) return cands;
-  // Quick-score each candidate to pick top N — evaluate() 기준으로 통일
+  // Quick-score each candidate to pick top N
   const scored=cands.map(([r,c])=>{
     let s=0;
-    bd[r][c]=aiCol; s+=evaluate(bd,aiCol)*2; bd[r][c]=EMPTY;
-    bd[r][c]=plCol; s+=evaluate(bd,aiCol);   bd[r][c]=EMPTY;
+    bd[r][c]=WHITE; s+=evalColor(bd,WHITE)*2; bd[r][c]=EMPTY;
+    bd[r][c]=BLACK; s+=evalColor(bd,BLACK);   bd[r][c]=EMPTY;
     return {r,c,s};
   });
   scored.sort((a,b)=>b.s-a.s);
@@ -814,7 +814,7 @@ function minimax(bd, depth, alpha, beta, maximizing, aiCol, plCol) {
 
   // 후보 제한: 깊이가 깊을수록 더 좁게
   const limit = depth>=3 ? 8 : depth===2 ? 12 : 20;
-  const cands=getCandidates(bd,limit,aiCol,plCol);
+  const cands=getCandidates(bd,limit);
 
   if (maximizing) {
     let best=-Infinity;
@@ -844,7 +844,7 @@ function minimax(bd, depth, alpha, beta, maximizing, aiCol, plCol) {
 }
 
 function getBestMove(bd, aiCol, plCol, depth) {
-  const cands=getCandidates(bd, null, aiCol, plCol);
+  const cands=getCandidates(bd, null);
 
   // 즉시 이기는 수
   for (const [r,c] of cands) {
@@ -860,7 +860,7 @@ function getBestMove(bd, aiCol, plCol, depth) {
     bd[r][c]=EMPTY;
   }
 
-  const topCands=getCandidates(bd, depth>=4?10:16, aiCol, plCol);
+  const topCands=getCandidates(bd, depth>=4?10:16);
   let best=-Infinity, bestMove=topCands[0]||[7,7];
   for (const [r,c] of topCands) {
     if(aiCol===BLACK&&isForbidden(bd,r,c)) continue;
