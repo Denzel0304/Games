@@ -819,12 +819,8 @@ window.addEventListener('popstate', () => {
 
 function enterGameScreen() {
   onGameScreen = true;
-  // pushState only once per main→game transition; restarts reuse the same entry
-  if (history.state && history.state.cf === 'game') {
-    history.replaceState({ cf: 'game' }, '');
-  } else {
-    history.pushState({ cf: 'game' }, '');
-  }
+  // 게임 진입은 항상 replaceState — push 안 함
+  history.replaceState({ cf: 'game' }, '');
 }
 
 function openModal(id) {
@@ -836,6 +832,7 @@ function openModal(id) {
 }
 
 function closeModal(id) {
+  // popstate → _closeModal 순으로 처리됨
   history.back();
 }
 
@@ -845,6 +842,13 @@ function _closeModal(id) {
   el.classList.remove('open');
   const idx = modalStack.lastIndexOf(id);
   if (idx !== -1) modalStack.splice(idx, 1);
+}
+
+function closeAllModals() {
+  [...modalStack].forEach(id => {
+    document.getElementById(id)?.classList.remove('open');
+  });
+  modalStack = [];
 }
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -862,8 +866,7 @@ function showScreen(id) {
 }
 
 function goMain() {
-  modalStack.forEach(id => document.getElementById(id)?.classList.remove('open'));
-  modalStack = [];
+  closeAllModals();
   gameActive = false;
   onGameScreen = false;
   showScreen('screen-main');
@@ -911,6 +914,8 @@ function startGame() {
 
 function restartGame() {
   _closeModal('modal-result');
+  // modal pushState entry를 game으로 덮어써서 스택 증가 방지
+  history.replaceState({ cf: 'game' }, '');
   startGame();
 }
 
