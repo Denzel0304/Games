@@ -159,8 +159,8 @@
         1/50
         <span class="cost" id="costLabel2">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn4" data-div="250">
-        1/250
+      <button class="spin betBtn" id="betBtn4" data-div="25">
+        1/25
         <span class="cost" id="costLabel4">-</span>
       </button>
       <button class="spin betBtn" id="betBtn7" data-div="10">
@@ -554,7 +554,7 @@
     betBtns.forEach(function(b){
       var div = parseInt(b.dataset.div, 10);
       var amt = calcBet(div);
-      b.querySelector('.cost').textContent = fmtCoins(amt) + '코인';
+      b.querySelector('.cost').textContent = fmtCoins(amt);
     });
   }
 
