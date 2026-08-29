@@ -443,8 +443,8 @@ const BASE_SIZE_MAP = {
 };
 
 const FOOD_TO_SPAWN = 100;   // 산란에 필요한 먹이 수
-const FRY_PER_SPAWN_MIN = 10;
-const FRY_PER_SPAWN_MAX = 15;
+const FRY_PER_SPAWN_MIN = 25;
+const FRY_PER_SPAWN_MAX = 35;
 const FRY_SIZE_RATIO = 0.27;   // 성어 대비 치어 초기 크기
 const FEMALE_SIZE_RATIO = 0.80; // 수컷 대비 암컷 크기
 const FEED_STEPS = [1,3,5,7,9];
@@ -1593,7 +1593,7 @@ function startGame(type){
         if(remaining > 0){
             window._spawnInterval = setInterval(()=>{
                 spawnOneFry(adultTop, adultBottom);
-            }, 10000);
+            }, 5000);
             showToast(`🐟 산란 재개! (${sp.born}/${sp.total} 완료)`);
         } else {
             spawningActive = false;
@@ -1783,7 +1783,7 @@ function startSpawning(tankTop, tankBottom){
     // 10초마다 1마리 생성 인터벌
     window._spawnInterval = setInterval(()=>{
         spawnOneFry(tankTop, tankBottom);
-    }, 10000);
+    }, 5000);
 }
 
 function spawnOneFry(tankTop, tankBottom){
