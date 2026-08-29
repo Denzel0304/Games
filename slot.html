@@ -151,21 +151,21 @@
     <div class="message" id="message">버튼을 눌러 행운을 돌려보세요</div>
 
     <div class="betRow" id="betRow">
-      <button class="spin betBtn" id="betBtn1" data-mult="1">
-        X1
-        <span class="cost">20코인</span>
+      <button class="spin betBtn" id="betBtn1" data-div="20">
+        1/20
+        <span class="cost" id="costLabel1">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn2" data-mult="2">
-        X2
-        <span class="cost">40코인</span>
+      <button class="spin betBtn" id="betBtn2" data-div="10">
+        1/10
+        <span class="cost" id="costLabel2">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn4" data-mult="4">
-        X4
-        <span class="cost">80코인</span>
+      <button class="spin betBtn" id="betBtn4" data-div="5">
+        1/5
+        <span class="cost" id="costLabel4">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn7" data-mult="7">
-        X7
-        <span class="cost">140코인</span>
+      <button class="spin betBtn" id="betBtn7" data-div="3">
+        1/3
+        <span class="cost" id="costLabel7">-</span>
       </button>
     </div>
   </main>
@@ -506,8 +506,8 @@
   function doSpin(){
     if(spinning) return false;
     if(coins<=0){ setCoins(300); flash('코인이 모두 소진되어 300코인으로 다시 시작합니다',false); return false; }
-    var cost = COST * currentMult;
-    if(coins<cost){ flash('코인이 부족해요! 더 적은 배수를 선택해보세요',false); return false; }
+    var cost = calcBet(currentDiv);
+    if(coins<cost){ flash('코인이 부족해요!',false); return false; }
     spinning=true; setBetBtnsDisabled(true);
     display.classList.remove('win','shake');
     reels.forEach(function(r){ r.classList.remove('hit'); });
@@ -529,7 +529,7 @@
       stopWhir();
       var res=score(grid);
       if(res.total>0){
-        setCoins(coins+res.total*currentMult);
+        setCoins(coins+res.total*cost);
         res.hitCells.forEach(function(i){ reels[i].classList.add('hit'); });
         drawLines(res.wins);
         flash(winMessage(res), res.jackpot||res.wins.length>=2);
@@ -542,14 +542,30 @@
     });
   }
 
-  // ---------- 베팅 배수 ----------
-  var currentMult = 1;
+  // ---------- 베팅 (비례) ----------
+  var currentDiv = 20; // 기본: 1/20
+  var currentBet = 20; // 실제 베팅 코인 수
+
+  function calcBet(div){
+    return Math.max(20, Math.floor(coins / div));
+  }
+
+  function updateBetLabels(){
+    betBtns.forEach(function(b){
+      var div = parseInt(b.dataset.div, 10);
+      var amt = calcBet(div);
+      b.querySelector('.cost').textContent = fmtCoins(amt) + '코인';
+    });
+  }
+
   function setBetBtnsDisabled(disabled){
     betBtns.forEach(function(b){ b.disabled = disabled; });
+    if(!disabled) updateBetLabels();
   }
-  function selectMult(mult){
-    currentMult = mult;
-    betBtns.forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.mult,10)===mult); });
+
+  function selectDiv(div){
+    currentDiv = div;
+    betBtns.forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.div,10)===div); });
   }
 
   // ---------- init ----------
@@ -557,13 +573,14 @@
   muteBtn.innerHTML=SPK_ON;
   betBtns.forEach(function(b){
     b.addEventListener('click',function(){
-      var prevMult = currentMult;
-      selectMult(parseInt(b.dataset.mult,10));
+      var prevDiv = currentDiv;
+      selectDiv(parseInt(b.dataset.div,10));
       var started = doSpin();
-      if(started===false) selectMult(prevMult);
+      if(started===false) selectDiv(prevDiv);
     });
   });
-  selectMult(1);
+  selectDiv(20);
+  updateBetLabels();
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
