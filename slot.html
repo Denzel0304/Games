@@ -151,20 +151,20 @@
     <div class="message" id="message">버튼을 눌러 행운을 돌려보세요</div>
 
     <div class="betRow" id="betRow">
-      <button class="spin betBtn" id="betBtn1" data-div="20">
-        1/20
+      <button class="spin betBtn" id="betBtn1" data-div="100">
+        1/100
         <span class="cost" id="costLabel1">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn2" data-div="10">
-        1/10
+      <button class="spin betBtn" id="betBtn2" data-div="50">
+        1/50
         <span class="cost" id="costLabel2">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn4" data-div="5">
-        1/5
+      <button class="spin betBtn" id="betBtn4" data-div="250">
+        1/250
         <span class="cost" id="costLabel4">-</span>
       </button>
-      <button class="spin betBtn" id="betBtn7" data-div="3">
-        1/3
+      <button class="spin betBtn" id="betBtn7" data-div="10">
+        1/10
         <span class="cost" id="costLabel7">-</span>
       </button>
     </div>
@@ -543,7 +543,7 @@
   }
 
   // ---------- 베팅 (비례) ----------
-  var currentDiv = 20; // 기본: 1/20
+  var currentDiv = 100; // 기본: 1/100
   var currentBet = 20; // 실제 베팅 코인 수
 
   function calcBet(div){
@@ -579,7 +579,7 @@
       if(started===false) selectDiv(prevDiv);
     });
   });
-  selectDiv(20);
+  selectDiv(100);
   updateBetLabels();
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
