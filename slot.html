@@ -32,6 +32,13 @@
     color:var(--gold); text-shadow:0 2px 0 #b9791a, 0 0 22px rgba(255,210,74,.35); letter-spacing:.5px;
     margin:0;
   }
+  .reset{
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+    width:42px; height:42px; border-radius:50%; border:2px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06); cursor:pointer; display:grid; place-items:center;
+    font-size:20px; color:var(--cream); transition:transform .12s ease;
+  }
+  .reset:active{ transform:translateY(-50%) scale(.9); }
   .mute{
     position:absolute; right:0; top:50%; transform:translateY(-50%);
     width:42px; height:42px; border-radius:50%; border:2px solid rgba(255,255,255,.18);
@@ -131,6 +138,7 @@
 
   <main class="machine">
     <div class="topbar">
+      <button class="reset" id="resetBtn" aria-label="코인 초기화">↺</button>
       <h1 class="title">오늘의 행운 슬롯</h1>
       <button class="mute" id="muteBtn" aria-label="소리 켜고 끄기"></button>
     </div>
@@ -213,8 +221,10 @@
   }
 
   var COINS_KEY = 'luckyslot_coins';
+  var INIT_COINS = 100000;
   var savedCoins = parseInt(localStorage.getItem(COINS_KEY), 10);
-  var coins = (!isNaN(savedCoins) && savedCoins > 0) ? savedCoins : 300;
+  if(isNaN(savedCoins) || savedCoins < 20){ savedCoins = INIT_COINS; localStorage.setItem(COINS_KEY, INIT_COINS); }
+  var coins = savedCoins;
   var spinning=false, muted=false;
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
@@ -501,7 +511,7 @@
 
   function doSpin(){
     if(spinning) return false;
-    if(coins<=0){ setCoins(300); flash('코인이 모두 소진되어 300코인으로 다시 시작합니다',false); return false; }
+    if(coins<=0){ setCoins(INIT_COINS); flash('코인이 모두 소진되어 100,000코인으로 다시 시작합니다',false); return false; }
     var cost = calcBet(currentDiv);
     if(coins<cost){ flash('코인이 부족해요!',false); return false; }
     spinning=true; setBetBtnsDisabled(true);
@@ -572,6 +582,11 @@
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
     if(!muted) beep(523,0.08,'triangle',0.15);
+  });
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    if(spinning) return;
+    setCoins(INIT_COINS);
+    flash('100,000코인으로 초기화했습니다', false);
   });
 
   function refit(){ resize(); fitBoard(); }
