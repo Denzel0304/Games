@@ -153,19 +153,15 @@
     <div class="betRow" id="betRow">
       <button class="spin betBtn" id="betBtn1" data-div="100">
         1/100
-        <span class="cost" id="costLabel1">-</span>
       </button>
       <button class="spin betBtn" id="betBtn2" data-div="50">
         1/50
-        <span class="cost" id="costLabel2">-</span>
       </button>
       <button class="spin betBtn" id="betBtn4" data-div="25">
         1/25
-        <span class="cost" id="costLabel4">-</span>
       </button>
       <button class="spin betBtn" id="betBtn7" data-div="10">
         1/10
-        <span class="cost" id="costLabel7">-</span>
       </button>
     </div>
   </main>
@@ -450,14 +446,14 @@
 
   function fmtCoins(n){ return Math.round(n).toLocaleString('en-US'); }
 
-  function setCoins(target){
+  function setCoins(target, cb){
     var start=coins, diff=target-start;
-    if(diff===0){ coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); return; }
+    if(diff===0){ coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); if(cb) cb(); return; }
     var dur=550, t0=performance.now();
     (function frame(now){
       var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
       coinsEl.textContent=fmtCoins(start+diff*e);
-      if(p<1) requestAnimationFrame(frame); else { coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); }
+      if(p<1) requestAnimationFrame(frame); else { coinsEl.textContent=fmtCoins(target); coins=target; localStorage.setItem(COINS_KEY, coins); if(cb) cb(); }
     })(performance.now());
   }
 
@@ -550,17 +546,9 @@
     return Math.max(20, Math.floor(coins / div));
   }
 
-  function updateBetLabels(){
-    betBtns.forEach(function(b){
-      var div = parseInt(b.dataset.div, 10);
-      var amt = calcBet(div);
-      b.querySelector('.cost').textContent = fmtCoins(amt);
-    });
-  }
 
   function setBetBtnsDisabled(disabled){
     betBtns.forEach(function(b){ b.disabled = disabled; });
-    if(!disabled) updateBetLabels();
   }
 
   function selectDiv(div){
@@ -580,7 +568,6 @@
     });
   });
   selectDiv(100);
-  updateBetLabels();
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
