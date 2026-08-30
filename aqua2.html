@@ -1083,8 +1083,8 @@ class Fish {
         ctx.translate(this.x, this.y);
         const facingLeft = Math.cos(this.angle) < 0;
         if(facingLeft){
+            ctx.rotate(Math.PI - this.angle);
             ctx.scale(-1, 1);
-            ctx.rotate(this.angle - Math.PI);
         } else {
             ctx.rotate(this.angle);
         }
