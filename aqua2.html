@@ -1082,8 +1082,9 @@ class Fish {
         ctx.save();
         ctx.translate(this.x, this.y);
         const facingLeft = Math.cos(this.angle) < 0;
-        if(facingLeft){ ctx.scale(-1,1); ctx.rotate(Math.PI-this.angle); }
-        else { ctx.rotate(this.angle); }
+        const tiltAngle = facingLeft ? -(Math.PI - this.angle) : this.angle;
+        ctx.rotate(tiltAngle);
+        if(facingLeft){ ctx.scale(-1, 1); }
         const t = Date.now();
         const s = this.size;
         const tw = Math.sin(t/this.tailSpeed)*0.28;
