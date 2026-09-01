@@ -159,21 +159,17 @@
     <div class="message" id="message">버튼을 눌러 행운을 돌려보세요</div>
 
     <div class="betRow" id="betRow">
-      <button class="spin betBtn" id="betBtnS" data-level="safe">
-        🟢 안전
-        <span class="cost">0.5%</span>
+      <button class="spin betBtn" id="betBtn1" data-div="100">
+        1/100
       </button>
-      <button class="spin betBtn" id="betBtnN" data-level="normal">
-        🟡 일반
-        <span class="cost">2%</span>
+      <button class="spin betBtn" id="betBtn2" data-div="50">
+        1/50
       </button>
-      <button class="spin betBtn" id="betBtnH" data-level="high">
-        🔴 위험
-        <span class="cost">5%</span>
+      <button class="spin betBtn" id="betBtn4" data-div="25">
+        1/25
       </button>
-      <button class="spin betBtn" id="betBtnA" data-level="allin" style="background:linear-gradient(180deg,#ff7a7a,#e03030 45%,#b01010);box-shadow:0 6px 0 #700000,0 12px 24px rgba(180,0,0,.4);color:#fff3f3;">
-        💀 올인
-        <span class="cost">90%</span>
+      <button class="spin betBtn" id="betBtn7" data-div="10">
+        1/10
       </button>
     </div>
   </main>
@@ -194,7 +190,7 @@
 
   var SYMBOLS = ['cherry','lemon','orange','bell','star','diamond','seven'];
   var COMMON  = ['cherry','lemon','orange','bell','star'];
-  var TRIPLE  = { seven:100, diamond:60, star:35, bell:25, orange:15, lemon:15, cherry:20 };
+  var TRIPLE  = { seven:30, diamond:18, star:10, bell:7, orange:4, lemon:4, cherry:5 };
   var COST = 20;
 
   var LINES = [
@@ -208,10 +204,10 @@
   var coinsEl = document.getElementById('coins');
   var msgEl   = document.getElementById('message');
   var betBtns = [
-    document.getElementById('betBtnS'),
-    document.getElementById('betBtnN'),
-    document.getElementById('betBtnH'),
-    document.getElementById('betBtnA')
+    document.getElementById('betBtn1'),
+    document.getElementById('betBtn2'),
+    document.getElementById('betBtn4'),
+    document.getElementById('betBtn7')
   ];
   var display = document.getElementById('display');
   var muteBtn = document.getElementById('muteBtn');
@@ -393,17 +389,17 @@
   function decideGrid(){
     var g=[]; for(var i=0;i<9;i++) g.push(pick(SYMBOLS));
     var r=Math.random();
-    if(r<0.01){
+    if(r<0.005){
       // 7 올매치 (0.5%)
       g=Array(9).fill('seven');
-    } else if(r<0.035){
-      // 일반 심볼 올매치 (3%)
+    } else if(r<0.015){
+      // 일반 심볼 올매치 (1%)
       var s=pick(COMMON); g=Array(9).fill(s);
-    } else if(r<0.055){
-      // 7 라인 1개 (2%)
+    } else if(r<0.030){
+      // 7 라인 1개 (1.5%)
       pick(LINES).cells.forEach(function(i){ g[i]='seven'; });
-    } else if(r<0.085){
-      // 3줄 동시 적중 (3%)
+    } else if(r<0.050){
+      // 3줄 동시 적중 (2%)
       var s3=pick(COMMON);
       var chosen=[]; var pool=LINES.slice();
       for(var k=0;k<3;k++){
@@ -411,19 +407,19 @@
         pool[idx].cells.forEach(function(i){ g[i]=s3; });
         chosen.push(pool[idx]); pool.splice(idx,1);
       }
-    } else if(r<0.135){
-      // 2줄 동시 적중 (5%)
+    } else if(r<0.085){
+      // 2줄 동시 적중 (3.5%)
       var s2=pick(COMMON);
       var p2=LINES.slice();
       var i2=Math.floor(Math.random()*p2.length);
       p2[i2].cells.forEach(function(i){ g[i]=s2; }); p2.splice(i2,1);
       var i2b=Math.floor(Math.random()*p2.length);
       p2[i2b].cells.forEach(function(i){ g[i]=s2; });
-    } else if(r<0.20){
-      // 1줄 적중 (6.5%)
+    } else if(r<0.120){
+      // 1줄 적중 (3.5%)
       var s1=pick(COMMON); pick(LINES).cells.forEach(function(i){ g[i]=s1; });
     }
-    // 80%: 꽝 — g 그대로 반환
+    // 88%: 꽝 — g 그대로 반환
     return g;
   }
 
@@ -516,7 +512,7 @@
   function doSpin(){
     if(spinning) return false;
     if(coins<=0){ setCoins(INIT_COINS); flash('코인이 모두 소진되어 100,000코인으로 다시 시작합니다',false); return false; }
-    var cost = calcBet(currentLevel);
+    var cost = calcBet(currentDiv);
     if(coins<cost){ flash('코인이 부족해요!',false); return false; }
     spinning=true; setBetBtnsDisabled(true);
     display.classList.remove('win','shake');
@@ -575,32 +571,24 @@
     });
   }
 
-  // ---------- 베팅 (고정 레벨) ----------
-  var currentLevel = 'normal';
+  // ---------- 베팅 (비례) ----------
+  var currentDiv = 100;
   var lossStreak = 0; // 연속 꽝 카운터
 
-  // 레벨별 고정 베팅액
-  function calcBet(level){
-    if(level === 'safe')   return 500;
-    if(level === 'normal') return 2000;
-    if(level === 'high')   return 5000;
-    if(level === 'allin')  return Math.max(500, Math.floor(coins * 0.9));
-    return 2000;
+  function calcBet(div){
+    return Math.max(20, Math.floor(coins / div));
   }
-
-  // 버튼 라벨은 퍼센트 고정 — 별도 갱신 불필요
 
   function setBetBtnsDisabled(disabled){
     betBtns.forEach(function(b){ b.disabled = disabled; });
   }
 
-  function selectLevel(level){
-    currentLevel = level;
-    betBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.level === level); });
+  function selectDiv(div){
+    currentDiv = div;
+    betBtns.forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.div,10)===div); });
   }
 
   // ---------- 니어미스 판정 ----------
-  // 당첨 직전: 3칸 중 2칸이 같은 심볼인 라인이 있으면 true
   function isNearMiss(grid){
     return LINES.some(function(L){
       var a=grid[L.cells[0]], b=grid[L.cells[1]], c=grid[L.cells[2]];
@@ -624,13 +612,13 @@
   muteBtn.innerHTML=SPK_ON;
   betBtns.forEach(function(b){
     b.addEventListener('click',function(){
-      var prevLevel = currentLevel;
-      selectLevel(b.dataset.level);
+      var prevDiv = currentDiv;
+      selectDiv(parseInt(b.dataset.div,10));
       var started = doSpin();
-      if(started===false) selectLevel(prevLevel);
+      if(started===false) selectDiv(prevDiv);
     });
   });
-  selectLevel('normal');
+  selectDiv(100);
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
