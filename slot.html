@@ -211,7 +211,7 @@
   var COINS_KEY = 'luckyslot_coins';
   var INIT_COINS = 100000;
   var savedCoins = parseInt(localStorage.getItem(COINS_KEY), 10);
-  if(isNaN(savedCoins) || savedCoins < 20){ savedCoins = INIT_COINS; localStorage.setItem(COINS_KEY, INIT_COINS); }
+  if(isNaN(savedCoins) || savedCoins < 1000){ savedCoins = INIT_COINS; localStorage.setItem(COINS_KEY, INIT_COINS); }
   var coins = savedCoins;
   var spinning=false, muted=false;
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -499,7 +499,7 @@
 
   function doSpin(){
     if(spinning) return false;
-    if(coins<=0){ setCoins(INIT_COINS); flash('코인이 모두 소진되어 100,000코인으로 다시 시작합니다',false); return false; }
+    if(coins<1000){ setCoins(INIT_COINS); flash('코인이 모두 소진되어 100,000코인으로 다시 시작합니다',false); return false; }
     var cost = calcBet(currentPct);
     if(coins<cost){ flash('코인이 부족해요!',false); return false; }
     spinning=true; setBetBtnsDisabled(true);
