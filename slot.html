@@ -499,7 +499,7 @@
 
   function doSpin(){
     if(spinning) return false;
-    if(coins<1000){ setCoins(INIT_COINS); flash('코인이 모두 소진되어 100,000코인으로 다시 시작합니다',false); return false; }
+    if(coins<1000){ setCoins(INIT_COINS); flash('100,000 코인이 충전되었습니다.',false); return false; }
     var cost = calcBet(currentPct);
     if(coins<cost){ flash('코인이 부족해요!',false); return false; }
     spinning=true; setBetBtnsDisabled(true);
