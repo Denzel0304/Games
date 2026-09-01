@@ -551,9 +551,7 @@
         if(isNearMiss(grid)){
           var nearMissMsg = pick(['아까워!! 딱 하나 차이였어요!','한 끗 차이...! 다음엔 꼭!','거의 다 왔어요, 한 번 더!']);
           flash(nearMissMsg, false);
-          // 아슬아슬한 틱 사운드
-          setTimeout(function(){ beep(300,0.12,'square',0.2); },80);
-          setTimeout(function(){ beep(220,0.15,'square',0.18); },220);
+
         } else {
           // 연속꽝 메시지
           if(lossStreak >= 7){
