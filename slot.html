@@ -121,7 +121,8 @@
   .spin .cost{ display:block; font-size:12px; font-family:'Fredoka',sans-serif; color:#7a4d12; margin-top:2px; letter-spacing:1px; }
 
   .betRow{ flex:0 0 auto; display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-  .betBtn{ width:100%; padding:10px 4px; font-size:18px; letter-spacing:1px; line-height:1.2; }
+  .betBtn{ width:100%; aspect-ratio:1/1; padding:0; font-size:18px; letter-spacing:1px; line-height:1.2; }
+  .betBtn .pt{ font-size:10px; letter-spacing:0; display:block; }
   .betBtn .cost{ font-size:11px; }
   .betBtn.active{ box-shadow: inset 0 0 0 3px var(--mint), 0 6px 0 #b9791a, 0 12px 24px rgba(245,166,35,.35); }
 
@@ -159,7 +160,7 @@
     <div class="message" id="message">버튼을 눌러 행운을 돌려보세요</div>
 
     <div class="betRow" id="betRow">
-      <button class="spin betBtn" id="betBtn1" data-pct="0" data-fixed="100">100<br>포인트</button>
+      <button class="spin betBtn" id="betBtn1" data-pct="0" data-fixed="100">100<span class="pt">포인트</span></button>
       <button class="spin betBtn" id="betBtn2" data-pct="10">10%</button>
       <button class="spin betBtn" id="betBtn3" data-pct="30">30%</button>
       <button class="spin betBtn" id="betBtn4" data-pct="60">60%</button>
@@ -619,7 +620,6 @@
       if(started===false) selectPct(prevPct, prevFixed !== null ? prevFixed : undefined);
     });
   });
-  selectPct(10);
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
