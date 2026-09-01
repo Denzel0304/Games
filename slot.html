@@ -161,19 +161,19 @@
     <div class="betRow" id="betRow">
       <button class="spin betBtn" id="betBtnS" data-level="safe">
         🟢 안전
-        <span class="cost" id="costS">500</span>
+        <span class="cost">0.5%</span>
       </button>
       <button class="spin betBtn" id="betBtnN" data-level="normal">
         🟡 일반
-        <span class="cost" id="costN">2,000</span>
+        <span class="cost">2%</span>
       </button>
       <button class="spin betBtn" id="betBtnH" data-level="high">
         🔴 위험
-        <span class="cost" id="costH">5,000</span>
+        <span class="cost">5%</span>
       </button>
       <button class="spin betBtn" id="betBtnA" data-level="allin" style="background:linear-gradient(180deg,#ff7a7a,#e03030 45%,#b01010);box-shadow:0 6px 0 #700000,0 12px 24px rgba(180,0,0,.4);color:#fff3f3;">
         💀 올인
-        <span class="cost" id="costA">90%</span>
+        <span class="cost">90%</span>
       </button>
     </div>
   </main>
@@ -525,7 +525,6 @@
     linesSvg.innerHTML='';
     try{ if(audio().resume) audio().resume(); }catch(e){}
     setCoins(coins-cost);
-    updateCostLabels();
     msgEl.classList.remove('big'); msgEl.textContent='돌리는 중...';
     beep(660,0.06,'square',0.18); startWhir();
 
@@ -544,7 +543,6 @@
         lossStreak = 0;
         display.style.filter = '';
         setCoins(coins+res.total*cost);
-        updateCostLabels();
         res.hitCells.forEach(function(i){ reels[i].classList.add('hit'); });
         drawLines(res.wins);
         flash(winMessage(res), res.jackpot||res.wins.length>=2);
@@ -590,14 +588,7 @@
     return 2000;
   }
 
-  // 베팅 버튼 cost 텍스트 갱신
-  function updateCostLabels(){
-    var el;
-    el = document.getElementById('costS'); if(el) el.textContent = fmtCoins(500);
-    el = document.getElementById('costN'); if(el) el.textContent = fmtCoins(2000);
-    el = document.getElementById('costH'); if(el) el.textContent = fmtCoins(5000);
-    el = document.getElementById('costA'); if(el) el.textContent = fmtCoins(Math.max(500, Math.floor(coins * 0.9)));
-  }
+  // 버튼 라벨은 퍼센트 고정 — 별도 갱신 불필요
 
   function setBetBtnsDisabled(disabled){
     betBtns.forEach(function(b){ b.disabled = disabled; });
@@ -606,7 +597,6 @@
   function selectLevel(level){
     currentLevel = level;
     betBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.level === level); });
-    updateCostLabels();
   }
 
   // ---------- 니어미스 판정 ----------
@@ -641,7 +631,6 @@
     });
   });
   selectLevel('normal');
-  updateCostLabels();
   coinsEl.textContent = fmtCoins(coins);
   muteBtn.addEventListener('click',function(){
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
@@ -652,7 +641,6 @@
     lossStreak = 0;
     display.style.filter = '';
     setCoins(INIT_COINS);
-    updateCostLabels();
     flash('100,000코인으로 초기화했습니다', false);
   });
 
