@@ -246,9 +246,13 @@
 
         <!-- 입금 섹션 -->
         <div class="modal-section active" id="sectionDeposit">
-          <div class="modal-label">변환할 코인 입력 (조 단위)</div>
-          <div class="modal-input-row">
-            <input class="modal-input" id="depositInput" type="number" min="0" placeholder="변환할 조 수 (예: 5)">
+          <div class="modal-label">변환할 코인 (조 단위)</div>
+          <div class="modal-input-row" style="gap:8px;align-items:center;">
+            <div style="flex:2;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:10px;color:#cbb6e8;letter-spacing:.5px;margin-bottom:2px;">보유 코인 (조)</div>
+              <div style="font-size:15px;font-family:'Fredoka',sans-serif;color:var(--gold);font-weight:600;" id="depositAvailJo">0 조</div>
+            </div>
+            <input class="modal-input" id="depositInput" type="number" min="0" placeholder="입력" style="flex:1;min-width:0;">
           </div>
           <div class="modal-result" id="depositResult">금괴 <strong>0</strong> 개로 변환됩니다</div>
           <button class="modal-confirm" id="depositConfirm" disabled>입금하기</button>
@@ -604,9 +608,16 @@
 
   function fmt조(n){ return (n/1e12).toLocaleString('en-US', {maximumFractionDigits:2}); }
 
+  function fmtJo(n){ return Math.floor(n).toLocaleString('en-US'); } // 조 단위 쉼표 포맷
+
   function refreshModalInfo(){
     modalGoldCount.textContent = goldBars.toLocaleString('en-US');
-    modalGoldWorth.textContent = (goldBars).toLocaleString('en-US');
+    modalGoldWorth.textContent = goldBars.toLocaleString('en-US');
+    var availJoEl = document.getElementById('depositAvailJo');
+    if(availJoEl){
+      var jo = Math.floor(coins / GOLD_UNIT);
+      availJoEl.textContent = fmtJo(jo) + ' 조';
+    }
   }
 
   function openGoldModal(){
@@ -614,8 +625,8 @@
     refreshModalInfo();
     depositInput.value = '';
     withdrawInput.value = '';
-    depositResult.innerHTML = '금괴 <strong>0</strong>개로 변환됩니다';
-    withdrawResult.innerHTML = '코인 <strong>0</strong>조로 환전됩니다';
+    depositResult.innerHTML = '금괴 <strong>0</strong> 개로 변환됩니다';
+    withdrawResult.innerHTML = '코인 <strong>0</strong> 조로 환전됩니다';
     depositConfirm.disabled = true;
     withdrawConfirm.disabled = true;
     goldModal.classList.remove('hidden');
