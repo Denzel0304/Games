@@ -226,22 +226,19 @@
 
   <main class="machine">
     <div class="topbar">
-      <button class="reset" id="resetBtn" aria-label="코인 초기화" style="position:absolute;left:0;top:50%;transform:translateY(-50%);">↺</button>
+      <button class="goldbar-btn" id="goldbarBtn" aria-label="금괴 금고" style="position:absolute;left:0;top:50%;transform:translateY(-50%);">
+        🪙
+        <span class="goldbar-badge" id="goldbarBadge" style="display:none">0</span>
+      </button>
       <h1 class="title">오늘의 행운 슬롯</h1>
-      <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:8px;align-items:center;">
-        <button class="goldbar-btn" id="goldbarBtn" aria-label="금괴 금고" style="position:relative;transform:none;top:auto;left:auto;">
-          🪙
-          <span class="goldbar-badge" id="goldbarBadge" style="display:none">0</span>
-        </button>
-        <button class="mute" id="muteBtn" aria-label="소리 켜고 끄기" style="position:relative;transform:none;top:auto;right:auto;"></button>
-      </div>
+      <button class="mute" id="muteBtn" aria-label="소리 켜고 끄기"></button>
     </div>
 
     <!-- 금괴 모달 -->
     <div class="modal-overlay hidden" id="goldModal">
       <div class="modal-box">
         <div class="modal-title">🪙 금괴 금고</div>
-        <div class="modal-stock">보유 금괴: <strong id="modalGoldCount">0</strong>개 &nbsp;(= <span id="modalGoldWorth">0</span>조 코인)</div>
+        <div class="modal-stock">보유 금괴 : <strong id="modalGoldCount">0</strong> 개 &nbsp;(= <span id="modalGoldWorth">0</span> 조 코인)</div>
         <div class="modal-tabs">
           <button class="modal-tab active" id="tabDeposit">입금 (코인→금괴)</button>
           <button class="modal-tab" id="tabWithdraw">출금 (금괴→코인)</button>
@@ -249,11 +246,11 @@
 
         <!-- 입금 섹션 -->
         <div class="modal-section active" id="sectionDeposit">
-          <div class="modal-label">변환할 코인 입력</div>
+          <div class="modal-label">변환할 코인 입력 (조 단위)</div>
           <div class="modal-input-row">
-            <input class="modal-input" id="depositInput" type="number" min="0" placeholder="코인 수">
+            <input class="modal-input" id="depositInput" type="number" min="0" placeholder="변환할 조 수 (예: 5)">
           </div>
-          <div class="modal-result" id="depositResult">금괴 <strong>0</strong>개로 변환됩니다</div>
+          <div class="modal-result" id="depositResult">금괴 <strong>0</strong> 개로 변환됩니다</div>
           <button class="modal-confirm" id="depositConfirm" disabled>입금하기</button>
         </div>
 
@@ -656,48 +653,46 @@
     sectionWithdraw.classList.add('active'); sectionDeposit.classList.remove('active');
   });
 
-  // 입금 계산
+  // 입금 계산 (입력값 = 조 단위)
   depositInput.addEventListener('input', function(){
-    var val = Math.floor(parseFloat(this.value) || 0);
-    var bars = Math.floor(val / GOLD_UNIT);
-    var remainder = val - bars * GOLD_UNIT;
-    if(bars > 0 && val <= coins){
-      depositResult.innerHTML = '금괴 <strong>' + bars.toLocaleString('en-US') + '</strong>개 + 잔돈 ' + remainder.toLocaleString('en-US') + ' 코인';
+    var inputJo = Math.floor(parseFloat(this.value) || 0); // 입력값을 조로 해석
+    var bars = inputJo; // 1조 = 금괴 1개
+    var needed = bars * GOLD_UNIT;
+    if(bars > 0 && needed <= coins){
+      depositResult.innerHTML = '금괴 <strong>' + bars.toLocaleString('en-US') + '</strong> 개로 변환됩니다';
       depositConfirm.disabled = false;
-    } else if(bars > 0 && val > coins){
+    } else if(bars > 0 && needed > coins){
       depositResult.innerHTML = '<span style="color:var(--cherry)">코인이 부족합니다</span>';
       depositConfirm.disabled = true;
     } else {
-      depositResult.innerHTML = '금괴 <strong>0</strong>개로 변환됩니다 (최소 1조)';
+      depositResult.innerHTML = '금괴 <strong>0</strong> 개로 변환됩니다 (최소 1 조)';
       depositConfirm.disabled = true;
     }
   });
 
   depositConfirm.addEventListener('click', function(){
-    var val = Math.floor(parseFloat(depositInput.value) || 0);
-    var bars = Math.floor(val / GOLD_UNIT);
-    if(bars < 1 || val > coins) return;
-    var spent = bars * GOLD_UNIT;
+    var bars = Math.floor(parseFloat(depositInput.value) || 0);
+    var needed = bars * GOLD_UNIT;
+    if(bars < 1 || needed > coins) return;
     goldBars += bars; saveGold(); updateGoldBadge();
-    setCoins(coins - spent);
+    setCoins(coins - needed);
     refreshModalInfo();
     depositInput.value = '';
-    depositResult.innerHTML = '✅ 금괴 <strong>' + bars.toLocaleString('en-US') + '</strong>개 저장 완료!';
+    depositResult.innerHTML = '✅ 금괴 <strong>' + bars.toLocaleString('en-US') + '</strong> 개 저장 완료!';
     depositConfirm.disabled = true;
   });
 
-  // 출금 계산
+  // 출금 계산 (입력값 = 금괴 수)
   withdrawInput.addEventListener('input', function(){
     var bars = Math.floor(parseFloat(this.value) || 0);
     if(bars > 0 && bars <= goldBars){
-      var coins조 = bars;
-      withdrawResult.innerHTML = '코인 <strong>' + bars.toLocaleString('en-US') + '</strong>조로 환전됩니다';
+      withdrawResult.innerHTML = '코인 <strong>' + bars.toLocaleString('en-US') + '</strong> 조로 환전됩니다';
       withdrawConfirm.disabled = false;
     } else if(bars > goldBars){
       withdrawResult.innerHTML = '<span style="color:var(--cherry)">금괴가 부족합니다</span>';
       withdrawConfirm.disabled = true;
     } else {
-      withdrawResult.innerHTML = '코인 <strong>0</strong>조로 환전됩니다';
+      withdrawResult.innerHTML = '코인 <strong>0</strong> 조로 환전됩니다';
       withdrawConfirm.disabled = true;
     }
   });
@@ -709,7 +704,7 @@
     setCoins(coins + bars * GOLD_UNIT);
     refreshModalInfo();
     withdrawInput.value = '';
-    withdrawResult.innerHTML = '✅ <strong>' + bars.toLocaleString('en-US') + '</strong>개 출금, 코인 충전 완료!';
+    withdrawResult.innerHTML = '✅ <strong>' + bars.toLocaleString('en-US') + '</strong> 개 출금, 코인 충전 완료!';
     withdrawConfirm.disabled = true;
   });
 
@@ -895,14 +890,6 @@
     muted=!muted; muteBtn.innerHTML= muted?SPK_OFF:SPK_ON;
     if(!muted) beep(523,0.08,'triangle',0.15);
   });
-  document.getElementById('resetBtn').addEventListener('click',function(){
-    if(spinning) return;
-    lossStreak = 0;
-    display.style.filter = '';
-    setCoins(INIT_COINS);
-    flash('100,000코인으로 초기화했습니다', false);
-  });
-
   function refit(){ resize(); fitBoard(); }
   refit();
   requestAnimationFrame(refit);
