@@ -1102,30 +1102,6 @@ class Fish {
         // 치어 차수 표시 없음
     }
 
-    // 치어 다수일 때 간략 그리기 (타원 몸통 + 삼각 꼬리)
-    drawSimple(){
-        const s = this.size;
-        const h = this.hueShift;
-        // 종류별 색상 (hue 기준)
-        const hueMap = {clownfish:25,butterfly:48,angelfish:210,tang:215,puffer:45,wrasse:160,turtle:120,whale:220,ray:200};
-        const hue = (hueMap[this.type]||200) + h;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        const facingLeft = Math.cos(this.angle) < 0;
-        if(facingLeft){ ctx.scale(-1,1); ctx.rotate(Math.PI-this.angle); }
-        else { ctx.rotate(this.angle); }
-        // 몸통
-        ctx.fillStyle = `hsl(${hue},80%,55%)`;
-        ctx.beginPath(); ctx.ellipse(0,0,s,s*0.5,0,0,Math.PI*2); ctx.fill();
-        // 꼬리
-        ctx.beginPath();
-        ctx.moveTo(-s*0.8, 0);
-        ctx.lineTo(-s*1.35, -s*0.45);
-        ctx.lineTo(-s*1.35,  s*0.45);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
-    }
-
     // ── 물고기 그리기 (원본 로직 그대로) ──
     _drawFish(s, tw){
         switch(this.type){
@@ -2059,9 +2035,6 @@ function animate(){
     requestAnimationFrame(animate);
 
     const divY = Math.floor(canvas.height/2);
-    // 치어가 많을수록 간략 그리기로 전환 (update는 매 프레임 유지)
-    const fryCount = fryFishes.length;
-    const frySimple = fryCount > 60;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawTank();
@@ -2102,11 +2075,11 @@ function animate(){
     }
     if(ateFood) updateSpawnUI();
 
-    // 치어 업데이트 & 그리기 (60마리 초과 시 간략 그리기)
+    // 치어 업데이트 & 그리기
     for(let fish of fryFishes){
+        // 치어가 성어 크기 도달 시 - 같은 fryFoods지만 먹이 크기는 성어용으로 표시됨
         fish.update(fryFoods, divY, canvas.height);
-        if(frySimple) fish.drawSimple();
-        else fish.draw();
+        fish.draw();
     }
 
     // 산란 진행 중 타이머 표시
