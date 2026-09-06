@@ -447,8 +447,8 @@ const FRY_PER_SPAWN_MIN = 25;
 const FRY_PER_SPAWN_MAX = 35;
 const FRY_SIZE_RATIO = 0.27;   // 성어 대비 치어 초기 크기
 const FEMALE_SIZE_RATIO = 0.80; // 수컷 대비 암컷 크기
-const FEED_STEPS = [1,3,5,7,9];
-const FRY_FEED_STEPS = [10,30,50,70,90];
+const FEED_STEPS = [10,30,50];
+const FRY_FEED_STEPS = [50,100,150,200];
 
 // ═══════════════════════════════════════════════════════
 // 전역 상태
@@ -2029,12 +2029,22 @@ function drawTank(){
 // 메인 애니메이션 루프
 // ═══════════════════════════════════════════════════════
 let lastSave = 0;
+let _fryFrameSkip = 0; // 치어 프레임 스킵 카운터
 
 function animate(){
     if(!gameRunning){ window._animRunning=false; return; }
     requestAnimationFrame(animate);
 
     const divY = Math.floor(canvas.height/2);
+
+    // 치어 수에 따른 업데이트 빈도 조절 (그리기는 매 프레임)
+    const fryCount = fryFishes.length;
+    let fryUpdateEvery = 1; // 기본: 매 프레임
+    if(fryCount > 300) fryUpdateEvery = 4;
+    else if(fryCount > 150) fryUpdateEvery = 3;
+    else if(fryCount > 80) fryUpdateEvery = 2;
+    _fryFrameSkip++;
+    const doFryUpdate = (_fryFrameSkip % fryUpdateEvery === 0);
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawTank();
@@ -2075,10 +2085,9 @@ function animate(){
     }
     if(ateFood) updateSpawnUI();
 
-    // 치어 업데이트 & 그리기
+    // 치어 업데이트 & 그리기 (수가 많으면 update 빈도 낮춤)
     for(let fish of fryFishes){
-        // 치어가 성어 크기 도달 시 - 같은 fryFoods지만 먹이 크기는 성어용으로 표시됨
-        fish.update(fryFoods, divY, canvas.height);
+        if(doFryUpdate) fish.update(fryFoods, divY, canvas.height);
         fish.draw();
     }
 
