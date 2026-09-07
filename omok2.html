@@ -134,12 +134,12 @@
   /* ── INFO ROW ── */
   .info-row {
     flex-shrink: 0;
-    display: flex; gap: 6px;
-    padding: 5px 14px 4px;
+    display: flex; gap: 4px;
+    padding: 5px 8px 4px;
   }
-  .info-chip { flex: 1; background: var(--panel); border-radius: 9px; padding: 5px 9px; }
+  .info-chip { flex: 1; background: var(--panel); border-radius: 9px; padding: 5px 4px; text-align: center; }
   .info-chip-label { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.7px; }
-  .info-chip-value { font-size: 13px; font-weight: 700; color: var(--gold); }
+  .info-chip-value { font-size: 13px; font-weight: 700; color: var(--gold); white-space: nowrap; }
 
   /* ── CONTROLS ── */
   .controls {
@@ -1457,12 +1457,15 @@ function chooseColor(c) {
 }
 
 function startGame() {
+  const bc = document.getElementById('board-container');
+  bc.style.visibility = 'hidden';
   closeModal('modal-new');
   playerColor=selectedColor==='black'?BLACK:WHITE;
   aiColor=playerColor===BLACK?WHITE:BLACK;
   document.getElementById('black-label').textContent=playerColor===BLACK?'나':'AI';
   document.getElementById('white-label').textContent=playerColor===WHITE?'나':'AI';
   initGame();
+  setTimeout(()=>{ bc.style.visibility = ''; }, 250);
 }
 
 function rematch() {
