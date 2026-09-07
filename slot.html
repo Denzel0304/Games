@@ -658,6 +658,8 @@
     goldModal.classList.add('hidden');
     // 메인 화면 잠금 해제
     document.getElementById('gridLock').classList.remove('active');
+    // 레이아웃 복원
+    requestAnimationFrame(function(){ refit(); });
   }
 
   // 뒤로가기 → 모달만 닫기
