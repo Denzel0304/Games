@@ -164,9 +164,9 @@
     text-shadow:0 1px 0 #b9791a;
   }
   .modal-stock{
-    text-align:center; font-size:13px; color:#cbb6e8; margin-bottom:18px;
+    text-align:center; font-size:16px; color:#cbb6e8; margin-bottom:18px;
   }
-  .modal-stock strong{ color:var(--gold); font-size:16px; }
+  .modal-stock strong{ color:var(--gold); font-size:20px; }
   .modal-tabs{
     display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px;
   }
@@ -254,7 +254,7 @@
             </div>
             <input class="modal-input" id="depositInput" type="number" min="0" placeholder="입력" style="flex:1;min-width:0;">
           </div>
-          <div class="modal-result" id="depositResult">금괴 <strong>0</strong> 개로 변환됩니다</div>
+          <div class="modal-result" id="depositResult">금괴&nbsp;<strong>0</strong>&nbsp;개로 변환됩니다</div>
           <button class="modal-confirm" id="depositConfirm" disabled>입금하기</button>
         </div>
 
@@ -625,7 +625,7 @@
     refreshModalInfo();
     depositInput.value = '';
     withdrawInput.value = '';
-    depositResult.innerHTML = '금괴 <strong>0</strong> 개로 변환됩니다';
+    depositResult.innerHTML = '금괴&nbsp;<strong>0</strong>&nbsp;개로 변환됩니다';
     withdrawResult.innerHTML = '코인 <strong>0</strong> 조로 환전됩니다';
     depositConfirm.disabled = true;
     withdrawConfirm.disabled = true;
@@ -670,13 +670,13 @@
     var bars = inputJo; // 1조 = 금괴 1개
     var needed = bars * GOLD_UNIT;
     if(bars > 0 && needed <= coins){
-      depositResult.innerHTML = '금괴 <strong>' + bars.toLocaleString('en-US') + '</strong> 개로 변환됩니다';
+      depositResult.innerHTML = '금괴&nbsp;<strong>' + bars.toLocaleString('en-US') + '</strong>&nbsp;개로 변환됩니다';
       depositConfirm.disabled = false;
     } else if(bars > 0 && needed > coins){
       depositResult.innerHTML = '<span style="color:var(--cherry)">코인이 부족합니다</span>';
       depositConfirm.disabled = true;
     } else {
-      depositResult.innerHTML = '금괴 <strong>0</strong> 개로 변환됩니다 (최소 1 조)';
+      depositResult.innerHTML = '금괴&nbsp;<strong>0</strong>&nbsp;개로 변환됩니다 (최소 1 조)';
       depositConfirm.disabled = true;
     }
   });
@@ -689,7 +689,7 @@
     setCoins(coins - needed);
     refreshModalInfo();
     depositInput.value = '';
-    depositResult.innerHTML = '✅ 금괴 <strong>' + bars.toLocaleString('en-US') + '</strong> 개 저장 완료!';
+    depositResult.innerHTML = '✅ 금괴&nbsp;<strong>' + bars.toLocaleString('en-US') + '</strong>&nbsp;개 저장 완료!';
     depositConfirm.disabled = true;
   });
 
