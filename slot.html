@@ -261,8 +261,12 @@
         <!-- 출금 섹션 -->
         <div class="modal-section" id="sectionWithdraw">
           <div class="modal-label">출금할 금괴 수 입력</div>
-          <div class="modal-input-row">
-            <input class="modal-input" id="withdrawInput" type="number" min="0" placeholder="금괴 수">
+          <div class="modal-input-row" style="gap:8px;align-items:center;">
+            <div style="flex:2;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:10px;color:#cbb6e8;letter-spacing:.5px;margin-bottom:2px;">보유 금괴</div>
+              <div style="font-size:15px;font-family:'Fredoka',sans-serif;color:var(--gold);font-weight:600;" id="withdrawAvailBars">0 개</div>
+            </div>
+            <input class="modal-input" id="withdrawInput" type="number" min="0" placeholder="입력" style="flex:1;min-width:0;">
           </div>
           <div class="modal-result" id="withdrawResult">코인&nbsp;<strong>0</strong>&nbsp;조로 환전됩니다</div>
           <button class="modal-confirm" id="withdrawConfirm" disabled>출금하기</button>
@@ -617,6 +621,10 @@
     if(availJoEl){
       var jo = Math.floor(coins / GOLD_UNIT);
       availJoEl.textContent = fmtJo(jo) + ' 조';
+    }
+    var availBarsEl = document.getElementById('withdrawAvailBars');
+    if(availBarsEl){
+      availBarsEl.textContent = goldBars.toLocaleString('en-US') + ' 개';
     }
   }
 
