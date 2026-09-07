@@ -652,8 +652,8 @@ function drawBoard() {
   // Last move marker — 또렷하게
   if (gameHistory.length) {
     const last = gameHistory[gameHistory.length-1];
-    const mx = Math.round(gx(last.c)) + 0.5;
-    const my = Math.round(gy(last.r)) + 0.5;
+    const mx = Math.round(gx(last.c));
+    const my = Math.round(gy(last.r));
     const mr = Math.round(cellSize * 0.2);
     ctx.save();
     ctx.shadowColor = 'transparent';
