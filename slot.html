@@ -264,7 +264,7 @@
           <div class="modal-input-row">
             <input class="modal-input" id="withdrawInput" type="number" min="0" placeholder="금괴 수">
           </div>
-          <div class="modal-result" id="withdrawResult">코인 <strong>0</strong>조로 환전됩니다</div>
+          <div class="modal-result" id="withdrawResult">코인&nbsp;<strong>0</strong>&nbsp;조로 환전됩니다</div>
           <button class="modal-confirm" id="withdrawConfirm" disabled>출금하기</button>
         </div>
 
@@ -623,18 +623,28 @@
   function openGoldModal(){
     if(spinning) return;
     refreshModalInfo();
+    // 입력값 초기화
     depositInput.value = '';
     withdrawInput.value = '';
     depositResult.innerHTML = '금괴&nbsp;<strong>0</strong>&nbsp;개로 변환됩니다';
-    withdrawResult.innerHTML = '코인 <strong>0</strong> 조로 환전됩니다';
+    withdrawResult.innerHTML = '코인&nbsp;<strong>0</strong>&nbsp;조로 환전됩니다';
     depositConfirm.disabled = true;
     withdrawConfirm.disabled = true;
+    // 항상 입금 탭으로 초기화
+    tabDeposit.classList.add('active'); tabWithdraw.classList.remove('active');
+    sectionDeposit.classList.add('active'); sectionWithdraw.classList.remove('active');
+    // 메인 화면 잠금
+    reelsEl.style.filter = 'blur(3px)';
+    reelsEl.style.pointerEvents = 'none';
     goldModal.classList.remove('hidden');
     history.pushState({goldModal:true}, '');
   }
 
   function closeGoldModal(){
     goldModal.classList.add('hidden');
+    // 메인 화면 잠금 해제
+    reelsEl.style.filter = '';
+    reelsEl.style.pointerEvents = '';
   }
 
   // 뒤로가기 → 모달만 닫기
@@ -697,13 +707,13 @@
   withdrawInput.addEventListener('input', function(){
     var bars = Math.floor(parseFloat(this.value) || 0);
     if(bars > 0 && bars <= goldBars){
-      withdrawResult.innerHTML = '코인 <strong>' + bars.toLocaleString('en-US') + '</strong> 조로 환전됩니다';
+      withdrawResult.innerHTML = '코인&nbsp;<strong>' + bars.toLocaleString('en-US') + '</strong>&nbsp;조로 환전됩니다';
       withdrawConfirm.disabled = false;
     } else if(bars > goldBars){
       withdrawResult.innerHTML = '<span style="color:var(--cherry)">금괴가 부족합니다</span>';
       withdrawConfirm.disabled = true;
     } else {
-      withdrawResult.innerHTML = '코인 <strong>0</strong> 조로 환전됩니다';
+      withdrawResult.innerHTML = '코인&nbsp;<strong>0</strong>&nbsp;조로 환전됩니다';
       withdrawConfirm.disabled = true;
     }
   });
