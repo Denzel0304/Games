@@ -498,7 +498,11 @@
 
           // snapPos 도달 or 단계 소진 → target 위치에 정확히 snap
           if(dIdx >= DECEL.length || pos + spd >= snapPos){
-            strip.style.transform = 'translateY(-' + snapPos + 'px)';
+            // strip을 target 심볼 1개만 남기고 transform 리셋
+            // → 이후 레이아웃 재계산이 일어나도 그림이 흔들리지 않음
+            strip.innerHTML = '<div class="cell">' + SVG[target] + '</div>';
+            strip.style.transition = 'none';
+            strip.style.transform  = 'translateY(0)';
             clunk();
             res();
             return;
@@ -658,8 +662,18 @@
     goldModal.classList.add('hidden');
     // 메인 화면 잠금 해제
     document.getElementById('gridLock').classList.remove('active');
-    // 레이아웃 복원
-    requestAnimationFrame(function(){ refit(); });
+    // strip을 현재 표시 중인 심볼 1개만 남기고 transform 리셋
+    // → 레이아웃 재계산 없이 그림 위치가 절대 흔들리지 않음
+    strips.forEach(function(s){
+      var cells = s.querySelectorAll('.cell');
+      if(cells.length === 0) return;
+      // 현재 보이는 셀의 SVG 심볼 HTML을 보존
+      var visible = cells[cells.length - 1];
+      var inner = visible.innerHTML;
+      s.innerHTML = '<div class="cell">' + inner + '</div>';
+      s.style.transition = 'none';
+      s.style.transform  = 'translateY(0)';
+    });
   }
 
   // 뒤로가기 → 모달만 닫기
